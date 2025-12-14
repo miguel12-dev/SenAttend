@@ -46,6 +46,23 @@ use App\Services\QRService;
 use App\Session\SessionManager;
 use App\Support\Response;
 
+// Módulo de Eventos
+use App\Eventos\Controllers\EventoAuthController;
+use App\Eventos\Controllers\EventoAdminController;
+use App\Eventos\Controllers\EventoPublicoController;
+use App\Eventos\Controllers\EventoQRController;
+use App\Eventos\Services\EventoAuthService;
+use App\Eventos\Services\EventoService;
+use App\Eventos\Services\EventoQRService;
+use App\Eventos\Services\EventoEmailService;
+use App\Eventos\Services\EventoRegistroService;
+use App\Eventos\Services\EventoEncryptionService;
+use App\Eventos\Repositories\EventoRepository;
+use App\Eventos\Repositories\EventoUsuarioRepository;
+use App\Eventos\Repositories\EventoParticipanteRepository;
+use App\Eventos\Repositories\EventoQRRepository;
+use App\Eventos\Middleware\EventoAuthMiddleware;
+
 // Manejo de errores global
 set_exception_handler(function ($exception) {
     error_log('Uncaught Exception: ' . $exception->getMessage());
@@ -370,6 +387,39 @@ $routes = [
             'action' => 'apiIngresosActivos',
             'middleware' => ['auth']
         ],
+        // ============================================
+        // MÓDULO DE EVENTOS - Rutas GET
+        // ============================================
+        '/eventos' => [
+            'controller' => EventoPublicoController::class,
+            'action' => 'index',
+            'middleware' => []
+        ],
+        '/eventos/login' => [
+            'controller' => EventoAuthController::class,
+            'action' => 'showLoginForm',
+            'middleware' => []
+        ],
+        '/eventos/logout' => [
+            'controller' => EventoAuthController::class,
+            'action' => 'logout',
+            'middleware' => []
+        ],
+        '/eventos/admin' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'dashboard',
+            'middleware' => []
+        ],
+        '/eventos/admin/crear' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'showCrearForm',
+            'middleware' => []
+        ],
+        '/eventos/qr/scanner' => [
+            'controller' => EventoQRController::class,
+            'action' => 'showScanner',
+            'middleware' => []
+        ],
     ],
     'POST' => [
         '/auth/login' => [
@@ -567,6 +617,44 @@ $routes = [
             'action' => 'procesarQR',
             'middleware' => ['auth']
         ],
+        // ============================================
+        // MÓDULO DE EVENTOS - Rutas POST
+        // ============================================
+        '/eventos/login' => [
+            'controller' => EventoAuthController::class,
+            'action' => 'login',
+            'middleware' => []
+        ],
+        '/eventos/admin/crear' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'crear',
+            'middleware' => []
+        ],
+        '/eventos/buscar-instructor' => [
+            'controller' => EventoPublicoController::class,
+            'action' => 'buscarInstructor',
+            'middleware' => []
+        ],
+        '/eventos/qr/validar' => [
+            'controller' => EventoQRController::class,
+            'action' => 'validar',
+            'middleware' => []
+        ],
+        '/eventos/qr/procesar' => [
+            'controller' => EventoQRController::class,
+            'action' => 'procesar',
+            'middleware' => []
+        ],
+        '/eventos/qr/ingreso' => [
+            'controller' => EventoQRController::class,
+            'action' => 'procesarIngreso',
+            'middleware' => []
+        ],
+        '/eventos/qr/salida' => [
+            'controller' => EventoQRController::class,
+            'action' => 'procesarSalida',
+            'middleware' => []
+        ],
     ],
 ];
 
@@ -687,6 +775,39 @@ $dynamicRoutes = [
             'middleware' => [],
             'params' => ['equipoId']
         ],
+        // ============================================
+        // MÓDULO DE EVENTOS - Rutas Dinámicas GET
+        // ============================================
+        '/eventos/registro/(\d+)' => [
+            'controller' => EventoPublicoController::class,
+            'action' => 'showRegistro',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/admin/(\d+)' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'detalle',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/admin/(\d+)/editar' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'showEditarForm',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/admin/(\d+)/participantes' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'participantes',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/api/(\d+)/participantes' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'apiParticipantes',
+            'middleware' => [],
+            'params' => ['id']
+        ],
     ],
     'POST' => [
         '/fichas/(\d+)' => [
@@ -759,6 +880,39 @@ $dynamicRoutes = [
             'controller' => \App\Controllers\AprendizController::class,
             'action' => 'apiDesvincularFicha',
             'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        // ============================================
+        // MÓDULO DE EVENTOS - Rutas Dinámicas POST
+        // ============================================
+        '/eventos/registro/(\d+)' => [
+            'controller' => EventoPublicoController::class,
+            'action' => 'registrar',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/admin/(\d+)/actualizar' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'actualizar',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/admin/(\d+)/estado' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'cambiarEstado',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/admin/(\d+)/eliminar' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'eliminar',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/eventos/(\d+)/reenviar-qr' => [
+            'controller' => EventoPublicoController::class,
+            'action' => 'reenviarQR',
+            'middleware' => [],
             'params' => ['id']
         ],
     ],
@@ -971,6 +1125,69 @@ try {
             $session,
             $analyticsService,
             $excelExportService
+        );
+    // ============================================
+    // MÓDULO DE EVENTOS - Controladores
+    // ============================================
+    } elseif ($controllerClass === EventoAuthController::class) {
+        $eventoUsuarioRepository = new EventoUsuarioRepository();
+        $eventoAuthService = new EventoAuthService($eventoUsuarioRepository, $session);
+        $controller = new $controllerClass($eventoAuthService, $session);
+    } elseif ($controllerClass === EventoAdminController::class) {
+        $eventoUsuarioRepository = new EventoUsuarioRepository();
+        $eventoRepository = new EventoRepository();
+        $eventoParticipanteRepository = new EventoParticipanteRepository();
+        $eventoAuthService = new EventoAuthService($eventoUsuarioRepository, $session);
+        $eventoService = new EventoService($eventoRepository, $eventoParticipanteRepository);
+        $eventoAuthMiddleware = new EventoAuthMiddleware($session);
+        $controller = new $controllerClass(
+            $eventoService,
+            $eventoAuthService,
+            $eventoParticipanteRepository,
+            $eventoAuthMiddleware,
+            $session
+        );
+    } elseif ($controllerClass === EventoPublicoController::class) {
+        $eventoRepository = new EventoRepository();
+        $eventoParticipanteRepository = new EventoParticipanteRepository();
+        $eventoQRRepository = new EventoQRRepository();
+        $eventoEncryptionService = new EventoEncryptionService();
+        $eventoEmailService = new EventoEmailService();
+        $eventoService = new EventoService($eventoRepository, $eventoParticipanteRepository);
+        $eventoQRService = new EventoQRService(
+            $eventoQRRepository,
+            $eventoParticipanteRepository,
+            $eventoEncryptionService
+        );
+        $eventoRegistroService = new EventoRegistroService(
+            $eventoRepository,
+            $eventoParticipanteRepository,
+            $eventoQRService,
+            $eventoEmailService,
+            $userRepository
+        );
+        $controller = new $controllerClass(
+            $eventoService,
+            $eventoRegistroService,
+            $eventoRepository,
+            $session
+        );
+    } elseif ($controllerClass === EventoQRController::class) {
+        $eventoRepository = new EventoRepository();
+        $eventoParticipanteRepository = new EventoParticipanteRepository();
+        $eventoQRRepository = new EventoQRRepository();
+        $eventoEncryptionService = new EventoEncryptionService();
+        $eventoEmailService = new EventoEmailService();
+        $eventoQRService = new EventoQRService(
+            $eventoQRRepository,
+            $eventoParticipanteRepository,
+            $eventoEncryptionService
+        );
+        $controller = new $controllerClass(
+            $eventoQRService,
+            $eventoEmailService,
+            $eventoRepository,
+            $eventoParticipanteRepository
         );
     } else {
         throw new RuntimeException("Unknown controller: {$controllerClass}");
