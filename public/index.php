@@ -55,6 +55,7 @@ use App\Eventos\Services\EventoAuthService;
 use App\Eventos\Services\EventoService;
 use App\Eventos\Services\EventoQRService;
 use App\Eventos\Services\EventoEmailService;
+use App\Eventos\Services\EventoUsuarioService;
 use App\Eventos\Services\EventoRegistroService;
 use App\Eventos\Services\EventoEncryptionService;
 use App\Eventos\Repositories\EventoRepository;
@@ -415,6 +416,11 @@ $routes = [
             'action' => 'showCrearForm',
             'middleware' => []
         ],
+        '/eventos/admin/usuarios' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'usuarios',
+            'middleware' => []
+        ],
         '/eventos/qr/scanner' => [
             'controller' => EventoQRController::class,
             'action' => 'showScanner',
@@ -633,6 +639,11 @@ $routes = [
         '/eventos/admin/crear' => [
             'controller' => EventoAdminController::class,
             'action' => 'crear',
+            'middleware' => []
+        ],
+        '/eventos/admin/usuarios' => [
+            'controller' => EventoAdminController::class,
+            'action' => 'crearUsuario',
             'middleware' => []
         ],
         '/eventos/buscar-instructor' => [
@@ -1149,11 +1160,14 @@ try {
         $eventoRepository = new EventoRepository();
         $eventoParticipanteRepository = new EventoParticipanteRepository();
         $eventoAuthService = new EventoAuthService($eventoUsuarioRepository, $session);
+        $eventoEmailService = new EventoEmailService();
+        $eventoUsuarioService = new EventoUsuarioService($eventoUsuarioRepository, $eventoEmailService);
         $eventoService = new EventoService($eventoRepository, $eventoParticipanteRepository);
         $eventoAuthMiddleware = new EventoAuthMiddleware($session);
         $controller = new $controllerClass(
             $eventoService,
             $eventoAuthService,
+            $eventoUsuarioService,
             $eventoParticipanteRepository,
             $eventoAuthMiddleware,
             $session
@@ -1189,6 +1203,11 @@ try {
         $eventoQRRepository = new EventoQRRepository();
         $eventoEncryptionService = new EventoEncryptionService();
         $eventoEmailService = new EventoEmailService();
+        $eventoUsuarioRepository = new EventoUsuarioRepository();
+        $eventoAuthService = new EventoAuthService(
+            $eventoUsuarioRepository,
+            $session
+        );
         $eventoQRService = new EventoQRService(
             $eventoQRRepository,
             $eventoParticipanteRepository,
@@ -1197,6 +1216,7 @@ try {
         $controller = new $controllerClass(
             $eventoQRService,
             $eventoEmailService,
+            $eventoAuthService,
             $eventoRepository,
             $eventoParticipanteRepository
         );
