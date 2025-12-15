@@ -4,6 +4,7 @@ namespace App\Eventos\Controllers;
 
 use App\Eventos\Services\EventoQRService;
 use App\Eventos\Services\EventoEmailService;
+use App\Eventos\Services\EventoAuthService;
 use App\Eventos\Repositories\EventoRepository;
 use App\Eventos\Repositories\EventoParticipanteRepository;
 
@@ -14,17 +15,20 @@ class EventoQRController
 {
     private EventoQRService $qrService;
     private EventoEmailService $emailService;
+    private EventoAuthService $authService;
     private EventoRepository $eventoRepository;
     private EventoParticipanteRepository $participanteRepository;
 
     public function __construct(
         EventoQRService $qrService,
         EventoEmailService $emailService,
+        EventoAuthService $authService,
         EventoRepository $eventoRepository,
         EventoParticipanteRepository $participanteRepository
     ) {
         $this->qrService = $qrService;
         $this->emailService = $emailService;
+        $this->authService = $authService;
         $this->eventoRepository = $eventoRepository;
         $this->participanteRepository = $participanteRepository;
     }
@@ -34,6 +38,9 @@ class EventoQRController
      */
     public function showScanner(): void
     {
+        // Obtener usuario autenticado para el header
+        $user = $this->authService->getCurrentUser();
+        
         require ROOT_PATH . '/views/eventos/qr/scanner.php';
     }
 
@@ -48,6 +55,9 @@ class EventoQRController
             header('Location: /eventos/admin');
             exit;
         }
+        
+        // Obtener usuario autenticado para el header
+        $user = $this->authService->getCurrentUser();
         
         require ROOT_PATH . '/views/eventos/qr/scanner-evento.php';
     }
