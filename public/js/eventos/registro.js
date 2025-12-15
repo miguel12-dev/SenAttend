@@ -3,6 +3,25 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Fallback robusto para obtener el ID del evento
+    const getEventoId = () => {
+        if (typeof window.eventoId !== 'undefined') {
+            return parseInt(window.eventoId, 10);
+        }
+        const bodyId = document.body?.dataset?.eventoId;
+        if (bodyId) {
+            return parseInt(bodyId, 10);
+        }
+        const match = window.location.pathname.match(/\/eventos\/registro\/(\d+)/);
+        if (match && match[1]) {
+            return parseInt(match[1], 10);
+        }
+        console.warn('No se pudo determinar el ID del evento en la página.');
+        return 0;
+    };
+
+    const eventoId = getEventoId();
+
     const documentoInput = document.getElementById('documento');
     const btnBuscar = document.getElementById('btnBuscar');
     const loadingIndicator = document.getElementById('loadingIndicator');

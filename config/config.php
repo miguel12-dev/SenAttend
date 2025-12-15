@@ -47,33 +47,13 @@ if (!function_exists('getEnv')) {
     }
 }
 
-/**
- * Helpers para rutas de assets y base URI
- */
-if (!function_exists('base_uri')) {
-    function base_uri(): string
-    {
-        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
-        if ($scriptName === '') {
-            return '';
-        }
-
-        $directory = str_replace('\\', '/', dirname($scriptName));
-        if ($directory === '/' || $directory === '\\' || $directory === '.') {
-            return '';
-        }
-
-        return rtrim($directory, '/');
-    }
-}
-
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        $base = base_uri();
-        $normalizedPath = '/' . ltrim(str_replace('\\', '/', $path), '/');
-
-        return $base . $normalizedPath;
+        // Siempre servir assets desde la raíz pública del dominio.
+        // Esto evita errores cuando las rutas amigables cambian (por ejemplo /eventos/admin/9)
+        // y garantiza que CSS/JS/imagenes se resuelvan correctamente.
+        return '/' . ltrim(str_replace('\\', '/', $path), '/');
     }
 }
 
@@ -113,6 +93,9 @@ if (!defined('DB_USER')) {
 if (!defined('DB_PASS')) {
     define('DB_PASS', getEnv('DB_PASS', ''));
 }
+if (!defined('DB_TIMEZONE')) {
+    define('DB_TIMEZONE', getEnv('DB_TIMEZONE', 'America/Bogota'));
+}
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(__DIR__));
 }
@@ -151,6 +134,7 @@ return [
         'name' => DB_NAME,
         'user' => DB_USER,
         'pass' => DB_PASS,
+        'timezone' => DB_TIMEZONE,
         'charset' => 'utf8mb4',
         'options' => [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

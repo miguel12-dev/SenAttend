@@ -5,6 +5,8 @@ namespace App\Database;
 use PDO;
 use PDOException;
 use RuntimeException;
+use DateTime;
+use DateTimeZone;
 
 /**
  * Conexión PDO Singleton con conexión persistente
@@ -77,6 +79,8 @@ class Connection
                 self::$config['pass'],
                 self::$config['options']
             );
+
+            self::configureSessionTimezone();
 
             // Log de conexión exitosa en modo desarrollo
             if (defined('APP_ENV') && APP_ENV === 'local') {
@@ -171,6 +175,33 @@ class Connection
                     FILE_APPEND
                 );
             }
+        }
+    }
+
+    /**
+     * Ajusta la zona horaria de la sesión MySQL para sincronizar NOW() con PHP
+     */
+    private static function configureSessionTimezone(): void
+    {
+        $timezone = self::$config['timezone'] ?? date_default_timezone_get();
+        if (empty($timezone)) {
+            return;
+        }
+
+        try {
+            $quotedTz = self::$instance->quote($timezone);
+            self::$instance->exec("SET time_zone = {$quotedTz}");
+            return;
+        } catch (PDOException $e) {
+            // Intentar con el offset numérico si la zona horaria no existe en MySQL
+        }
+
+        try {
+            $offset = (new DateTime('now', new DateTimeZone($timezone)))->format('P');
+            $quotedOffset = self::$instance->quote($offset);
+            self::$instance->exec("SET time_zone = {$quotedOffset}");
+        } catch (PDOException $e) {
+            self::log('Failed to set MySQL time_zone: ' . $e->getMessage(), 'WARNING');
         }
     }
 
