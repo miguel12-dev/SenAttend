@@ -84,16 +84,19 @@
     transform: translateX(-50%) rotate(-45deg);
 }
 
-.header-public .logo h1 {
+.header-public .logo-link-public {
+    text-decoration: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-public .logo-text {
     font-size: 1.75rem;
     font-weight: 700;
     margin: 0;
     color: white;
-}
-
-.header-public .logo a {
-    text-decoration: none;
-    color: inherit;
 }
 
 .nav-public {
@@ -178,7 +181,7 @@
         min-width: 0;
     }
 
-    .header-public .logo h1 {
+    .header-public .logo-text {
         font-size: 1.5rem;
         margin: 0;
         white-space: nowrap;
