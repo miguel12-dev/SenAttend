@@ -204,6 +204,26 @@ class EventoParticipanteRepository
     }
 
     /**
+     * Obtiene el historial de participantes con ingreso o salida del día actual
+     */
+    public function getHistorialHoy(): array
+    {
+        $stmt = Connection::prepare(
+            "SELECT * FROM eventos_participantes 
+             WHERE (DATE(fecha_ingreso) = CURDATE() OR DATE(fecha_salida) = CURDATE())
+             AND estado IN ('ingreso', 'salida', 'sin_salida')
+             ORDER BY 
+                GREATEST(
+                    COALESCE(fecha_ingreso, '1900-01-01'), 
+                    COALESCE(fecha_salida, '1900-01-01')
+                ) DESC"
+        );
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Elimina un participante
      */
     public function delete(int $id): bool

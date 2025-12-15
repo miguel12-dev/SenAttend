@@ -67,7 +67,7 @@ class EventoQRRepository
             'token' => $data['token'],
             'tipo' => $data['tipo'],
             'qr_data' => $data['qr_data'],
-            'usado' => $data['usado'] ?? false
+            'usado' => isset($data['usado']) ? (int)$data['usado'] : 0
         ]);
         
         return (int) Connection::lastInsertId();
