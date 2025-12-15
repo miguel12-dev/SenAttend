@@ -110,16 +110,27 @@ class EventoPublicoController
         $instructor = $this->registroService->buscarInstructor($documento);
 
         if ($instructor) {
+            // Enmascarar el email para mostrar parcialmente
+            $emailEnmascarado = $this->enmascararEmail($instructor['email']);
+            
             $this->jsonResponse([
                 'success' => true,
                 'encontrado' => true,
-                'data' => $instructor
+                'es_instructor' => true,
+                'data' => [
+                    'documento' => $instructor['documento'],
+                    'nombre' => $instructor['nombre'], // Nombre completo
+                    'email' => $instructor['email'],
+                    'email_enmascarado' => $emailEnmascarado,
+                    'tipo' => 'instructor'
+                ]
             ]);
         } else {
             $this->jsonResponse([
                 'success' => true,
                 'encontrado' => false,
-                'message' => 'No se encontró el documento. Por favor complete sus datos.'
+                'es_instructor' => false,
+                'message' => 'No se encontró el documento como instructor. Por favor complete sus datos.'
             ]);
         }
     }
@@ -134,13 +145,20 @@ class EventoPublicoController
             exit;
         }
 
+        $tipo = $_POST['tipo'] ?? 'externo';
+        
         $datos = [
             'documento' => trim($_POST['documento'] ?? ''),
             'nombre' => trim($_POST['nombre'] ?? ''),
             'apellido' => trim($_POST['apellido'] ?? ''),
             'email' => trim($_POST['email'] ?? ''),
-            'tipo' => $_POST['tipo'] ?? 'externo'
+            'tipo' => $tipo
         ];
+        
+        // Si es instructor y no viene apellido, dejar vacío (el nombre completo ya está en nombre)
+        if ($tipo === 'instructor' && empty($datos['apellido'])) {
+            $datos['apellido'] = '';
+        }
 
         $result = $this->registroService->registrarParticipante($id, $datos);
 
@@ -209,6 +227,7 @@ class EventoPublicoController
 
     /**
      * Enmascara un email para mostrar parcialmente
+     * Formato: mig*****32@gmail.com (primeros 3 caracteres + asteriscos + últimos 2 caracteres)
      */
     private function enmascararEmail(string $email): string
     {
@@ -219,11 +238,17 @@ class EventoPublicoController
 
         $local = $parts[0];
         $domain = $parts[1];
+        $localLength = strlen($local);
 
-        if (strlen($local) <= 3) {
-            $maskedLocal = $local[0] . str_repeat('*', 5);
+        if ($localLength <= 3) {
+            // Si es muy corto, mostrar solo el primer carácter
+            $maskedLocal = $local[0] . str_repeat('*', min(5, $localLength - 1));
+        } else if ($localLength <= 5) {
+            // Si tiene 4-5 caracteres, mostrar primeros 2 y asteriscos
+            $maskedLocal = substr($local, 0, 2) . str_repeat('*', $localLength - 2);
         } else {
-            $maskedLocal = substr($local, 0, 3) . str_repeat('*', 5);
+            // Si tiene más de 5 caracteres, mostrar primeros 3, asteriscos, y últimos 2
+            $maskedLocal = substr($local, 0, 3) . str_repeat('*', max(3, $localLength - 5)) . substr($local, -2);
         }
 
         return $maskedLocal . '@' . $domain;

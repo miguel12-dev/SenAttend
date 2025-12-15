@@ -7,17 +7,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnBuscar = document.getElementById('btnBuscar');
     const loadingIndicator = document.getElementById('loadingIndicator');
     const step1 = document.getElementById('step1');
-    const registroForm = document.getElementById('registroForm');
+    const registroForm = document.getElementById('registroForm'); // Formulario para no instructores
+    const registroFormInstructor = document.getElementById('registroFormInstructor'); // Formulario para instructores
     const btnVolver = document.getElementById('btnVolver');
-    const instructorInfo = document.getElementById('instructorInfo');
+    const btnVolverInstructor = document.getElementById('btnVolverInstructor');
     const btnReenviarQR = document.getElementById('btnReenviarQR');
     
-    // Form fields
+    // Form fields - No instructor
     const formDocumento = document.getElementById('formDocumento');
     const formTipo = document.getElementById('formTipo');
     const nombreInput = document.getElementById('nombre');
     const apellidoInput = document.getElementById('apellido');
     const emailInput = document.getElementById('email');
+    
+    // Form fields - Instructor
+    const formDocumentoInstructor = document.getElementById('formDocumentoInstructor');
+    const formNombreInstructor = document.getElementById('formNombreInstructor');
+    const formEmailInstructorOriginal = document.getElementById('formEmailInstructorOriginal');
+    const displayNombreInstructor = document.getElementById('displayNombreInstructor');
+    const displayEmailEnmascarado = document.getElementById('displayEmailEnmascarado');
+    const btnCambiarEmail = document.getElementById('btnCambiarEmail');
+    const emailEditContainer = document.getElementById('emailEditContainer');
+    const emailInstructorInput = document.getElementById('emailInstructor');
+    const registroFormInstructorForm = document.getElementById('registroFormInstructor');
 
     // Buscar instructor al hacer clic
     if (btnBuscar) {
@@ -34,12 +46,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Volver al paso 1
+    // Volver al paso 1 - No instructor
     if (btnVolver) {
         btnVolver.addEventListener('click', function() {
             registroForm.style.display = 'none';
             step1.classList.add('active');
             documentoInput.focus();
+        });
+    }
+    
+    // Volver al paso 1 - Instructor
+    if (btnVolverInstructor) {
+        btnVolverInstructor.addEventListener('click', function() {
+            registroFormInstructor.style.display = 'none';
+            emailEditContainer.style.display = 'none';
+            emailInstructorInput.removeAttribute('required');
+            step1.classList.add('active');
+            documentoInput.focus();
+        });
+    }
+    
+    // Cambiar email - Instructor
+    if (btnCambiarEmail) {
+        btnCambiarEmail.addEventListener('click', function() {
+            if (emailEditContainer.style.display === 'none' || !emailEditContainer.style.display) {
+                emailEditContainer.style.display = 'block';
+                emailInstructorInput.setAttribute('required', 'required');
+                emailInstructorInput.focus();
+                btnCambiarEmail.innerHTML = '<i class="fas fa-times"></i> Cancelar';
+            } else {
+                emailEditContainer.style.display = 'none';
+                emailInstructorInput.removeAttribute('required');
+                emailInstructorInput.value = formEmailInstructorOriginal.value; // Restaurar email original
+                btnCambiarEmail.innerHTML = '<i class="fas fa-edit"></i> Cambiar';
+            }
+        });
+    }
+    
+    // Manejar envío del formulario de instructor
+    if (registroFormInstructorForm) {
+        registroFormInstructorForm.addEventListener('submit', function(e) {
+            // Si el contenedor de edición de email está oculto, usar el email original del campo oculto
+            if (emailEditContainer.style.display === 'none' || !emailEditContainer.style.display) {
+                // El campo oculto ya tiene el email original, no hacer nada
+                // El campo oculto formEmailInstructorOriginal ya tiene el valor correcto
+            } else {
+                // Si está visible, usar el email ingresado en el campo de edición
+                if (emailInstructorInput.value) {
+                    formEmailInstructorOriginal.value = emailInstructorInput.value;
+                }
+            }
         });
     }
     
@@ -87,37 +143,38 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (data.success) {
-                // Pasar al formulario
+                // Ocultar paso 1
                 step1.classList.remove('active');
-                registroForm.style.display = 'block';
                 
                 // Establecer documento
                 formDocumento.value = documento;
                 
-                if (data.encontrado) {
-                    // Instructor encontrado - llenar datos
-                    instructorInfo.style.display = 'flex';
-                    formTipo.value = 'instructor';
-                    nombreInput.value = data.data.nombre;
-                    apellidoInput.value = data.data.apellido;
-                    emailInput.value = data.data.email;
+                if (data.encontrado && data.es_instructor) {
+                    // Instructor encontrado - mostrar formulario de instructor
+                    registroForm.style.display = 'none';
+                    registroFormInstructor.style.display = 'block';
                     
-                    // Hacer campos readonly para instructores encontrados
-                    nombreInput.readOnly = true;
-                    apellidoInput.readOnly = true;
-                    emailInput.readOnly = true;
+                    // Llenar datos del instructor
+                    formDocumentoInstructor.value = documento;
+                    formNombreInstructor.value = data.data.nombre;
+                    formEmailInstructorOriginal.value = data.data.email; // Email original para cuando no se cambia
+                    displayNombreInstructor.textContent = data.data.nombre;
+                    displayEmailEnmascarado.textContent = data.data.email_enmascarado;
+                    
+                    // Si el usuario quiere cambiar el email, usar el email real como valor inicial
+                    emailInstructorInput.value = data.data.email;
+                    
+                    // Ocultar contenedor de edición de email inicialmente
+                    emailEditContainer.style.display = 'none';
                 } else {
-                    // No encontrado - formulario vacío para externos
-                    instructorInfo.style.display = 'none';
+                    // No encontrado - mostrar formulario completo para externos
+                    registroFormInstructor.style.display = 'none';
+                    registroForm.style.display = 'block';
+                    
                     formTipo.value = 'externo';
                     nombreInput.value = '';
                     apellidoInput.value = '';
                     emailInput.value = '';
-                    
-                    // Permitir edición
-                    nombreInput.readOnly = false;
-                    apellidoInput.readOnly = false;
-                    emailInput.readOnly = false;
                     
                     // Focus en nombre
                     nombreInput.focus();

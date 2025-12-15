@@ -102,27 +102,77 @@
                     </div>
                 </div>
 
-                <!-- Paso 2: Formulario completo -->
+                <!-- Paso 2A: Instructor encontrado -->
+                <form id="registroFormInstructor" action="/eventos/registro/<?= $evento['id'] ?>" method="POST" class="form-step" style="display: none;">
+                    <input type="hidden" name="documento" id="formDocumentoInstructor">
+                    <input type="hidden" name="tipo" value="instructor">
+                    <input type="hidden" name="nombre" id="formNombreInstructor">
+                    <input type="hidden" name="apellido" value="">
+                    <input type="hidden" name="email" id="formEmailInstructorOriginal">
+
+                    <div class="info-box success" style="display: flex; margin-bottom: 1.5rem;">
+                        <i class="fas fa-check-circle" style="margin-right: 0.75rem; color: #28a745;"></i>
+                        <span>¡Te encontramos en el sistema como instructor!</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <div class="info-display" id="displayNombreInstructor" style="padding: 0.75rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                            <!-- Se llenará con JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="info-display" id="displayEmailEnmascarado" style="flex: 1; padding: 0.75rem; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                                <!-- Se llenará con JavaScript -->
+                            </div>
+                            <button type="button" id="btnCambiarEmail" class="btn btn-secondary" style="white-space: nowrap;">
+                                <i class="fas fa-edit"></i>
+                                Cambiar
+                            </button>
+                        </div>
+                        <small class="form-help">El código QR será enviado a este correo</small>
+                    </div>
+
+                    <div id="emailEditContainer" style="display: none;">
+                        <div class="form-group">
+                            <label for="emailInstructor">Nuevo Correo Electrónico <span class="required">*</span></label>
+                            <input type="email" id="emailInstructor" name="email" required
+                                   placeholder="tu.correo@ejemplo.com">
+                            <small class="form-help">Ingresa el correo donde deseas recibir el código QR</small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="btnVolverInstructor" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i>
+                            Confirmar Registro
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Paso 2B: Formulario completo (no instructor) -->
                 <form id="registroForm" action="/eventos/registro/<?= $evento['id'] ?>" method="POST" class="form-step" style="display: none;">
                     <input type="hidden" name="documento" id="formDocumento">
                     <input type="hidden" name="tipo" id="formTipo" value="externo">
 
-                    <div id="instructorInfo" class="info-box" style="display: none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                        </svg>
-                        <span>¡Te encontramos! Tus datos han sido completados automáticamente.</span>
-                    </div>
-
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="nombre">Nombres <span class="required">*</span></label>
+                            <label for="nombre">Nombre Completo <span class="required">*</span></label>
                             <input type="text" id="nombre" name="nombre" required
+                                   placeholder="Ingresa tu nombre completo"
                                    value="<?= htmlspecialchars($datos['nombre'] ?? '') ?>">
                         </div>
                         <div class="form-group">
                             <label for="apellido">Apellidos <span class="required">*</span></label>
                             <input type="text" id="apellido" name="apellido" required
+                                   placeholder="Ingresa tus apellidos"
                                    value="<?= htmlspecialchars($datos['apellido'] ?? '') ?>">
                         </div>
                     </div>

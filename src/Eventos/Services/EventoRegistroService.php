@@ -36,6 +36,7 @@ class EventoRegistroService
 
     /**
      * Busca un instructor por su documento
+     * Devuelve solo el nombre completo (sin separar nombre/apellido)
      */
     public function buscarInstructor(string $documento): ?array
     {
@@ -52,8 +53,7 @@ class EventoRegistroService
 
         return [
             'documento' => $usuario['documento'],
-            'nombre' => $this->extraerNombre($usuario['nombre']),
-            'apellido' => $this->extraerApellido($usuario['nombre']),
+            'nombre' => $usuario['nombre'], // Nombre completo tal como está en BD
             'email' => $usuario['email'],
             'tipo' => 'instructor'
         ];
@@ -105,12 +105,21 @@ class EventoRegistroService
         try {
             Connection::beginTransaction();
 
+            // Si es instructor y no tiene apellido separado, usar nombre completo
+            $nombre = $datos['nombre'];
+            $apellido = $datos['apellido'] ?? '';
+            
+            // Si es instructor y apellido está vacío, dejar apellido vacío (el nombre completo ya está en nombre)
+            if (($datos['tipo'] ?? '') === 'instructor' && empty($apellido)) {
+                $apellido = ''; // Dejar vacío para instructores
+            }
+
             // Crear participante
             $participanteId = $this->participanteRepository->create([
                 'evento_id' => $eventoId,
                 'documento' => $datos['documento'],
-                'nombre' => $datos['nombre'],
-                'apellido' => $datos['apellido'],
+                'nombre' => $nombre,
+                'apellido' => $apellido,
                 'email' => $datos['email'],
                 'tipo' => $datos['tipo'] ?? 'instructor',
                 'estado' => 'registrado'
@@ -122,10 +131,16 @@ class EventoRegistroService
                 throw new Exception('Error al generar el código QR');
             }
 
+            // Construir nombre completo para el email
+            $nombreCompleto = $nombre;
+            if (!empty($apellido)) {
+                $nombreCompleto .= ' ' . $apellido;
+            }
+            
             // Enviar email con QR (incluyendo información completa del evento)
             $emailResult = $this->emailService->enviarQRIngreso(
                 $datos['email'],
-                $datos['nombre'] . ' ' . $datos['apellido'],
+                $nombreCompleto,
                 $evento['titulo'],
                 $qrResult['data']['image_base64'],
                 [
@@ -258,7 +273,9 @@ class EventoRegistroService
             $errores[] = 'El nombre es obligatorio';
         }
 
-        if (empty($datos['apellido'])) {
+        // Apellido solo es obligatorio si NO es instructor
+        $esInstructor = ($datos['tipo'] ?? '') === 'instructor';
+        if (!$esInstructor && empty($datos['apellido'])) {
             $errores[] = 'El apellido es obligatorio';
         }
 
