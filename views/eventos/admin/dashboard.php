@@ -136,12 +136,14 @@
                                         </span>
                                     </td>
                                     <td class="actions">
-                                        <a href="/eventos/admin/<?= $evento['id'] ?>" class="btn btn-sm btn-primary" title="Ver detalles">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="/eventos/admin/<?= $evento['id'] ?>/participantes" class="btn btn-sm btn-primary" title="Ver participantes">
-                                            <i class="fas fa-users"></i>
-                                        </a>
+                                        <div class="actions-row">
+                                            <a href="/eventos/admin/<?= $evento['id'] ?>" class="btn btn-sm btn-primary" title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="/eventos/admin/<?= $evento['id'] ?>/participantes" class="btn btn-sm btn-primary" title="Ver participantes">
+                                                <i class="fas fa-users"></i>
+                                            </a>
+                                        </div>
                                         <a href="/eventos/admin/<?= $evento['id'] ?>/editar" class="btn btn-sm btn-secondary" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>

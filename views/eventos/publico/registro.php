@@ -222,7 +222,6 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
-    <script src="<?= asset('js/common/header-public.js') ?>"></script>
     <script>
         // IMPORTANTE: Definir eventoId ANTES de cargar registro.js
         const eventoId = <?= $evento['id'] ?>;

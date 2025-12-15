@@ -18,18 +18,18 @@
                 <i class="fas fa-calendar-alt" style="font-size: 5rem; color: white; margin-bottom: 1.5rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));"></i>
                 <h1>Eventos SENA</h1>
                 <p>Regístrate a los eventos disponibles y participa en las actividades del SENA</p>
-                <div class="hero-stats" style="display: flex; justify-content: center; gap: 3rem; margin-top: 2rem; flex-wrap: wrap;">
+                <div class="hero-stats">
                     <div class="hero-stat">
                         <i class="fas fa-calendar-check" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                        <div style="font-size: 0.95rem; opacity: 0.9;">Eventos Disponibles</div>
+                        <div>Eventos Disponibles</div>
                     </div>
                     <div class="hero-stat">
                         <i class="fas fa-users" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                        <div style="font-size: 0.95rem; opacity: 0.9;">Participa Fácilmente</div>
+                        <div>Participa Fácilmente</div>
                     </div>
                     <div class="hero-stat">
                         <i class="fas fa-qrcode" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                        <div style="font-size: 0.95rem; opacity: 0.9;">Acceso con QR</div>
+                        <div>Acceso con QR</div>
                     </div>
                 </div>
             </div>
@@ -45,7 +45,7 @@
                 <?php endif; ?>
 
                 <section class="events-section">
-                    <h2 style="margin-bottom: 2rem;">
+                    <h2>
                         <i class="fas fa-calendar-alt"></i>
                         Eventos Disponibles
                     </h2>
@@ -110,7 +110,6 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
-    <script src="<?= asset('js/common/header-public.js') ?>"></script>
 </body>
 </html>
 
