@@ -66,6 +66,7 @@ class EventoPublicoController
 
     /**
      * Busca un instructor por documento (API)
+     * AHORA TAMBIÉN VALIDA SI YA ESTÁ REGISTRADO EN EL EVENTO
      */
     public function buscarInstructor(): void
     {
@@ -76,12 +77,36 @@ class EventoPublicoController
 
         $data = json_decode(file_get_contents('php://input'), true);
         $documento = trim($data['documento'] ?? '');
+        $eventoId = (int)($data['evento_id'] ?? 0);
 
         if (empty($documento)) {
             $this->jsonResponse(['success' => false, 'error' => 'Documento requerido']);
             return;
         }
 
+        if ($eventoId <= 0) {
+            $this->jsonResponse(['success' => false, 'error' => 'Evento no válido']);
+            return;
+        }
+
+        // PRIMERO: Verificar si ya está registrado en este evento
+        $yaRegistrado = $this->registroService->getParticipanteByDocumento($documento, $eventoId);
+        
+        if ($yaRegistrado) {
+            // Ya está registrado - no permitir avanzar
+            $emailEnmascarado = $this->enmascararEmail($yaRegistrado['email']);
+            
+            $this->jsonResponse([
+                'success' => false,
+                'ya_registrado' => true,
+                'estado' => $yaRegistrado['estado'],
+                'email_enmascarado' => $emailEnmascarado,
+                'error' => '⚠️ Ya estás registrado en este evento. Puedes reenviar tu código QR si lo necesitas.'
+            ]);
+            return;
+        }
+
+        // No está registrado - continuar con la búsqueda de instructor
         $instructor = $this->registroService->buscarInstructor($documento);
 
         if ($instructor) {
@@ -123,11 +148,24 @@ class EventoPublicoController
 
         if (!$result['success']) {
             if (isset($result['ya_registrado']) && $result['ya_registrado']) {
-                $this->session->set('eventos_mensaje', [
-                    'tipo' => 'info',
-                    'texto' => 'Ya estás registrado en este evento. Revisa tu correo para el código QR.'
-                ]);
-                header('Location: /eventos');
+                // Obtener el participante para mostrar su email enmascarado
+                $participante = $this->registroService->buscarInstructor($datos['documento']);
+                if (!$participante) {
+                    // Si no es instructor, buscar en participantes de eventos
+                    $participanteEvento = $this->registroService->getParticipanteByDocumento($datos['documento'], $id);
+                    if ($participanteEvento) {
+                        $emailEnmascarado = $this->enmascararEmail($participanteEvento['email']);
+                    }
+                } else {
+                    $emailEnmascarado = $this->enmascararEmail($participante['email']);
+                }
+                
+                // Quedarse en la página de registro con opción de reenviar QR
+                $datos['_duplicado'] = true;
+                $datos['_email_enmascarado'] = $emailEnmascarado ?? '***';
+                $this->session->set('registro_evento_error', 'Ya estás registrado en este evento. Puedes reenviar tu código QR si lo necesitas.');
+                $this->session->set('registro_evento_datos', $datos);
+                header('Location: /eventos/registro/' . $id);
                 exit;
             }
 
@@ -167,6 +205,28 @@ class EventoPublicoController
 
         $result = $this->registroService->reenviarQRIngreso($documento, $id);
         $this->jsonResponse($result);
+    }
+
+    /**
+     * Enmascara un email para mostrar parcialmente
+     */
+    private function enmascararEmail(string $email): string
+    {
+        $parts = explode('@', $email);
+        if (count($parts) !== 2) {
+            return str_repeat('*', 5) . '@***';
+        }
+
+        $local = $parts[0];
+        $domain = $parts[1];
+
+        if (strlen($local) <= 3) {
+            $maskedLocal = $local[0] . str_repeat('*', 5);
+        } else {
+            $maskedLocal = substr($local, 0, 3) . str_repeat('*', 5);
+        }
+
+        return $maskedLocal . '@' . $domain;
     }
 
     /**

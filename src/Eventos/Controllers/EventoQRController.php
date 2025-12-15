@@ -179,6 +179,68 @@ class EventoQRController
     }
 
     /**
+     * Obtiene el historial de escaneos del día actual
+     */
+    public function historialHoy(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->jsonResponse(['success' => false, 'error' => 'Método no permitido']);
+            return;
+        }
+
+        try {
+            // Obtener todos los participantes con ingreso o salida del día de hoy
+            $participantes = $this->participanteRepository->getHistorialHoy();
+            
+            $historial = [];
+            foreach ($participantes as $p) {
+                $evento = $this->eventoRepository->findById($p['evento_id']);
+                
+                // Registrar entrada si tiene fecha_ingreso
+                if (!empty($p['fecha_ingreso'])) {
+                    $historial[] = [
+                        'id' => $p['id'],
+                        'nombre' => $p['nombre'],
+                        'apellido' => $p['apellido'],
+                        'documento' => $p['documento'],
+                        'evento' => $evento['titulo'] ?? 'Evento',
+                        'tipo' => 'ingreso',
+                        'fecha' => date('d/m/Y', strtotime($p['fecha_ingreso'])),
+                        'hora' => date('h:i:s A', strtotime($p['fecha_ingreso']))
+                    ];
+                }
+                
+                // Registrar salida si tiene fecha_salida
+                if (!empty($p['fecha_salida'])) {
+                    $historial[] = [
+                        'id' => $p['id'] . '_salida',
+                        'nombre' => $p['nombre'],
+                        'apellido' => $p['apellido'],
+                        'documento' => $p['documento'],
+                        'evento' => $evento['titulo'] ?? 'Evento',
+                        'tipo' => 'salida',
+                        'fecha' => date('d/m/Y', strtotime($p['fecha_salida'])),
+                        'hora' => date('h:i:s A', strtotime($p['fecha_salida']))
+                    ];
+                }
+            }
+            
+            // Ordenar por fecha más reciente primero
+            usort($historial, function($a, $b) {
+                return strcmp($b['fecha'] . ' ' . $b['hora'], $a['fecha'] . ' ' . $a['hora']);
+            });
+            
+            $this->jsonResponse([
+                'success' => true,
+                'data' => $historial
+            ]);
+        } catch (\Exception $e) {
+            error_log('EventoQRController::historialHoy error: ' . $e->getMessage());
+            $this->jsonResponse(['success' => false, 'error' => 'Error al cargar el historial']);
+        }
+    }
+
+    /**
      * Envía respuesta JSON
      */
     private function jsonResponse(array $data): void
