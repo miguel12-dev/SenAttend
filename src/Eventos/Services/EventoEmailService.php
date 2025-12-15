@@ -204,9 +204,20 @@ class EventoEmailService
             ? 'Presenta este código QR al ingresar al evento.'
             : 'Presenta este código QR al salir del evento para completar tu asistencia.';
 
-        $qrImage = $cid 
-            ? "<img src='cid:{$cid}' alt='Código QR' style='width:250px;height:250px;'>"
-            : '<p style="color:#666;">El código QR no pudo ser generado.</p>';
+        // Generar el tag de imagen QR con formato optimizado para móviles y clientes de correo
+        $qrImageTag = '';
+        if ($cid) {
+            // Usar tabla HTML para mejor compatibilidad con clientes de correo (como en EmailService)
+            $qrImageTag = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0 auto;">
+                <tr>
+                    <td align="center" style="padding: 0;">
+                        <img src="cid:' . htmlspecialchars($cid) . '" alt="Código QR" style="max-width: 300px; width: 100%; height: auto; margin: 0 auto; border: 1px solid #ddd; padding: 15px; background: white; border-radius: 8px; display: block; box-sizing: border-box;">
+                    </td>
+                </tr>
+            </table>';
+        } else {
+            $qrImageTag = '<p style="color:#666; margin: 0; padding: 15px; text-align: center;">El código QR no pudo ser generado.</p>';
+        }
 
         return <<<HTML
 <!DOCTYPE html>
@@ -214,49 +225,241 @@ class EventoEmailService
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Reset para clientes de correo */
+        body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+        
+        body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            background-color: #f4f4f4;
+            width: 100% !important;
+        }
+        
+        .wrapper {
+            width: 100% !important;
+            table-layout: fixed;
+            background-color: #f4f4f4;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container { 
+            max-width: 600px; 
+            width: 100% !important;
+            margin: 0 auto; 
+            padding: 0;
+            background-color: #ffffff;
+        }
+        
+        .header { 
+            background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); 
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center; 
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .header h1 {
+            margin: 0;
+            padding: 0;
+            font-size: 24px;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            padding: 0;
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .content { 
+            padding: 30px 20px; 
+            background-color: #ffffff; 
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .content h2 {
+            margin: 0 0 15px 0;
+            padding: 0;
+            font-size: 20px;
+            color: #333;
+        }
+        
+        .content p {
+            margin: 0 0 15px 0;
+            padding: 0;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .evento-info {
+            background: #f8f9fa;
+            border-left: 4px solid #39A900;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .evento-info p {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .evento-info .evento-nombre {
+            color: #333;
+            font-weight: normal;
+        }
+        
+        .evento-info .evento-tipo {
+            color: #39A900;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .qr-container { 
+            text-align: center; 
+            margin: 20px auto; 
+            width: 100%;
+            max-width: 300px;
+            box-sizing: border-box;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        
+        .warning { 
+            background-color: #fff3cd; 
+            border: 1px solid #ffc107; 
+            padding: 15px; 
+            margin: 20px 0;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .warning p {
+            margin: 0;
+            padding: 0;
+            color: #856404;
+            font-size: 14px;
+        }
+        
+        .footer { 
+            text-align: center; 
+            padding: 20px; 
+            font-size: 12px; 
+            color: #666;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+            padding: 0;
+        }
+        
+        .footer .copyright {
+            color: #999;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+        
+        /* Media queries para móviles */
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            
+            .content {
+                padding: 20px 15px !important;
+            }
+            
+            .header {
+                padding: 20px 15px !important;
+            }
+            
+            .header h1 {
+                font-size: 20px !important;
+            }
+            
+            .qr-container {
+                max-width: 100% !important;
+                margin: 15px 0 !important;
+                padding: 15px !important;
+            }
+            
+            .footer {
+                padding: 15px !important;
+            }
+        }
+    </style>
 </head>
-<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px;">
-    <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <!-- Header -->
-        <div style="background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); padding: 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">SENAttend Eventos</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Sistema de Gestión de Eventos SENA</p>
-        </div>
-        
-        <!-- Content -->
-        <div style="padding: 30px;">
-            <h2 style="color: #333; margin-top: 0;">Hola, {$nombre}</h2>
-            
-            <div style="background: #f8f9fa; border-left: 4px solid #39A900; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-                <p style="margin: 0; color: #333;"><strong>Evento:</strong> {$evento}</p>
-                <p style="margin: 10px 0 0 0; color: #39A900; font-weight: bold;">Tipo: QR de {$tipoTexto}</p>
-            </div>
-            
-            <p style="color: #666; line-height: 1.6;">{$instruccion}</p>
-            
-            <!-- QR Code -->
-            <div style="text-align: center; padding: 20px; background: #fafafa; border-radius: 8px; margin: 20px 0;">
-                {$qrImage}
-            </div>
-            
-            <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-top: 20px;">
-                <p style="margin: 0; color: #856404; font-size: 14px;">
-                    <strong>⚠️ Importante:</strong> Este código QR es personal e intransferible. No lo compartas con otras personas.
-                </p>
-            </div>
-        </div>
-        
-        <!-- Footer -->
-        <div style="background: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-            <p style="color: #666; font-size: 12px; margin: 0;">
-                Este es un correo automático del sistema SENAttend Eventos.<br>
-                Por favor no responda a este mensaje.
-            </p>
-            <p style="color: #999; font-size: 11px; margin: 10px 0 0 0;">
-                © 2024 SENA - Servicio Nacional de Aprendizaje
-            </p>
-        </div>
-    </div>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; width: 100%;">
+    <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0; padding: 0; background-color: #f4f4f4;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td class="header" style="background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); color: white; padding: 30px 20px; text-align: center; width: 100%; box-sizing: border-box;">
+                            <h1 style="margin: 0; padding: 0; font-size: 24px;">SENAttend Eventos</h1>
+                            <p style="margin: 10px 0 0 0; padding: 0; font-size: 14px; color: rgba(255,255,255,0.9);">Sistema de Gestión de Eventos SENA</p>
+                        </td>
+                    </tr>
+                    <!-- Content -->
+                    <tr>
+                        <td class="content" style="padding: 30px 20px; background-color: #ffffff; width: 100%; box-sizing: border-box;">
+                            <h2 style="margin: 0 0 15px 0; padding: 0; font-size: 20px; color: #333;">Hola, {$nombre}</h2>
+                            
+                            <div class="evento-info" style="background: #f8f9fa; border-left: 4px solid #39A900; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; width: 100%; box-sizing: border-box;">
+                                <p class="evento-nombre" style="margin: 0; padding: 0; color: #333; font-size: 14px;"><strong>Evento:</strong> {$evento}</p>
+                                <p class="evento-tipo" style="margin: 10px 0 0 0; padding: 0; color: #39A900; font-weight: bold; font-size: 14px;">Tipo: QR de {$tipoTexto}</p>
+                            </div>
+                            
+                            <p style="margin: 0 0 15px 0; padding: 0; font-size: 14px; color: #666; line-height: 1.6;">{$instruccion}</p>
+                            
+                            <!-- QR Code Container -->
+                            <div class="qr-container" style="text-align: center; margin: 20px auto; width: 100%; max-width: 300px; box-sizing: border-box; padding: 20px; background: #fafafa; border-radius: 8px;">
+                                {$qrImageTag}
+                            </div>
+                            
+                            <div class="warning" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 8px; width: 100%; box-sizing: border-box;">
+                                <p style="margin: 0; padding: 0; color: #856404; font-size: 14px;">
+                                    <strong>⚠️ Importante:</strong> Este código QR es personal e intransferible. No lo compartas con otras personas.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer" style="text-align: center; padding: 20px; font-size: 12px; color: #666; background: #f8f9fa; border-top: 1px solid #eee; width: 100%; box-sizing: border-box;">
+                            <p style="margin: 5px 0; padding: 0;">
+                                Este es un correo automático del sistema SENAttend Eventos.<br>
+                                Por favor no responda a este mensaje.
+                            </p>
+                            <p class="copyright" style="color: #999; font-size: 11px; margin: 10px 0 0 0; padding: 0;">
+                                © 2025 SENA - Servicio Nacional de Aprendizaje
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
 HTML;
