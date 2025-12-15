@@ -43,6 +43,11 @@ $currentPage = $currentPage ?? '';
                     <li><a href="/eventos/admin/crear" class="<?= $currentPage === 'eventos-crear' ? 'active' : '' ?>">
                         <i class="fas fa-plus-circle"></i> Crear Evento
                     </a></li>
+                    <?php if (($user['rol'] ?? '') === 'admin'): ?>
+                    <li><a href="/eventos/admin/usuarios" class="<?= $currentPage === 'eventos-usuarios' ? 'active' : '' ?>">
+                        <i class="fas fa-user-shield"></i> Usuarios
+                    </a></li>
+                    <?php endif; ?>
                     <li><a href="/eventos/qr/scanner" class="<?= $currentPage === 'eventos-scanner' ? 'active' : '' ?>">
                         <i class="fas fa-qrcode"></i> Escáner QR
                     </a></li>
