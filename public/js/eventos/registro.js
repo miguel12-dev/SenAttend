@@ -73,8 +73,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ documento: documento })
+                body: JSON.stringify({ 
+                    documento: documento,
+                    evento_id: eventoId
+                })
             });
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('El servidor no respondió con JSON válido');
+            }
             
             const data = await response.json();
             
@@ -115,16 +123,114 @@ document.addEventListener('DOMContentLoaded', function() {
                     nombreInput.focus();
                 }
             } else {
-                alert(data.error || 'Error al buscar el documento');
+                // Verificar si es porque ya está registrado
+                if (data.ya_registrado) {
+                    // Mostrar mensaje de ya registrado con opción de reenvío
+                    const mensaje = data.error || 'Ya estás registrado en este evento.';
+                    const emailEnmascarado = data.email_enmascarado || '***';
+                    const estado = data.estado || 'registrado';
+                    
+                    // Determinar tipo de QR según el estado
+                    let tipoQR = 'ingreso';
+                    let estadoTexto = 'registrado';
+                    
+                    if (estado === 'ingreso' || estado === 'sin_salida') {
+                        tipoQR = 'salida';
+                        estadoTexto = 'ya registraste tu entrada';
+                    } else if (estado === 'salida') {
+                        estadoTexto = 'ya completaste el evento';
+                    }
+                    
+                    const html = `
+                        <div style="text-align: left; padding: 1rem;">
+                            <p style="margin-bottom: 1rem; font-weight: bold; color: #ff9800;">
+                                ⚠️ ${mensaje}
+                            </p>
+                            <p style="margin-bottom: 0.5rem; color: #666;">
+                                <strong>Estado actual:</strong> ${estadoTexto}
+                            </p>
+                            <p style="margin-bottom: 1rem; color: #666;">
+                                <strong>Email registrado:</strong> ${emailEnmascarado}
+                            </p>
+                            ${estado !== 'salida' ? `
+                                <button onclick="reenviarQRDirecto('${documento}')" 
+                                        style="width: 100%; padding: 0.75rem; background: #39A900; color: white; 
+                                               border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                                    📧 Reenviar código QR de ${tipoQR.toUpperCase()}
+                                </button>
+                            ` : `
+                                <p style="color: #28a745; font-weight: 600;">
+                                    ✓ Ya completaste tu asistencia al evento.
+                                </p>
+                            `}
+                        </div>
+                    `;
+                    
+                    // Crear un div temporal para el mensaje
+                    const alertDiv = document.createElement('div');
+                    alertDiv.innerHTML = html;
+                    alertDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); ' +
+                        'background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); ' +
+                        'z-index: 10000; max-width: 500px; width: 90%;';
+                    
+                    // Añadir botón de cerrar
+                    const btnCerrar = document.createElement('button');
+                    btnCerrar.innerHTML = '✕';
+                    btnCerrar.style.cssText = 'position: absolute; top: 10px; right: 10px; background: none; ' +
+                        'border: none; font-size: 1.5rem; cursor: pointer; color: #666;';
+                    btnCerrar.onclick = () => {
+                        document.body.removeChild(alertDiv);
+                        document.body.removeChild(overlay);
+                    };
+                    alertDiv.appendChild(btnCerrar);
+                    
+                    // Overlay
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; ' +
+                        'background: rgba(0,0,0,0.5); z-index: 9999;';
+                    overlay.onclick = () => {
+                        document.body.removeChild(alertDiv);
+                        document.body.removeChild(overlay);
+                    };
+                    
+                    document.body.appendChild(overlay);
+                    document.body.appendChild(alertDiv);
+                    
+                } else {
+                    alert(data.error || 'Error al buscar el documento');
+                }
             }
         } catch (error) {
-            console.error('Error:', error);
             alert('Error de conexión. Por favor, intenta nuevamente.');
         } finally {
             loadingIndicator.style.display = 'none';
             btnBuscar.disabled = false;
         }
     }
+    
+    // Función global para reenviar QR directamente desde el modal
+    window.reenviarQRDirecto = async function(documento) {
+        try {
+            const response = await fetch(`/eventos/${eventoId}/reenviar-qr`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ documento: documento })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('✓ Código QR reenviado exitosamente a: ' + (data.email_enmascarado || ''));
+                window.location.href = '/eventos';
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo reenviar el código QR'));
+            }
+        } catch (error) {
+            alert('Error de conexión. Por favor, intenta nuevamente.');
+        }
+    };
     
     async function reenviarQR() {
         const documento = btnReenviarQR.dataset.documento;
@@ -139,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btnReenviarQR.innerHTML = '<span>Enviando...</span>';
         
         try {
-            const response = await fetch(`/eventos/reenviar-qr/${eventoId}`, {
+            const response = await fetch(`/eventos/${eventoId}/reenviar-qr`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -161,7 +267,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnReenviarQR.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg><span>Reenviar código QR</span>';
             }
         } catch (error) {
-            console.error('Error:', error);
             alert('Error de conexión. Por favor, intenta nuevamente.');
             btnReenviarQR.disabled = false;
             btnReenviarQR.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg><span>Reenviar código QR</span>';

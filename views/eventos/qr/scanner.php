@@ -9,174 +9,328 @@
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/eventos/admin.css') ?>">
     <style>
-        .scanner-container {
-            max-width: 600px;
+        .scanner-wrapper {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 1.5rem 0;
         }
         
-        .scanner-header {
+        .scanner-header-info {
             text-align: center;
             margin-bottom: 2rem;
         }
         
-        .scanner-header h1 {
+        .scanner-header-info h1 {
             font-size: 1.75rem;
             color: #1a1a2e;
             margin-bottom: 0.5rem;
         }
         
-        .scanner-header p {
+        .scanner-header-info p {
             color: #666;
         }
         
-        .scanner-input {
+        .scanner-status {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #39A900;
+        }
+        
+        .scanner-status h3 {
+            font-size: 1rem;
+            color: #39A900;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .scanner-status p {
+            margin: 0.5rem 0 0 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .scanner-card {
             background: white;
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             margin-bottom: 2rem;
         }
         
-        .scanner-input .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .scanner-input label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-        
-        .scanner-input input {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 1.1rem;
+        .scanner-container {
             text-align: center;
-            letter-spacing: 2px;
-            transition: all 0.3s ease;
+            padding: 1.5rem 0;
+            width: 100%;
         }
         
-        .scanner-input input:focus {
-            outline: none;
-            border-color: #39A900;
-            box-shadow: 0 0 0 4px rgba(57, 169, 0, 0.1);
-        }
-        
-        .scanner-actions {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .scanner-actions button {
-            flex: 1;
-            padding: 1rem;
-            border: none;
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background: #000;
             border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        #reader video,
+        #reader canvas {
+            width: 100% !important;
+            height: auto !important;
+            max-width: 500px;
+            display: block;
+        }
+        
+        .scan-result {
+            margin: 1.5rem auto;
+            max-width: 500px;
+            min-height: 50px;
+        }
+        
+        .scan-result-message {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .scan-result-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .scan-result-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .scan-result-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .scan-result-message i {
+            font-size: 1.2rem;
+        }
+        
+        .scanner-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 0.5rem;
             transition: all 0.3s ease;
         }
         
-        .btn-scan {
+        .btn-primary {
             background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%);
             color: white;
         }
         
-        .btn-scan:hover {
+        .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(57, 169, 0, 0.3);
         }
         
-        .btn-clear {
-            background: #f5f5f5;
-            color: #666;
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
         }
         
-        .btn-clear:hover {
-            background: #e0e0e0;
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
         
-        .result-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            text-align: center;
+        .ultimo-escaneo {
+            background: #f0fff4;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
             display: none;
         }
         
-        .result-card.show {
+        .ultimo-escaneo.show {
             display: block;
-            animation: fadeIn 0.3s ease;
         }
         
-        .result-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-        }
-        
-        .result-icon svg {
-            width: 40px;
-            height: 40px;
-        }
-        
-        .result-icon.success {
-            background: #e8f5e9;
+        .ultimo-escaneo h4 {
+            margin: 0 0 0.5rem 0;
             color: #39A900;
+            font-size: 1rem;
         }
         
-        .result-icon.error {
-            background: #ffebee;
-            color: #d32f2f;
+        .ultimo-escaneo p {
+            margin: 0.25rem 0;
+            color: #333;
+            font-size: 0.9rem;
         }
         
-        .result-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+        .tablas-asistencia {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
         }
         
-        .result-card.success h3 { color: #39A900; }
-        .result-card.error h3 { color: #d32f2f; }
-        
-        .result-details {
-            background: #f8f9fa;
+        .tabla-section {
+            background: white;
             border-radius: 12px;
             padding: 1.5rem;
-            margin: 1.5rem 0;
-            text-align: left;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .result-details p {
-            margin: 0.5rem 0;
+        .tabla-section h3 {
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .tabla-section.entradas h3 {
+            color: #28a745;
+        }
+        
+        .tabla-section.salidas h3 {
+            color: #17a2b8;
+        }
+        
+        .tabla-count {
+            margin-left: auto;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .registro-item {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: #f8f9fa;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .registro-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .tabla-section.entradas .registro-item {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        
+        .tabla-section.salidas .registro-item {
+            border-left-color: #17a2b8;
+            background: #f0f9ff;
+        }
+        
+        .registro-nombre {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .registro-info {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #666;
         }
         
-        .result-details strong {
+        .registro-documento {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+        
+        .registro-hora {
+            font-weight: 500;
             color: #333;
         }
         
-        .result-note {
-            background: #fff3cd;
-            color: #856404;
-            padding: 1rem;
-            border-radius: 8px;
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            opacity: 0.5;
+        }
+        
+        .empty-state p {
             font-size: 0.9rem;
-            margin-top: 1rem;
+            margin: 0;
+        }
+        
+        .estadisticas-resumen {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-top: 3px solid;
+        }
+        
+        .stat-card.total {
+            border-top-color: #6c757d;
+        }
+        
+        .stat-card.entradas {
+            border-top-color: #28a745;
+        }
+        
+        .stat-card.salidas {
+            border-top-color: #17a2b8;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
         }
         
         @keyframes fadeIn {
@@ -218,6 +372,20 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        @media (max-width: 768px) {
+            .tablas-asistencia {
+                grid-template-columns: 1fr;
+            }
+            
+            .estadisticas-resumen {
+                grid-template-columns: 1fr;
+            }
+            
+            #reader {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -240,60 +408,89 @@
                     </h2>
                 </div>
 
-                <div class="scanner-container">
-            <div class="scanner-header">
-                <h1>Validar Código QR</h1>
-                <p>Ingresa o escanea el código QR del participante</p>
-            </div>
+                <div class="scanner-wrapper">
+                    <div class="scanner-header-info">
+                        <h1><i class="fas fa-qrcode"></i> Escanear Código QR</h1>
+                        <p>Escanea el código QR del participante para registrar ingreso o salida automáticamente</p>
+                    </div>
 
-            <div class="scanner-input">
-                <div class="form-group">
-                    <label for="qrToken">Código QR / Token</label>
-                    <input type="text" id="qrToken" placeholder="Ingresa el código QR..." autofocus>
-                </div>
-                <div class="scanner-actions">
-                    <button type="button" class="btn-clear" onclick="limpiar()">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
-                        </svg>
-                        Limpiar
-                    </button>
-                    <button type="button" class="btn-scan" onclick="procesarQR()">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                            <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13z"/>
-                        </svg>
-                        Procesar
-                    </button>
-                </div>
-            </div>
+                    <div class="scanner-status">
+                        <h3><i class="fas fa-magic"></i> Escáner Inteligente Activo</h3>
+                        <p>Detecta automáticamente si es entrada o salida según el contexto del participante</p>
+                    </div>
 
-            <!-- Resultado Exitoso -->
-            <div id="resultSuccess" class="result-card success">
-                <div class="result-icon success">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                    </svg>
-                </div>
-                <h3 id="resultTitle">¡Ingreso Registrado!</h3>
-                <div class="result-details">
-                    <p><strong>Participante:</strong> <span id="resultNombre"></span></p>
-                    <p><strong>Evento:</strong> <span id="resultEvento"></span></p>
-                    <p><strong>Email:</strong> <span id="resultEmail"></span></p>
-                </div>
-                <div id="qrSalidaNote" class="result-note">
-                    El código QR de salida ha sido enviado al correo del participante.
-                </div>
-            </div>
+                    <!-- Último Escaneo -->
+                    <div id="ultimoEscaneo" class="ultimo-escaneo">
+                        <h4><i class="fas fa-check-circle"></i> Última operación registrada:</h4>
+                        <p><strong>Participante:</strong> <span id="ultimoNombre"></span></p>
+                        <p><strong>Tipo:</strong> <span id="ultimoTipo"></span></p>
+                        <p><strong>Fecha/Hora:</strong> <span id="ultimoHora"></span></p>
+                    </div>
 
-            <!-- Resultado Error -->
-            <div id="resultError" class="result-card error">
-                <div class="result-icon error">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                    </svg>
-                </div>
-                <h3>Error</h3>
-                <p id="errorMessage"></p>
+                    <!-- Escáner QR -->
+                    <div class="scanner-card">
+                        <div class="scanner-container">
+                            <div id="reader"></div>
+                            <div id="scanResult" class="scan-result"></div>
+                            <div class="scanner-controls">
+                                <button type="button" id="btnIniciarScanner" class="btn btn-primary">
+                                    <i class="fas fa-play"></i> Iniciar Escáner
+                                </button>
+                                <button type="button" id="btnDetenerScanner" class="btn btn-danger" style="display: none;">
+                                    <i class="fas fa-stop"></i> Detener
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas -->
+                    <div class="estadisticas-resumen" id="estadisticasContainer">
+                        <div class="stat-card total">
+                            <div class="stat-label">Total Operaciones</div>
+                            <div class="stat-value" id="statTotal">0</div>
+                        </div>
+                        <div class="stat-card entradas">
+                            <div class="stat-label">Ingresos Registrados</div>
+                            <div class="stat-value" id="statEntradas">0</div>
+                        </div>
+                        <div class="stat-card salidas">
+                            <div class="stat-label">Salidas Registradas</div>
+                            <div class="stat-value" id="statSalidas">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Tablas de Entradas y Salidas -->
+                    <div class="tablas-asistencia">
+                        <!-- Tabla de Entradas -->
+                        <div class="tabla-section entradas">
+                            <h3>
+                                <i class="fas fa-sign-in-alt"></i>
+                                Entradas
+                                <span class="tabla-count" id="countEntradas">0</span>
+                            </h3>
+                            <div id="listaEntradas">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay entradas registradas aún</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Salidas -->
+                        <div class="tabla-section salidas">
+                            <h3>
+                                <i class="fas fa-sign-out-alt"></i>
+                                Salidas
+                                <span class="tabla-count" id="countSalidas">0</span>
+                            </h3>
+                            <div id="listaSalidas">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay salidas registradas aún</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -313,91 +510,376 @@
         </div>
     </div>
 
+    <!-- Librería html5-qrcode -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="<?= asset('js/app.js') ?>"></script>
     <script>
-        const tokenInput = document.getElementById('qrToken');
-        const resultSuccess = document.getElementById('resultSuccess');
-        const resultError = document.getElementById('resultError');
+        /**
+         * JavaScript para escaneo continuo de QR de eventos
+         * Detecta automáticamente si es entrada o salida
+         */
+        
+        let html5QrCode = null;
+        let isScanning = false;
+        let historialEntradas = [];
+        let historialSalidas = [];
+        let ultimoQRProcesado = null;
+        let tiempoUltimoProcesamiento = 0;
+        
+        // Elementos del DOM
+        const btnIniciarScanner = document.getElementById('btnIniciarScanner');
+        const btnDetenerScanner = document.getElementById('btnDetenerScanner');
+        const scanResult = document.getElementById('scanResult');
+        const listaEntradas = document.getElementById('listaEntradas');
+        const listaSalidas = document.getElementById('listaSalidas');
+        const ultimoEscaneo = document.getElementById('ultimoEscaneo');
         const loadingOverlay = document.getElementById('loadingOverlay');
-
-        // Auto-procesar al presionar Enter
-        tokenInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                procesarQR();
-            }
-        });
-
-        function limpiar() {
-            tokenInput.value = '';
-            resultSuccess.classList.remove('show');
-            resultError.classList.remove('show');
-            tokenInput.focus();
-        }
-
-        async function procesarQR() {
-            const token = tokenInput.value.trim();
-            
-            if (!token) {
-                mostrarError('Por favor, ingresa un código QR');
+        
+        // Inicialización cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar si Html5Qrcode está disponible
+            if (typeof Html5Qrcode === 'undefined') {
+                console.error('Html5Qrcode no está cargado. Asegúrate de incluir la librería.');
+                mostrarMensaje('Error: Librería de escaneo no disponible', 'error');
                 return;
             }
-
-            loadingOverlay.classList.add('show');
-            resultSuccess.classList.remove('show');
-            resultError.classList.remove('show');
-
+            
+            // Configurar botones
+            if (btnIniciarScanner) {
+                btnIniciarScanner.addEventListener('click', iniciarScanner);
+            }
+            if (btnDetenerScanner) {
+                btnDetenerScanner.addEventListener('click', detenerScanner);
+            }
+            
+            // Cargar historial inicial
+            cargarHistorial();
+        });
+        
+        // Iniciar escáner
+        async function iniciarScanner() {
             try {
+                html5QrCode = new Html5Qrcode("reader");
+                
+                const config = {
+                    fps: 10,
+                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                        // Usar 70% del ancho disponible, mínimo 250px, máximo 350px
+                        const minSize = 250;
+                        const maxSize = 350;
+                        const size = Math.min(Math.max(viewfinderWidth * 0.7, minSize), maxSize);
+                        return { width: size, height: size };
+                    },
+                    aspectRatio: 1.0
+                };
+                
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess,
+                    onScanError
+                );
+                
+                isScanning = true;
+                if (btnIniciarScanner) btnIniciarScanner.style.display = 'none';
+                if (btnDetenerScanner) btnDetenerScanner.style.display = 'inline-flex';
+                
+                mostrarMensaje('Escáner activo. Acerca el código QR del participante a la cámara.', 'info');
+                
+            } catch (error) {
+                console.error('Error iniciando escáner:', error);
+                mostrarMensaje('No se pudo iniciar la cámara. Por favor verifica los permisos.', 'error');
+            }
+        }
+        
+        // Detener escáner
+        async function detenerScanner() {
+            if (html5QrCode && isScanning) {
+                try {
+                    await html5QrCode.stop();
+                    html5QrCode.clear();
+                    isScanning = false;
+                    if (btnIniciarScanner) btnIniciarScanner.style.display = 'inline-flex';
+                    if (btnDetenerScanner) btnDetenerScanner.style.display = 'none';
+                    mostrarMensaje('Escáner detenido', 'info');
+                } catch (error) {
+                    console.error('Error deteniendo escáner:', error);
+                }
+            }
+        }
+        
+        // Callback cuando se escanea exitosamente
+        async function onScanSuccess(decodedText, decodedResult) {
+            const ahora = Date.now();
+            
+            // Evitar procesar el mismo QR múltiples veces (debounce de 2 segundos)
+            if (ultimoQRProcesado === decodedText && (ahora - tiempoUltimoProcesamiento) < 2000) {
+                return;
+            }
+            
+            ultimoQRProcesado = decodedText;
+            tiempoUltimoProcesamiento = ahora;
+            
+            console.log('QR Escaneado:', decodedText);
+            
+            // Procesar el QR sin detener el escáner
+            await procesarQR(decodedText);
+        }
+        
+        // Callback de errores de escaneo (no críticos)
+        function onScanError(errorMessage) {
+            // Ignorar errores continuos de lectura (es normal cuando no hay QR visible)
+        }
+        
+        // Procesar código QR escaneado
+        async function procesarQR(token) {
+            try {
+                mostrarMensaje('Procesando código QR...', 'info');
+                
                 const response = await fetch('/eventos/qr/procesar', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ token: token })
+                    body: JSON.stringify({
+                        token: token
+                    })
                 });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    mostrarExito(data);
-                } else {
-                    mostrarError(data.error || 'Error desconocido');
+                
+                // Verificar si la respuesta es JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('Respuesta no JSON:', text);
+                    mostrarMensaje('Error: El servidor no respondió correctamente', 'error');
+                    return;
                 }
+                
+                const result = await response.json();
+                
+                // Si la respuesta no fue exitosa, mostrar el mensaje de error
+                if (!response.ok) {
+                    const errorMessage = result.error || result.message || `Error ${response.status}`;
+                    mostrarMensaje(`<i class="fas fa-exclamation-circle"></i> ${errorMessage}`, 'error');
+                    console.error('Error del servidor:', result);
+                    return;
+                }
+                
+                if (result.success) {
+                    const data = result.data || {};
+                    const tipo = result.message && result.message.includes('Salida') ? 'salida' : 'ingreso';
+                    
+                    // Crear registro
+                    const registro = {
+                        id: data.participante_id || Date.now(),
+                        nombre: data.nombre || 'Participante',
+                        apellido: data.apellido || '',
+                        documento: data.documento || 'N/A',
+                        evento: data.evento_titulo || 'Evento',
+                        tipo: tipo,
+                        fecha: new Date().toLocaleDateString('es-CO'),
+                        hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    };
+                    
+                    // Añadir al historial correspondiente
+                    if (tipo === 'ingreso') {
+                        historialEntradas.unshift(registro);
+                    } else {
+                        historialSalidas.unshift(registro);
+                    }
+                    
+                    const tipoTexto = tipo === 'ingreso' ? 'INGRESO' : 'SALIDA';
+                    const nombreCompleto = `${registro.nombre} ${registro.apellido}`;
+                    
+                    mostrarMensaje(
+                        `<i class="fas fa-check"></i> ${tipoTexto} registrado: ${nombreCompleto}`,
+                        'success'
+                    );
+                    
+                    // Mostrar último escaneo
+                    mostrarUltimoEscaneo(registro);
+                    
+                    // Actualizar tablas y estadísticas
+                    actualizarTablas();
+                    actualizarEstadisticas();
+                    
+                    // Reproducir sonido de éxito
+                    reproducirSonidoExito();
+                    
+                } else {
+                    mostrarMensaje(`<i class="fas fa-xmark"></i> Error: ${result.error || 'Error al procesar el QR'}`, 'error');
+                }
+                
             } catch (error) {
-                console.error('Error:', error);
-                mostrarError('Error de conexión. Intenta nuevamente.');
-            } finally {
-                loadingOverlay.classList.remove('show');
+                console.error('Error procesando QR:', error);
+                mostrarMensaje('Error de conexión al procesar el QR. Por favor intenta nuevamente.', 'error');
             }
         }
-
-        function mostrarExito(data) {
-            const isIngreso = data.message && data.message.includes('Ingreso');
+        
+        // Mostrar mensaje en el resultado del escaneo
+        function mostrarMensaje(mensaje, tipo) {
+            if (!scanResult) return;
             
-            document.getElementById('resultTitle').textContent = 
-                isIngreso ? '¡Ingreso Registrado!' : '¡Salida Registrada!';
+            const iconos = {
+                'success': 'fa-check-circle',
+                'error': 'fa-exclamation-circle',
+                'info': 'fa-info-circle'
+            };
             
-            document.getElementById('resultNombre').textContent = 
-                data.data.nombre + ' ' + data.data.apellido;
-            document.getElementById('resultEvento').textContent = data.data.evento_titulo;
-            document.getElementById('resultEmail').textContent = data.data.email;
+            scanResult.innerHTML = `
+                <div class="scan-result-message ${tipo}">
+                    <i class="fas ${iconos[tipo] || 'fa-info-circle'}"></i>
+                    <span>${mensaje}</span>
+                </div>
+            `;
             
-            document.getElementById('qrSalidaNote').style.display = 
-                data.qr_salida_enviado ? 'block' : 'none';
-            
-            resultSuccess.classList.add('show');
-            
-            // Limpiar input después de 3 segundos
-            setTimeout(limpiar, 5000);
+            // Auto-ocultar después de un tiempo
+            setTimeout(() => {
+                if (scanResult) {
+                    scanResult.innerHTML = '';
+                }
+            }, tipo === 'success' ? 3000 : 5000);
         }
-
-        function mostrarError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            resultError.classList.add('show');
+        
+        // Mostrar último escaneo
+        function mostrarUltimoEscaneo(registro) {
+            if (!ultimoEscaneo) return;
+            
+            document.getElementById('ultimoNombre').textContent = `${registro.nombre} ${registro.apellido}`;
+            document.getElementById('ultimoTipo').textContent = registro.tipo.toUpperCase();
+            document.getElementById('ultimoHora').textContent = `${registro.fecha} ${registro.hora}`;
+            
+            ultimoEscaneo.classList.add('show');
         }
-
-        // Mantener foco en el input
-        tokenInput.focus();
+        
+        // Actualizar tablas de entradas y salidas
+        function actualizarTablas() {
+            // Actualizar contador de entradas
+            document.getElementById('countEntradas').textContent = historialEntradas.length;
+            
+            // Actualizar lista de entradas
+            if (historialEntradas.length === 0) {
+                listaEntradas.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No hay entradas registradas aún</p>
+                    </div>
+                `;
+            } else {
+                const htmlEntradas = historialEntradas.map(registro => `
+                    <div class="registro-item">
+                        <div class="registro-nombre">${registro.nombre} ${registro.apellido}</div>
+                        <div class="registro-documento">Doc: ${registro.documento}</div>
+                        <div class="registro-info">
+                            <span>${registro.evento}</span>
+                            <span class="registro-hora">${registro.hora}</span>
+                        </div>
+                    </div>
+                `).join('');
+                listaEntradas.innerHTML = htmlEntradas;
+            }
+            
+            // Actualizar contador de salidas
+            document.getElementById('countSalidas').textContent = historialSalidas.length;
+            
+            // Actualizar lista de salidas
+            if (historialSalidas.length === 0) {
+                listaSalidas.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No hay salidas registradas aún</p>
+                    </div>
+                `;
+            } else {
+                const htmlSalidas = historialSalidas.map(registro => `
+                    <div class="registro-item">
+                        <div class="registro-nombre">${registro.nombre} ${registro.apellido}</div>
+                        <div class="registro-documento">Doc: ${registro.documento}</div>
+                        <div class="registro-info">
+                            <span>${registro.evento}</span>
+                            <span class="registro-hora">${registro.hora}</span>
+                        </div>
+                    </div>
+                `).join('');
+                listaSalidas.innerHTML = htmlSalidas;
+            }
+        }
+        
+        // Actualizar estadísticas
+        function actualizarEstadisticas() {
+            const total = historialEntradas.length + historialSalidas.length;
+            
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statEntradas').textContent = historialEntradas.length;
+            document.getElementById('statSalidas').textContent = historialSalidas.length;
+        }
+        
+        // Cargar historial desde el servidor
+        async function cargarHistorial() {
+            try {
+                const response = await fetch('/eventos/qr/historial-hoy', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) {
+                    actualizarTablas();
+                    actualizarEstadisticas();
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    // Separar entradas y salidas
+                    historialEntradas = result.data.filter(r => r.tipo === 'ingreso');
+                    historialSalidas = result.data.filter(r => r.tipo === 'salida');
+                    
+                    actualizarTablas();
+                    actualizarEstadisticas();
+                    
+                    if (historialEntradas.length > 0 || historialSalidas.length > 0) {
+                        mostrarMensaje(`Historial cargado: ${historialEntradas.length} entradas, ${historialSalidas.length} salidas`, 'info');
+                    }
+                }
+            } catch (error) {
+                actualizarTablas();
+                actualizarEstadisticas();
+            }
+        }
+        
+        // Reproducir sonido de éxito
+        function reproducirSonidoExito() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                // Silenciar errores de audio
+            }
+        }
+        
+        // Limpiar al salir
+        window.addEventListener('beforeunload', () => {
+            if (isScanning) {
+                detenerScanner();
+            }
+        });
     </script>
 </body>
 </html>
-
