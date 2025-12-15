@@ -60,6 +60,14 @@ class EventoRegistroService
     }
 
     /**
+     * Obtiene un participante por documento y evento
+     */
+    public function getParticipanteByDocumento(string $documento, int $eventoId): ?array
+    {
+        return $this->participanteRepository->findByDocumentoAndEvento($documento, $eventoId);
+    }
+
+    /**
      * Registra un participante en un evento
      */
     public function registrarParticipante(int $eventoId, array $datos): array
@@ -144,7 +152,8 @@ class EventoRegistroService
     }
 
     /**
-     * Reenvía el QR de ingreso a un participante
+     * Reenvía el QR correspondiente a un participante
+     * VALIDACIÓN AUTOMÁTICA: Si ya tiene entrada registrada, envía QR de salida
      */
     public function reenviarQRIngreso(string $documento, int $eventoId): array
     {
@@ -154,19 +163,51 @@ class EventoRegistroService
             return ['success' => false, 'error' => 'No estás registrado en este evento'];
         }
 
-        if ($participante['estado'] !== 'registrado') {
-            return ['success' => false, 'error' => 'Ya has ingresado al evento o ha finalizado'];
-        }
-
         $evento = $this->eventoRepository->findById($eventoId);
 
-        // Generar nuevo QR
+        // VALIDACIÓN AUTOMÁTICA DEL CONTEXTO
+        // Si el participante ya tiene entrada registrada (estado: ingreso, salida, sin_salida)
+        // entonces debe recibir el QR de SALIDA, no el de ingreso
+        $estadosConIngreso = ['ingreso', 'salida', 'sin_salida'];
+        
+        if (in_array($participante['estado'], $estadosConIngreso)) {
+            // Ya registró entrada, debe usar QR de SALIDA
+            if ($participante['estado'] === 'salida') {
+                return [
+                    'success' => false, 
+                    'error' => 'Ya has registrado tu salida del evento'
+                ];
+            }
+            
+            // Generar QR de SALIDA
+            $qrResult = $this->qrService->generarQRSalida($participante['id']);
+            if (!$qrResult['success']) {
+                return ['success' => false, 'error' => 'Error al generar el código QR de salida'];
+            }
+
+            // Enviar email con QR de SALIDA
+            $emailResult = $this->emailService->enviarQRSalida(
+                $participante['email'],
+                $participante['nombre'] . ' ' . $participante['apellido'],
+                $evento['titulo'],
+                $qrResult['data']['image_base64']
+            );
+
+            return [
+                'success' => true,
+                'message' => 'Ya registraste tu entrada. El código QR de SALIDA ha sido enviado a tu correo',
+                'tipo_enviado' => 'salida',
+                'email_enmascarado' => $this->enmascararEmail($participante['email'])
+            ];
+        }
+        
+        // Estado: 'registrado' - Aún no ha ingresado, enviar QR de INGRESO
         $qrResult = $this->qrService->generarQRIngreso($participante['id']);
         if (!$qrResult['success']) {
             return ['success' => false, 'error' => 'Error al generar el código QR'];
         }
 
-        // Enviar email
+        // Enviar email con QR de INGRESO
         $emailResult = $this->emailService->enviarQRIngreso(
             $participante['email'],
             $participante['nombre'] . ' ' . $participante['apellido'],
@@ -176,7 +217,8 @@ class EventoRegistroService
 
         return [
             'success' => true,
-            'message' => 'El código QR ha sido reenviado a tu correo',
+            'message' => 'El código QR de INGRESO ha sido reenviado a tu correo',
+            'tipo_enviado' => 'ingreso',
             'email_enmascarado' => $this->enmascararEmail($participante['email'])
         ];
     }

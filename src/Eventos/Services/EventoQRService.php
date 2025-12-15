@@ -63,7 +63,8 @@ class EventoQRService
             'participante_id' => $participanteId,
             'token' => $token,
             'tipo' => 'ingreso',
-            'qr_data' => $qrData
+            'qr_data' => $qrData,
+            'usado' => false
         ]);
 
         // Generar imagen QR
@@ -87,6 +88,8 @@ class EventoQRService
 
     /**
      * Genera un QR de salida para un participante
+     * Nota: Se permite generar incluso si el estado no es exactamente 'ingreso'
+     * para casos de reenvío o regeneración de QRs
      */
     public function generarQRSalida(int $participanteId): array
     {
@@ -95,8 +98,10 @@ class EventoQRService
             return ['success' => false, 'error' => 'Participante no encontrado'];
         }
 
-        if ($participante['estado'] !== 'ingreso') {
-            return ['success' => false, 'error' => 'El participante no ha ingresado al evento'];
+        // Verificar que al menos esté registrado (no puede generar salida si no está registrado)
+        $estadosValidos = ['registrado', 'ingreso', 'sin_salida'];
+        if (!in_array($participante['estado'], $estadosValidos)) {
+            return ['success' => false, 'error' => 'El participante no puede generar QR de salida en su estado actual'];
         }
 
         // Invalidar QRs anteriores de salida
@@ -121,7 +126,8 @@ class EventoQRService
             'participante_id' => $participanteId,
             'token' => $token,
             'tipo' => 'salida',
-            'qr_data' => $qrData
+            'qr_data' => $qrData,
+            'usado' => false
         ]);
 
         // Generar imagen QR
@@ -216,6 +222,7 @@ class EventoQRService
             'message' => 'Ingreso registrado exitosamente',
             'data' => [
                 'participante_id' => $data['participante_id'],
+                'documento' => $data['documento'],
                 'nombre' => $data['nombre'],
                 'apellido' => $data['apellido'],
                 'email' => $this->enmascararEmail($data['email']),
@@ -254,6 +261,7 @@ class EventoQRService
             'message' => 'Salida registrada exitosamente',
             'data' => [
                 'participante_id' => $data['participante_id'],
+                'documento' => $data['documento'],
                 'nombre' => $data['nombre'],
                 'apellido' => $data['apellido'],
                 'email' => $this->enmascararEmail($data['email']),
