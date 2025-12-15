@@ -475,7 +475,239 @@
     }
 }
 
+/* === Event Detail === */
+.event-detail {
+    margin-top: 2rem;
+}
+
+.event-header {
+    height: 350px;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.event-header-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7));
+    display: flex;
+    align-items: flex-end;
+}
+
+.event-header-content {
+    padding: 2rem;
+    color: white;
+    width: 100%;
+}
+
+.event-header-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.event-meta-header {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    font-size: 1rem;
+}
+
+.event-meta-header span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.event-meta-header i {
+    font-size: 1.1rem;
+}
+
+.detail-stats {
+    margin-bottom: 2rem;
+}
+
+.stat-card.stat-pending .stat-icon {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.event-body {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.event-description,
+.event-info {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+}
+
+.event-description h3,
+.event-info h3 {
+    font-size: 1.25rem;
+    color: var(--color-gray-900);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--color-gray-200);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.event-description p {
+    color: var(--color-gray-700);
+    line-height: 1.8;
+}
+
+.event-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.event-info ul li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--color-gray-200);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.event-info ul li:last-child {
+    border-bottom: none;
+}
+
+.event-info ul li i {
+    color: var(--color-primary);
+    width: 20px;
+    text-align: center;
+}
+
+.event-info ul li strong {
+    min-width: 150px;
+    color: var(--color-gray-900);
+}
+
+.event-info ul li span {
+    color: var(--color-gray-600);
+}
+
+.event-actions {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.event-actions .btn {
+    flex: 1;
+    min-width: 150px;
+    justify-content: center;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+    border: none;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+    border: none;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-danger {
+    background: var(--color-danger);
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+/* === Modal === */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: var(--color-white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+    font-size: 1.5rem;
+    color: var(--color-gray-900);
+    margin-bottom: 1rem;
+}
+
+.modal-content p {
+    color: var(--color-gray-600);
+    margin-bottom: 2rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
 /* === Responsive === */
+@media (max-width: 1024px) {
+    .event-body {
+        grid-template-columns: 1fr;
+    }
+
+    .event-actions {
+        flex-direction: column;
+    }
+
+    .event-actions .btn {
+        width: 100%;
+    }
+}
+
 @media (max-width: 768px) {
     .dashboard-header {
         flex-direction: column;
@@ -497,5 +729,33 @@
 
     .scanner-actions {
         flex-direction: column;
+    }
+
+    .event-header {
+        height: 250px;
+    }
+
+    .event-header-content h1 {
+        font-size: 1.75rem;
+    }
+
+    .event-meta-header {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .event-description,
+    .event-info {
+        padding: 1.5rem;
+    }
+
+    .event-info ul li strong {
+        min-width: 120px;
+        font-size: 0.9rem;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
+        margin: 1rem;
     }
 }
