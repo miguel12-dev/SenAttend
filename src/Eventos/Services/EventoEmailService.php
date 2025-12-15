@@ -108,6 +108,54 @@ class EventoEmailService
     }
 
     /**
+     * Envía las credenciales de acceso a un nuevo usuario del módulo de eventos.
+     */
+    public function enviarCredencialesUsuarioEvento(
+        string $email,
+        string $nombreCompleto,
+        string $passwordPlano,
+        string $rol = 'administrativo',
+        string $loginPath = '/eventos'
+    ): array {
+        try {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return ['success' => false, 'message' => 'Email no válido'];
+            }
+
+            $this->mailer->clearAddresses();
+            $this->mailer->clearAttachments();
+
+            $this->mailer->addAddress($email, $nombreCompleto);
+            $this->mailer->Subject = "Acceso al Módulo de Eventos | SENAttend";
+
+            $baseUrl = $_ENV['APP_URL'] ?? getenv('APP_URL') ?? 'https://senattend.adso.pro';
+            $loginUrl = $loginPath;
+            if (!empty($baseUrl) && !preg_match('#^https?://#i', $loginPath)) {
+                $loginUrl = rtrim($baseUrl, '/') . $loginPath;
+            }
+
+            $this->mailer->Body = $this->generarCuerpoCredenciales($nombreCompleto, $email, $passwordPlano, $rol, $loginUrl);
+            $this->mailer->AltBody = $this->generarTextoPlanoCredenciales($nombreCompleto, $email, $passwordPlano, $rol, $loginUrl);
+
+            $this->mailer->send();
+
+            return [
+                'success' => true,
+                'message' => "Credenciales enviadas a {$email}"
+            ];
+        } catch (Exception $e) {
+            $errorInfo = $this->mailer->ErrorInfo;
+            error_log("EventoEmailService: Error enviando credenciales: " . $e->getMessage());
+            error_log("EventoEmailService: PHPMailer ErrorInfo: " . $errorInfo);
+
+            return [
+                'success' => false,
+                'message' => 'Error al enviar las credenciales: ' . $errorInfo
+            ];
+        }
+    }
+
+    /**
      * Envía un email con código QR
      * @param array $eventoInfo Información adicional del evento: ['descripcion', 'imagen_url', 'fecha_inicio', 'fecha_fin']
      */
@@ -568,6 +616,104 @@ HTML;
         $texto .= "Por favor no responda a este mensaje.\n\n";
         $texto .= "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje";
         
+        return $texto;
+    }
+
+    /**
+     * Genera el cuerpo HTML para credenciales de usuario de eventos.
+     */
+    private function generarCuerpoCredenciales(
+        string $nombre,
+        string $email,
+        string $password,
+        string $rol,
+        string $loginUrl
+    ): string {
+        $rolLabel = $rol === 'admin' ? 'Administrador' : 'Administrativo';
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin:0; padding:0; font-family: Arial, sans-serif; background: #f4f4f4; color:#333; }
+        .wrapper { width:100%; padding:20px 0; background:#f4f4f4; }
+        .card { max-width: 640px; margin:0 auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.1); }
+        .card__header { background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); color:#fff; padding:24px; text-align:center; }
+        .card__header h1 { margin:0; font-size:22px; }
+        .card__body { padding:24px; }
+        .pill { display:inline-block; padding:6px 12px; border-radius:20px; background:#eef6ff; color:#0b64c0; font-weight:600; font-size:12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom:12px; }
+        .info { background:#f8f9fa; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0; }
+        .info p { margin:6px 0; }
+        .credentials { margin:16px 0; padding:16px; border-radius:10px; background:#f0fff4; border:1px solid #c6f6d5; }
+        .credentials code { display:block; background:#fff; border:1px dashed #a0aec0; padding:10px; border-radius:8px; margin-top:8px; font-family: 'Courier New', monospace; }
+        .cta { display:inline-block; padding:12px 18px; background:#39A900; color:#fff; border-radius:8px; text-decoration:none; font-weight:700; }
+        .footer { text-align:center; padding:18px; font-size:12px; color:#6b7280; background:#f8f9fa; }
+        @media (max-width: 640px) {
+            .card__body { padding:20px 16px; }
+            .card__header h1 { font-size:20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="card">
+            <div class="card__header">
+                <h1>Acceso a Gestión de Eventos</h1>
+                <p style="margin:8px 0 0 0; color: rgba(255,255,255,0.9); font-size:14px;">SENAttend</p>
+            </div>
+            <div class="card__body">
+                <span class="pill">Nuevo usuario {$rolLabel}</span>
+                <h2 style="margin:0 0 10px 0; font-size:18px;">Hola, {$nombre}</h2>
+                <p style="margin:0 0 12px 0; color:#4b5563;">Te han creado una cuenta para gestionar los Eventos SENA. Usa estas credenciales para ingresar.</p>
+                <div class="credentials">
+                    <strong>Credenciales de acceso</strong>
+                    <code>Usuario: {$email}<br>Contraseña: {$password}</code>
+                    <p style="margin:10px 0 0 0; color:#22543d; font-size:13px;">Por seguridad, cambia tu contraseña al ingresar.</p>
+                </div>
+                <div class="info">
+                    <p><strong>Rol asignado:</strong> {$rolLabel}</p>
+                    <p><strong>URL de ingreso:</strong> <a href="{$loginUrl}" style="color:#0b64c0;">{$loginUrl}</a></p>
+                    <p style="margin-top:8px; color:#6b7280;">Si no solicitaste este acceso, contacta al administrador.</p>
+                </div>
+                <a href="{$loginUrl}" class="cta">Ir al módulo de eventos</a>
+            </div>
+            <div class="footer">
+                Correo automático de SENAttend Eventos. No responder.<br>
+                © 2025 SENA - Servicio Nacional de Aprendizaje
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+    }
+
+    /**
+     * Genera texto plano para credenciales de usuario de eventos.
+     */
+    private function generarTextoPlanoCredenciales(
+        string $nombre,
+        string $email,
+        string $password,
+        string $rol,
+        string $loginUrl
+    ): string {
+        $rolLabel = $rol === 'admin' ? 'Administrador' : 'Administrativo';
+
+        $texto = "SENAttend - Acceso a Gestión de Eventos\n";
+        $texto .= "Hola, {$nombre}\n\n";
+        $texto .= "Se creó una cuenta para ti con rol {$rolLabel}.\n\n";
+        $texto .= "Usuario: {$email}\n";
+        $texto .= "Contraseña: {$password}\n";
+        $texto .= "URL de ingreso: {$loginUrl}\n\n";
+        $texto .= "Cambia tu contraseña al iniciar sesión.\n";
+        $texto .= "---\n";
+        $texto .= "Correo automático de SENAttend Eventos. No responder.\n";
+        $texto .= "© 2025 SENA - Servicio Nacional de Aprendizaje";
+
         return $texto;
     }
 }

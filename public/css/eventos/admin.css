@@ -426,6 +426,24 @@
     margin-top: 1rem;
 }
 
+.badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.badge-primary {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.badge-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
 /* === Loading Overlay === */
 .loading-overlay {
     position: fixed;
@@ -462,6 +480,68 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* === Modal sencillo para crear usuarios === */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1;
+}
+
+.modal-dialog {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    width: min(520px, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalIn 0.2s ease-out;
+    z-index: 2;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+@keyframes modalIn {
+    from { transform: translateY(-6px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
 }
 
 @keyframes fadeIn {
