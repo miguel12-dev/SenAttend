@@ -1,0 +1,481 @@
+/* ============================================
+   ESTILOS PARA ESCÁNER QR DE EVENTOS
+   ============================================ */
+
+.scanner-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 0;
+}
+
+.scanner-header-info {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.scanner-header-info h1 {
+    font-size: 1.5rem;
+    color: #1a1a2e;
+    margin-bottom: 0.375rem;
+}
+
+.scanner-header-info .evento-titulo {
+    font-size: 1.125rem;
+    color: #39A900;
+    font-weight: 600;
+    margin-bottom: 0.375rem;
+}
+
+.scanner-header-info p {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.scanner-status {
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid #39A900;
+}
+
+.scanner-status h3 {
+    font-size: 1rem;
+    color: #39A900;
+    margin: 0;
+    font-weight: 600;
+}
+
+.scanner-status p {
+    margin: 0.5rem 0 0 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.scanner-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.scanner-container {
+    text-align: center;
+    padding: 1.5rem 0;
+    width: 100%;
+}
+
+#reader {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#reader video,
+#reader canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-width: 500px;
+    display: block;
+}
+
+.scan-result {
+    margin: 1.5rem auto;
+    max-width: 500px;
+    min-height: 50px;
+}
+
+.scan-result-message {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.scan-result-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.scan-result-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.scan-result-message.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.scan-result-message i {
+    font-size: 1.2rem;
+}
+
+.scanner-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.ultimo-escaneo {
+    background: #f0fff4;
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: none;
+}
+
+.ultimo-escaneo.show {
+    display: block;
+}
+
+.ultimo-escaneo h4 {
+    margin: 0 0 0.5rem 0;
+    color: #39A900;
+    font-size: 1rem;
+}
+
+.ultimo-escaneo p {
+    margin: 0.25rem 0;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.tablas-asistencia {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+.tabla-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.tabla-section h3 {
+    margin: 0 0 0.875rem 0;
+    padding-bottom: 0.625rem;
+    border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+}
+
+.tabla-section.entradas h3 {
+    color: #28a745;
+}
+
+.tabla-section.salidas h3 {
+    color: #17a2b8;
+}
+
+.tabla-count {
+    margin-left: auto;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.registro-item {
+    padding: 0.875rem;
+    margin-bottom: 0.625rem;
+    border-radius: 8px;
+    border-left: 4px solid;
+    background: #f8f9fa;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.registro-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.tabla-section.entradas .registro-item {
+    border-left-color: #28a745;
+    background: #f0fff4;
+}
+
+.tabla-section.salidas .registro-item {
+    border-left-color: #17a2b8;
+    background: #f0f9ff;
+}
+
+.registro-nombre {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.registro-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.825rem;
+    color: #666;
+}
+
+.registro-documento {
+    font-size: 0.825rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.registro-hora {
+    font-weight: 500;
+    color: #333;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #999;
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.estadisticas-resumen {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-top: 3px solid;
+}
+
+.stat-card.total {
+    border-top-color: #6c757d;
+}
+
+.stat-card.entradas {
+    border-top-color: #28a745;
+}
+
+.stat-card.salidas {
+    border-top-color: #17a2b8;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 0.375rem;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-overlay.show {
+    display: flex;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid #e0e0e0;
+    border-top-color: #39A900;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* Header más compacto */
+    .scanner-header-info h1 {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .scanner-header-info .evento-titulo {
+        font-size: 1rem;
+    }
+    
+    .scanner-header-info p {
+        font-size: 0.825rem;
+    }
+    
+    /* Scanner Card */
+    .scanner-card {
+        padding: 1.125rem;
+        margin-bottom: 1.25rem;
+        border-radius: 10px;
+    }
+    
+    /* Stats en 3x1 - MANTENER EN UNA FILA */
+    .estadisticas-resumen {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .stat-card {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.7rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-value {
+        font-size: 1.4rem;
+    }
+    
+    /* Cámara - mantener buen tamaño para visibilidad */
+    #reader {
+        max-width: 100%;
+    }
+    
+    /* Scanner Container */
+    .scanner-container {
+        padding: 1rem 0;
+    }
+    
+    /* Scanner Controls */
+    .scanner-controls {
+        gap: 0.75rem;
+        margin-top: 1.125rem;
+    }
+    
+    /* Tablas */
+    .tablas-asistencia {
+        grid-template-columns: 1fr;
+        gap: 1.125rem;
+        margin-top: 1.5rem;
+    }
+    
+    .tabla-section {
+        padding: 1.125rem;
+        border-radius: 10px;
+    }
+    
+    .tabla-section h3 {
+        font-size: 1.05rem;
+        margin-bottom: 0.875rem;
+    }
+    
+    .tabla-count {
+        font-size: 1.25rem;
+    }
+    
+    .registro-item {
+        padding: 0.875rem;
+        margin-bottom: 0.625rem;
+    }
+    
+    .registro-nombre {
+        font-size: 0.925rem;
+    }
+    
+    .registro-info {
+        font-size: 0.8rem;
+    }
+    
+    .registro-documento {
+        font-size: 0.8rem;
+    }
+    
+    /* Último escaneo */
+    .ultimo-escaneo {
+        padding: 0.875rem;
+        margin-bottom: 1.125rem;
+    }
+    
+    .ultimo-escaneo h4 {
+        font-size: 0.9rem;
+    }
+    
+    .ultimo-escaneo p {
+        font-size: 0.825rem;
+    }
+    
+    /* Scanner Status */
+    .scanner-status {
+        padding: 0.875rem;
+        margin-bottom: 1.125rem;
+    }
+    
+    .scanner-status h3 {
+        font-size: 0.9rem;
+    }
+    
+    .scanner-status p {
+        font-size: 0.825rem;
+    }
+    
+    /* Scan Result */
+    .scan-result {
+        margin: 1.125rem auto;
+    }
+    
+    .scan-result-message {
+        padding: 0.875rem 1.125rem;
+        font-size: 0.9rem;
+    }
+}
