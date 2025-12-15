@@ -4,6 +4,7 @@ namespace App\Eventos\Controllers;
 
 use App\Eventos\Services\EventoService;
 use App\Eventos\Services\EventoAuthService;
+use App\Eventos\Services\EventoUsuarioService;
 use App\Eventos\Repositories\EventoParticipanteRepository;
 use App\Eventos\Middleware\EventoAuthMiddleware;
 use App\Session\SessionManager;
@@ -15,6 +16,7 @@ class EventoAdminController
 {
     private EventoService $eventoService;
     private EventoAuthService $authService;
+    private EventoUsuarioService $usuarioService;
     private EventoParticipanteRepository $participanteRepository;
     private EventoAuthMiddleware $authMiddleware;
     private SessionManager $session;
@@ -22,12 +24,14 @@ class EventoAdminController
     public function __construct(
         EventoService $eventoService,
         EventoAuthService $authService,
+        EventoUsuarioService $usuarioService,
         EventoParticipanteRepository $participanteRepository,
         EventoAuthMiddleware $authMiddleware,
         SessionManager $session
     ) {
         $this->eventoService = $eventoService;
         $this->authService = $authService;
+        $this->usuarioService = $usuarioService;
         $this->participanteRepository = $participanteRepository;
         $this->authMiddleware = $authMiddleware;
         $this->session = $session;
@@ -258,6 +262,64 @@ class EventoAdminController
         $this->eventoService->eliminarEvento($id);
         
         header('Location: /eventos/admin?mensaje=Evento eliminado');
+        exit;
+    }
+
+    /**
+     * Listado y formulario de usuarios administrativos de eventos
+     */
+    public function usuarios(): void
+    {
+        $this->authMiddleware->handle();
+        $this->authMiddleware->requireRole('admin');
+
+        $user = $this->authService->getCurrentUser();
+        $usuarios = $this->usuarioService->listar();
+
+        $this->session->start();
+        $error = $this->session->get('evento_usuario_error');
+        $success = $this->session->get('evento_usuario_success');
+        $this->session->remove('evento_usuario_error');
+        $this->session->remove('evento_usuario_success');
+
+        require ROOT_PATH . '/views/eventos/admin/usuarios.php';
+    }
+
+    /**
+     * Crea un usuario del módulo de eventos y envía credenciales
+     */
+    public function crearUsuario(): void
+    {
+        $this->authMiddleware->handle();
+        $this->authMiddleware->requireRole('admin');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /eventos/admin/usuarios');
+            exit;
+        }
+
+        $data = [
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'email' => trim($_POST['email'] ?? ''),
+            'documento' => trim($_POST['documento'] ?? ''),
+            'rol' => $_POST['rol'] ?? 'administrativo'
+        ];
+
+        $result = $this->usuarioService->crearUsuario($data);
+
+        $this->session->start();
+        if (!$result['success']) {
+            $mensaje = isset($result['errors']) ? implode(', ', $result['errors']) : 'No se pudo crear el usuario';
+            $this->session->set('evento_usuario_error', $mensaje);
+        } else {
+            $mensaje = 'Usuario creado correctamente.';
+            if (isset($result['email_enviado']) && !$result['email_enviado']) {
+                $mensaje .= ' Sin embargo, no se pudo enviar el correo de credenciales.';
+            }
+            $this->session->set('evento_usuario_success', $mensaje);
+        }
+
+        header('Location: /eventos/admin/usuarios');
         exit;
     }
 
