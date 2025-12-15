@@ -16,7 +16,7 @@
         require __DIR__ . '/../../components/header-eventos.php'; 
         ?>
 
-        <main class="main-content">
+    <main class="main-content">
             <div class="container">
                 <div class="page-header">
                     <a href="/eventos/admin" class="btn-back">
@@ -28,71 +28,71 @@
                         Crear Nuevo Evento
                     </h2>
                     <p class="subtitle">Completa la información del evento</p>
-                </div>
+            </div>
 
-                <?php if (!empty($error)): ?>
+            <?php if (!empty($error)): ?>
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-circle"></i>
                     <?= htmlspecialchars($error) ?>
-                </div>
-                <?php endif; ?>
+            </div>
+            <?php endif; ?>
 
                 <div class="card">
                     <form action="/eventos/admin/crear" method="POST" enctype="multipart/form-data" class="form">
-                        <div class="form-section">
+                <div class="form-section">
                             <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
-                            
-                            <div class="form-group">
-                                <label for="titulo">Título del Evento <span class="required">*</span></label>
+                    
+                    <div class="form-group">
+                        <label for="titulo">Título del Evento <span class="required">*</span></label>
                                 <input type="text" id="titulo" name="titulo" class="form-control" required 
-                                       placeholder="Ej: Capacitación en Nuevas Tecnologías" maxlength="200">
-                            </div>
+                               placeholder="Ej: Capacitación en Nuevas Tecnologías" maxlength="200">
+                    </div>
 
-                            <div class="form-group">
-                                <label for="descripcion">Descripción <span class="optional">(opcional)</span></label>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción <span class="optional">(opcional)</span></label>
                                 <textarea id="descripcion" name="descripcion" class="form-control" rows="4" 
-                                          placeholder="Describe brevemente el evento..."></textarea>
-                            </div>
+                                  placeholder="Describe brevemente el evento..."></textarea>
+                    </div>
 
-                            <div class="form-group">
-                                <label for="imagen">Imagen del Evento <span class="optional">(opcional)</span></label>
+                    <div class="form-group">
+                        <label for="imagen">Imagen del Evento <span class="optional">(opcional)</span></label>
                                 <input type="file" id="imagen" name="imagen" class="form-control" accept="image/*">
                                 <small class="form-text">PNG, JPG o GIF (máx. 5MB)</small>
-                                <div class="file-preview" id="imagePreview"></div>
-                            </div>
-                        </div>
+                            <div class="file-preview" id="imagePreview"></div>
+                    </div>
+                </div>
 
-                        <div class="form-section">
+                <div class="form-section">
                             <h3><i class="fas fa-calendar-alt"></i> Fechas y Horarios</h3>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="fecha_inicio">Fecha y Hora de Inicio <span class="required">*</span></label>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha_inicio">Fecha y Hora de Inicio <span class="required">*</span></label>
                                     <input type="datetime-local" id="fecha_inicio" name="fecha_inicio" class="form-control" required>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="fecha_fin">Fecha y Hora de Fin <span class="required">*</span></label>
-                                    <input type="datetime-local" id="fecha_fin" name="fecha_fin" class="form-control" required>
-                                </div>
-                            </div>
                         </div>
 
-                        <div class="form-section">
+                        <div class="form-group">
+                            <label for="fecha_fin">Fecha y Hora de Fin <span class="required">*</span></label>
+                                    <input type="datetime-local" id="fecha_fin" name="fecha_fin" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
                             <h3><i class="fas fa-users"></i> Participantes</h3>
-                            
-                            <div class="form-group">
+                    
+                    <div class="form-group">
                                 <label for="tipo_participantes">Tipo de Participantes <span class="required">*</span></label>
                                 <select id="tipo_participantes" name="tipo_participantes" class="form-control">
-                                    <option value="instructores" selected>Instructores</option>
-                                    <option value="aprendices">Aprendices</option>
-                                    <option value="todos">Todos</option>
-                                </select>
+                            <option value="instructores" selected>Instructores</option>
+                            <option value="aprendices">Aprendices</option>
+                            <option value="todos">Todos</option>
+                        </select>
                                 <small class="form-text">Por el momento, el registro está habilitado para instructores.</small>
-                            </div>
-                        </div>
+                    </div>
+                </div>
 
-                        <div class="form-actions">
+                <div class="form-actions">
                             <a href="/eventos/admin" class="btn btn-secondary">
                                 <i class="fas fa-times"></i>
                                 Cancelar
@@ -100,12 +100,12 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-check"></i>
                                 Crear Evento
-                            </button>
-                        </div>
-                    </form>
+                    </button>
                 </div>
-            </div>
-        </main>
+            </form>
+                </div>
+        </div>
+    </main>
 
         <footer class="footer">
             <div class="container">

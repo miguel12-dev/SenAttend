@@ -17,7 +17,7 @@
         require __DIR__ . '/../../components/header-eventos.php'; 
         ?>
 
-        <main class="main-content">
+    <main class="main-content">
             <div class="container">
                 <div class="page-header">
                     <a href="/eventos/admin" class="btn-back">
@@ -39,7 +39,7 @@
                     <div class="scanner-status">
                         <h3><i class="fas fa-magic"></i> Escáner Inteligente Activo</h3>
                         <p>Detecta automáticamente si es entrada o salida según el contexto del participante</p>
-                    </div>
+            </div>
 
                     <!-- Último Escaneo -->
                     <div id="ultimoEscaneo" class="ultimo-escaneo">
@@ -47,7 +47,7 @@
                         <p><strong>Participante:</strong> <span id="ultimoNombre"></span></p>
                         <p><strong>Tipo:</strong> <span id="ultimoTipo"></span></p>
                         <p><strong>Fecha/Hora:</strong> <span id="ultimoHora"></span></p>
-                    </div>
+                </div>
 
                     <!-- Escáner QR -->
                     <div class="scanner-card">
@@ -57,13 +57,13 @@
                             <div class="scanner-controls">
                                 <button type="button" id="btnIniciarScanner" class="btn btn-primary">
                                     <i class="fas fa-play"></i> Iniciar Escáner
-                                </button>
+                    </button>
                                 <button type="button" id="btnDetenerScanner" class="btn btn-danger" style="display: none;">
                                     <i class="fas fa-stop"></i> Detener
-                                </button>
+                    </button>
                             </div>
-                        </div>
-                    </div>
+                </div>
+            </div>
 
                     <!-- Estadísticas -->
                     <div class="estadisticas-resumen" id="estadisticasContainer">
@@ -79,7 +79,7 @@
                             <div class="stat-label">Salidas Registradas</div>
                             <div class="stat-value" id="statSalidas">0</div>
                         </div>
-                    </div>
+                </div>
 
                     <!-- Tablas de Entradas y Salidas -->
                     <div class="tablas-asistencia">
@@ -94,9 +94,9 @@
                                 <div class="empty-state">
                                     <i class="fas fa-inbox"></i>
                                     <p>No hay entradas registradas aún</p>
-                                </div>
-                            </div>
-                        </div>
+                </div>
+                </div>
+            </div>
 
                         <!-- Tabla de Salidas -->
                         <div class="tabla-section salidas">
@@ -112,10 +112,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </div>
             </div>
-        </main>
+        </div>
+    </main>
 
         <footer class="footer">
             <div class="container">
@@ -155,7 +155,7 @@
         const listaSalidas = document.getElementById('listaSalidas');
         const ultimoEscaneo = document.getElementById('ultimoEscaneo');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        
+
         // Inicialización cuando el DOM esté listo
         document.addEventListener('DOMContentLoaded', () => {
             // Verificar si Html5Qrcode está disponible
@@ -210,7 +210,7 @@
             } catch (error) {
                 console.error('Error iniciando escáner:', error);
                 mostrarMensaje('No se pudo iniciar la cámara. Por favor verifica los permisos.', 'error');
-            }
+        }
         }
         
         // Detener escáner
@@ -237,11 +237,9 @@
             if (ultimoQRProcesado === decodedText && (ahora - tiempoUltimoProcesamiento) < 2000) {
                 return;
             }
-            
+
             ultimoQRProcesado = decodedText;
             tiempoUltimoProcesamiento = ahora;
-            
-            console.log('QR Escaneado:', decodedText);
             
             // Procesar el QR sin detener el escáner
             await procesarQR(decodedText);
@@ -267,7 +265,7 @@
                         token: token
                     })
                 });
-                
+
                 // Verificar si la respuesta es JSON
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
@@ -278,7 +276,7 @@
                 }
                 
                 const result = await response.json();
-                
+
                 // Si la respuesta no fue exitosa, mostrar el mensaje de error
                 if (!response.ok) {
                     const errorMessage = result.error || result.message || `Error ${response.status}`;
@@ -361,7 +359,7 @@
                     scanResult.innerHTML = '';
                 }
             }, tipo === 'success' ? 3000 : 5000);
-        }
+            }
         
         // Mostrar último escaneo
         function mostrarUltimoEscaneo(registro) {
@@ -469,7 +467,7 @@
             } catch (error) {
                 actualizarTablas();
                 actualizarEstadisticas();
-            }
+        }
         }
         
         // Reproducir sonido de éxito
@@ -494,7 +492,7 @@
                 // Silenciar errores de audio
             }
         }
-        
+
         // Limpiar al salir
         window.addEventListener('beforeunload', () => {
             if (isScanning) {

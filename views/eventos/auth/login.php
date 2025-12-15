@@ -6,66 +6,91 @@
     <title>Login - Gestión de Eventos</title>
     <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/components/header-public.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/auth/login.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/eventos/auth.css') ?>">
 </head>
-<body>
-    <div class="login-page">
-        <div class="login-container">
-            <div class="login-card">
-                <div class="login-header">
-                    <div class="logo-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <h1>Gestión de Eventos</h1>
-                    <p class="subtitle">Sistema de Eventos SENA</p>
+<body class="login-page eventos-login">
+    <?php include __DIR__ . '/../../components/header-eventos-publico.php'; ?>
+    
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>Gestión de Eventos</h1>
+                <p>Sistema de Eventos SENA</p>
+                <p class="login-subtitle">Acceso para gestión de eventos</p>
+            </div>
+
+            <?php if (!empty($error)): ?>
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <?= htmlspecialchars($error) ?>
+            </div>
+            <?php endif; ?>
+
+            <form action="/eventos/login" method="POST" id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">Correo Electrónico</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-control" 
+                        placeholder="tu.correo@sena.edu.co"
+                        required
+                        autofocus
+                        autocomplete="email"
+                    >
                 </div>
 
-                <?php if (!empty($error)): ?>
-                <div class="alert alert-error">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <?= htmlspecialchars($error) ?>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="••••••••"
+                        required
+                        autocomplete="current-password"
+                    >
                 </div>
-                <?php endif; ?>
 
-                <form action="/eventos/login" method="POST" class="login-form">
-                    <div class="form-group">
-                        <label for="email">
-                            <i class="fas fa-envelope"></i>
-                            Correo electrónico
-                        </label>
-                        <input type="email" id="email" name="email" class="form-control" required 
-                               placeholder="tu.correo@sena.edu.co" autocomplete="email">
-                    </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Ingresar
+                </button>
+            </form>
 
-                    <div class="form-group">
-                        <label for="password">
-                            <i class="fas fa-lock"></i>
-                            Contraseña
-                        </label>
-                        <input type="password" id="password" name="password" class="form-control" required 
-                               placeholder="••••••••" autocomplete="current-password">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-block">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Iniciar Sesión
-                    </button>
-                </form>
-
-                <div class="login-footer">
-                    <a href="/eventos" class="btn-back">
-                        <i class="fas fa-arrow-left"></i>
-                        Volver a eventos públicos
-                    </a>
-                    <a href="/" class="btn-back" style="margin-top: 0.5rem;">
-                        <i class="fas fa-home"></i>
-                        Ir al sistema principal
-                    </a>
-                </div>
+            <div class="login-footer">
+                <a href="/eventos" class="link-back">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a eventos públicos
+                </a>
             </div>
         </div>
     </div>
+
+    <script src="<?= asset('js/app.js') ?>"></script>
+    <script>
+        // Validación simple del formulario
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                e.preventDefault();
+                alert('Por favor complete todos los campos');
+                return false;
+            }
+
+            if (!email.includes('@')) {
+                e.preventDefault();
+                alert('Por favor ingrese un email válido');
+                return false;
+            }
+        });
+    </script>
 </body>
 </html>
 

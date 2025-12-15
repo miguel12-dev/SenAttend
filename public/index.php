@@ -824,6 +824,12 @@ $dynamicRoutes = [
             'middleware' => [],
             'params' => ['id']
         ],
+        '/eventos/qr/historial-evento/(\d+)' => [
+            'controller' => EventoQRController::class,
+            'action' => 'historialEvento',
+            'middleware' => [],
+            'params' => ['id']
+        ],
         '/eventos/api/(\d+)/participantes' => [
             'controller' => EventoAdminController::class,
             'action' => 'apiParticipantes',

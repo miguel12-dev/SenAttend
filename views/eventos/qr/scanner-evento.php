@@ -68,6 +68,55 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Estadísticas -->
+                    <div class="estadisticas-resumen" id="estadisticasContainer">
+                        <div class="stat-card total">
+                            <div class="stat-label">Total Operaciones</div>
+                            <div class="stat-value" id="statTotal">0</div>
+                        </div>
+                        <div class="stat-card entradas">
+                            <div class="stat-label">Ingresos Registrados</div>
+                            <div class="stat-value" id="statEntradas">0</div>
+                        </div>
+                        <div class="stat-card salidas">
+                            <div class="stat-label">Salidas Registradas</div>
+                            <div class="stat-value" id="statSalidas">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Tablas de Entradas y Salidas -->
+                    <div class="tablas-asistencia">
+                        <!-- Tabla de Entradas -->
+                        <div class="tabla-section entradas">
+                            <h3>
+                                <i class="fas fa-sign-in-alt"></i>
+                                Entradas
+                                <span class="tabla-count" id="countEntradas">0</span>
+                            </h3>
+                            <div id="listaEntradas">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay entradas registradas aún</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Salidas -->
+                        <div class="tabla-section salidas">
+                            <h3>
+                                <i class="fas fa-sign-out-alt"></i>
+                                Salidas
+                                <span class="tabla-count" id="countSalidas">0</span>
+                            </h3>
+                            <div id="listaSalidas">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay salidas registradas aún</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -81,16 +130,18 @@
 
     <!-- Librería html5-qrcode -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="<?= asset('js/app.js') ?>"></script>
     <script>
         /**
          * JavaScript para escaneo continuo de QR de eventos específicos
          * Detecta automáticamente si es entrada o salida
+         * Muestra historial COMPLETO del evento (no solo del día)
          */
         
         const EVENTO_ID = <?= $evento['id'] ?>;
         let html5QrCode = null;
         let isScanning = false;
+        let historialEntradas = [];
+        let historialSalidas = [];
         let ultimoQRProcesado = null;
         let tiempoUltimoProcesamiento = 0;
         
@@ -98,6 +149,8 @@
         const btnIniciarScanner = document.getElementById('btnIniciarScanner');
         const btnDetenerScanner = document.getElementById('btnDetenerScanner');
         const scanResult = document.getElementById('scanResult');
+        const listaEntradas = document.getElementById('listaEntradas');
+        const listaSalidas = document.getElementById('listaSalidas');
         const ultimoEscaneo = document.getElementById('ultimoEscaneo');
         
         // Inicialización cuando el DOM esté listo
@@ -116,6 +169,9 @@
             if (btnDetenerScanner) {
                 btnDetenerScanner.addEventListener('click', detenerScanner);
             }
+            
+            // Cargar historial completo del evento
+            cargarHistorial();
         });
         
         // Iniciar escáner
@@ -180,9 +236,7 @@
             
             ultimoQRProcesado = decodedText;
             tiempoUltimoProcesamiento = ahora;
-            
-            console.log('QR Escaneado:', decodedText);
-            
+
             // Procesar el QR sin detener el escáner
             await procesarQR(decodedText);
         }
@@ -238,10 +292,18 @@
                         nombre: data.nombre || 'Participante',
                         apellido: data.apellido || '',
                         documento: data.documento || 'N/A',
+                        evento: '<?= htmlspecialchars($evento['titulo']) ?>',
                         tipo: tipo,
                         fecha: new Date().toLocaleDateString('es-CO'),
                         hora: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
                     };
+                    
+                    // Añadir al historial correspondiente (al inicio para orden cronológico)
+                    if (tipo === 'ingreso') {
+                        historialEntradas.unshift(registro);
+                    } else {
+                        historialSalidas.unshift(registro);
+                    }
                     
                     const tipoTexto = tipo === 'ingreso' ? 'INGRESO' : 'SALIDA';
                     const nombreCompleto = `${registro.nombre} ${registro.apellido}`;
@@ -253,6 +315,10 @@
                     
                     // Mostrar último escaneo
                     mostrarUltimoEscaneo(registro);
+                    
+                    // Actualizar tablas y estadísticas
+                    actualizarTablas();
+                    actualizarEstadisticas();
                     
                     // Reproducir sonido de éxito
                     reproducirSonidoExito();
@@ -303,6 +369,102 @@
             ultimoEscaneo.classList.add('show');
         }
         
+        // Actualizar tablas de entradas y salidas
+        function actualizarTablas() {
+            // Actualizar contador de entradas
+            document.getElementById('countEntradas').textContent = historialEntradas.length;
+            
+            // Actualizar lista de entradas
+            if (historialEntradas.length === 0) {
+                listaEntradas.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No hay entradas registradas aún</p>
+                    </div>
+                `;
+            } else {
+                const htmlEntradas = historialEntradas.map(registro => `
+                    <div class="registro-item">
+                        <div class="registro-nombre">${registro.nombre} ${registro.apellido}</div>
+                        <div class="registro-documento">Doc: ${registro.documento}</div>
+                        <div class="registro-info">
+                            <span>${registro.fecha}</span>
+                            <span class="registro-hora">${registro.hora}</span>
+                        </div>
+                    </div>
+                `).join('');
+                listaEntradas.innerHTML = htmlEntradas;
+            }
+            
+            // Actualizar contador de salidas
+            document.getElementById('countSalidas').textContent = historialSalidas.length;
+            
+            // Actualizar lista de salidas
+            if (historialSalidas.length === 0) {
+                listaSalidas.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>No hay salidas registradas aún</p>
+                    </div>
+                `;
+            } else {
+                const htmlSalidas = historialSalidas.map(registro => `
+                    <div class="registro-item">
+                        <div class="registro-nombre">${registro.nombre} ${registro.apellido}</div>
+                        <div class="registro-documento">Doc: ${registro.documento}</div>
+                        <div class="registro-info">
+                            <span>${registro.fecha}</span>
+                            <span class="registro-hora">${registro.hora}</span>
+                        </div>
+                    </div>
+                `).join('');
+                listaSalidas.innerHTML = htmlSalidas;
+            }
+        }
+        
+        // Actualizar estadísticas
+        function actualizarEstadisticas() {
+            const total = historialEntradas.length + historialSalidas.length;
+            
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statEntradas').textContent = historialEntradas.length;
+            document.getElementById('statSalidas').textContent = historialSalidas.length;
+        }
+        
+        // Cargar historial completo del evento desde el servidor
+        async function cargarHistorial() {
+            try {
+                const response = await fetch(`/eventos/qr/historial-evento/${EVENTO_ID}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (!response.ok) {
+                    console.error('Error cargando historial:', response.status);
+                    actualizarTablas();
+                    actualizarEstadisticas();
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    // Separar entradas y salidas (ya vienen ordenadas cronológicamente)
+                    historialEntradas = result.data.filter(r => r.tipo === 'ingreso');
+                    historialSalidas = result.data.filter(r => r.tipo === 'salida');
+                    
+                    actualizarTablas();
+                    actualizarEstadisticas();
+                }
+            } catch (error) {
+                console.error('Error cargando historial:', error);
+                actualizarTablas();
+                actualizarEstadisticas();
+            }
+        }
+        
         // Reproducir sonido de éxito
         function reproducirSonidoExito() {
             try {
@@ -338,4 +500,3 @@
     <script src="<?= asset('js/app.js') ?>"></script>
 </body>
 </html>
-

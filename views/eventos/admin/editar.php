@@ -16,7 +16,7 @@
         require __DIR__ . '/../../components/header-eventos.php'; 
         ?>
 
-        <main class="main-content">
+    <main class="main-content">
             <div class="container">
                 <div class="page-header">
                     <a href="/eventos/admin/<?= $evento['id'] ?>" class="btn-back">
@@ -25,63 +25,63 @@
                     </a>
                     <h2><i class="fas fa-edit"></i> Editar Evento</h2>
                     <p class="subtitle">Modifica la información del evento</p>
-                </div>
+            </div>
 
-                <?php if (!empty($error)): ?>
+            <?php if (!empty($error)): ?>
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-circle"></i>
                     <?= htmlspecialchars($error) ?>
-                </div>
-                <?php endif; ?>
+            </div>
+            <?php endif; ?>
 
                 <div class="card">
                     <form action="/eventos/admin/<?= $evento['id'] ?>/actualizar" method="POST" enctype="multipart/form-data" class="form">
-                        <div class="form-section">
+                <div class="form-section">
                             <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
-                            
-                            <div class="form-group">
-                                <label for="titulo">Título del Evento <span class="required">*</span></label>
+                    
+                    <div class="form-group">
+                        <label for="titulo">Título del Evento <span class="required">*</span></label>
                                 <input type="text" id="titulo" name="titulo" class="form-control" required 
-                                       value="<?= htmlspecialchars($evento['titulo']) ?>" maxlength="200">
-                            </div>
+                               value="<?= htmlspecialchars($evento['titulo']) ?>" maxlength="200">
+                    </div>
 
-                            <div class="form-group">
-                                <label for="descripcion">Descripción <span class="optional">(opcional)</span></label>
+                    <div class="form-group">
+                        <label for="descripcion">Descripción <span class="optional">(opcional)</span></label>
                                 <textarea id="descripcion" name="descripcion" class="form-control" rows="4"><?= htmlspecialchars($evento['descripcion'] ?? '') ?></textarea>
-                            </div>
+                    </div>
 
-                            <div class="form-group">
-                                <label for="imagen">Imagen del Evento <span class="optional">(opcional)</span></label>
-                                <?php if ($evento['imagen_url']): ?>
-                                <div class="current-image">
+                    <div class="form-group">
+                        <label for="imagen">Imagen del Evento <span class="optional">(opcional)</span></label>
+                        <?php if ($evento['imagen_url']): ?>
+                        <div class="current-image">
                                     <img src="<?= htmlspecialchars($evento['imagen_url']) ?>" alt="Imagen actual" style="max-width: 300px; border-radius: 8px; margin-bottom: 0.5rem;">
                                     <p style="color: var(--color-gray-600); font-size: 0.9rem;"><i class="fas fa-image"></i> Imagen actual (sube una nueva para reemplazarla)</p>
-                                </div>
-                                <?php endif; ?>
+                        </div>
+                        <?php endif; ?>
                                 <input type="file" id="imagen" name="imagen" class="form-control" accept="image/*">
-                                <div class="file-preview" id="imagePreview"></div>
-                            </div>
-                        </div>
+                            <div class="file-preview" id="imagePreview"></div>
+                    </div>
+                </div>
 
-                        <div class="form-section">
+                <div class="form-section">
                             <h3><i class="fas fa-calendar-alt"></i> Fechas y Horarios</h3>
-                            
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="fecha_inicio">Fecha y Hora de Inicio <span class="required">*</span></label>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha_inicio">Fecha y Hora de Inicio <span class="required">*</span></label>
                                     <input type="datetime-local" id="fecha_inicio" name="fecha_inicio" class="form-control" required
-                                           value="<?= date('Y-m-d\TH:i', strtotime($evento['fecha_inicio'])) ?>">
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="fecha_fin">Fecha y Hora de Fin <span class="required">*</span></label>
-                                    <input type="datetime-local" id="fecha_fin" name="fecha_fin" class="form-control" required
-                                           value="<?= date('Y-m-d\TH:i', strtotime($evento['fecha_fin'])) ?>">
-                                </div>
-                            </div>
+                                   value="<?= date('Y-m-d\TH:i', strtotime($evento['fecha_inicio'])) ?>">
                         </div>
 
-                        <div class="form-actions">
+                        <div class="form-group">
+                            <label for="fecha_fin">Fecha y Hora de Fin <span class="required">*</span></label>
+                                    <input type="datetime-local" id="fecha_fin" name="fecha_fin" class="form-control" required
+                                   value="<?= date('Y-m-d\TH:i', strtotime($evento['fecha_fin'])) ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
                             <a href="/eventos/admin/<?= $evento['id'] ?>" class="btn btn-secondary">
                                 <i class="fas fa-times"></i>
                                 Cancelar
@@ -89,12 +89,12 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i>
                                 Guardar Cambios
-                            </button>
-                        </div>
-                    </form>
+                    </button>
                 </div>
-            </div>
-        </main>
+            </form>
+                </div>
+        </div>
+    </main>
 
         <footer class="footer">
             <div class="container">
