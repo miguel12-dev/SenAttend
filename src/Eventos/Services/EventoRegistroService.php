@@ -122,12 +122,18 @@ class EventoRegistroService
                 throw new Exception('Error al generar el código QR');
             }
 
-            // Enviar email con QR
+            // Enviar email con QR (incluyendo información completa del evento)
             $emailResult = $this->emailService->enviarQRIngreso(
                 $datos['email'],
                 $datos['nombre'] . ' ' . $datos['apellido'],
                 $evento['titulo'],
-                $qrResult['data']['image_base64']
+                $qrResult['data']['image_base64'],
+                [
+                    'descripcion' => $evento['descripcion'] ?? '',
+                    'imagen_url' => $evento['imagen_url'] ?? '',
+                    'fecha_inicio' => $evento['fecha_inicio'] ?? '',
+                    'fecha_fin' => $evento['fecha_fin'] ?? ''
+                ]
             );
 
             Connection::commit();
@@ -185,12 +191,18 @@ class EventoRegistroService
                 return ['success' => false, 'error' => 'Error al generar el código QR de salida'];
             }
 
-            // Enviar email con QR de SALIDA
+            // Enviar email con QR de SALIDA (incluyendo información completa del evento)
             $emailResult = $this->emailService->enviarQRSalida(
                 $participante['email'],
                 $participante['nombre'] . ' ' . $participante['apellido'],
                 $evento['titulo'],
-                $qrResult['data']['image_base64']
+                $qrResult['data']['image_base64'],
+                [
+                    'descripcion' => $evento['descripcion'] ?? '',
+                    'imagen_url' => $evento['imagen_url'] ?? '',
+                    'fecha_inicio' => $evento['fecha_inicio'] ?? '',
+                    'fecha_fin' => $evento['fecha_fin'] ?? ''
+                ]
             );
 
             return [
@@ -207,12 +219,18 @@ class EventoRegistroService
             return ['success' => false, 'error' => 'Error al generar el código QR'];
         }
 
-        // Enviar email con QR de INGRESO
+        // Enviar email con QR de INGRESO (incluyendo información completa del evento)
         $emailResult = $this->emailService->enviarQRIngreso(
             $participante['email'],
             $participante['nombre'] . ' ' . $participante['apellido'],
             $evento['titulo'],
-            $qrResult['data']['image_base64']
+            $qrResult['data']['image_base64'],
+            [
+                'descripcion' => $evento['descripcion'] ?? '',
+                'imagen_url' => $evento['imagen_url'] ?? '',
+                'fecha_inicio' => $evento['fecha_inicio'] ?? '',
+                'fecha_fin' => $evento['fecha_fin'] ?? ''
+            ]
         );
 
         return [

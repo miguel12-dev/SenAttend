@@ -151,8 +151,10 @@ class EventoQRService
 
     /**
      * Valida un QR escaneado
+     * @param string $token Token del QR
+     * @param int|null $eventoId ID del evento para validación opcional (si se proporciona, valida que el QR pertenezca a ese evento)
      */
-    public function validarQR(string $token): array
+    public function validarQR(string $token, ?int $eventoId = null): array
     {
         $qr = $this->qrRepository->findByToken($token);
 
@@ -162,6 +164,11 @@ class EventoQRService
 
         if ($qr['usado']) {
             return ['success' => false, 'error' => 'Este código QR ya fue utilizado'];
+        }
+
+        // Si se proporciona evento_id, validar que el QR pertenezca a ese evento
+        if ($eventoId !== null && (int)$qr['evento_id'] !== $eventoId) {
+            return ['success' => false, 'error' => 'Este código QR no pertenece a este evento'];
         }
 
         // Verificar que el evento esté en curso

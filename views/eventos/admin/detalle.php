@@ -129,6 +129,10 @@
                             <i class="fas fa-users"></i>
                             Ver Participantes
                         </a>
+                        <a href="/eventos/qr/scanner/<?= $evento['id'] ?>" class="btn btn-primary" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                            <i class="fas fa-qrcode"></i>
+                            Escanear QR del Evento
+                        </a>
                         <a href="/eventos/admin/<?= $evento['id'] ?>/editar" class="btn btn-secondary">
                             <i class="fas fa-edit"></i>
                             Editar Evento

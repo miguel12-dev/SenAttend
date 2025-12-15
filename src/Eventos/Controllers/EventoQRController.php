@@ -38,6 +38,21 @@ class EventoQRController
     }
 
     /**
+     * Muestra la página del escáner QR para un evento específico
+     */
+    public function showScannerEvento(int $eventoId): void
+    {
+        $evento = $this->eventoRepository->findById($eventoId);
+        
+        if (!$evento) {
+            header('Location: /eventos/admin');
+            exit;
+        }
+        
+        require ROOT_PATH . '/views/eventos/qr/scanner-evento.php';
+    }
+
+    /**
      * Valida un código QR sin procesarlo
      */
     public function validar(): void
@@ -112,6 +127,7 @@ class EventoQRController
 
     /**
      * Procesa un QR automáticamente detectando si es ingreso o salida
+     * Si se proporciona evento_id, valida que el QR pertenezca a ese evento
      */
     public function procesar(): void
     {
@@ -122,6 +138,7 @@ class EventoQRController
 
         $data = json_decode(file_get_contents('php://input'), true);
         $token = trim($data['token'] ?? '');
+        $eventoId = isset($data['evento_id']) ? (int)$data['evento_id'] : null;
 
         if (empty($token)) {
             $this->jsonResponse(['success' => false, 'error' => 'Token requerido']);
@@ -129,7 +146,7 @@ class EventoQRController
         }
 
         // Primero validar el QR
-        $validacion = $this->qrService->validarQR($token);
+        $validacion = $this->qrService->validarQR($token, $eventoId);
 
         if (!$validacion['success']) {
             $this->jsonResponse($validacion);
@@ -170,7 +187,13 @@ class EventoQRController
                     $qrResult['data']['participante']['email'],
                     $qrResult['data']['participante']['nombre'] . ' ' . $qrResult['data']['participante']['apellido'],
                     $evento['titulo'],
-                    $qrResult['data']['image_base64']
+                    $qrResult['data']['image_base64'],
+                    [
+                        'descripcion' => $evento['descripcion'] ?? '',
+                        'imagen_url' => $evento['imagen_url'] ?? '',
+                        'fecha_inicio' => $evento['fecha_inicio'] ?? '',
+                        'fecha_fin' => $evento['fecha_fin'] ?? ''
+                    ]
                 );
             }
         } catch (\Exception $e) {

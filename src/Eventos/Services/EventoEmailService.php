@@ -88,9 +88,10 @@ class EventoEmailService
         string $email,
         string $nombreCompleto,
         string $eventoTitulo,
-        string $qrImageBase64
+        string $qrImageBase64,
+        array $eventoInfo = []
     ): array {
-        return $this->enviarQR($email, $nombreCompleto, $eventoTitulo, $qrImageBase64, 'ingreso');
+        return $this->enviarQR($email, $nombreCompleto, $eventoTitulo, $qrImageBase64, 'ingreso', $eventoInfo);
     }
 
     /**
@@ -100,20 +101,23 @@ class EventoEmailService
         string $email,
         string $nombreCompleto,
         string $eventoTitulo,
-        string $qrImageBase64
+        string $qrImageBase64,
+        array $eventoInfo = []
     ): array {
-        return $this->enviarQR($email, $nombreCompleto, $eventoTitulo, $qrImageBase64, 'salida');
+        return $this->enviarQR($email, $nombreCompleto, $eventoTitulo, $qrImageBase64, 'salida', $eventoInfo);
     }
 
     /**
      * Envía un email con código QR
+     * @param array $eventoInfo Información adicional del evento: ['descripcion', 'imagen_url', 'fecha_inicio', 'fecha_fin']
      */
     private function enviarQR(
         string $email,
         string $nombreCompleto,
         string $eventoTitulo,
         string $qrImageBase64,
-        string $tipo
+        string $tipo,
+        array $eventoInfo = []
     ): array {
         try {
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -167,9 +171,10 @@ class EventoEmailService
                 $nombreCompleto, 
                 $eventoTitulo, 
                 $tipo, 
-                $cid
+                $cid,
+                $eventoInfo
             );
-            $this->mailer->AltBody = $this->generarTextoPlano($nombreCompleto, $eventoTitulo, $tipo);
+            $this->mailer->AltBody = $this->generarTextoPlano($nombreCompleto, $eventoTitulo, $tipo, $eventoInfo);
 
             $this->mailer->send();
 
@@ -192,17 +197,27 @@ class EventoEmailService
 
     /**
      * Genera el cuerpo HTML del email
+     * @param array $eventoInfo Información adicional del evento
      */
     private function generarCuerpoEmail(
         string $nombre,
         string $evento,
         string $tipo,
-        ?string $cid
+        ?string $cid,
+        array $eventoInfo = []
     ): string {
         $tipoTexto = $tipo === 'ingreso' ? 'INGRESO' : 'SALIDA';
         $instruccion = $tipo === 'ingreso' 
             ? 'Presenta este código QR al ingresar al evento.'
             : 'Presenta este código QR al salir del evento para completar tu asistencia.';
+
+        // Información del evento
+        $descripcion = $eventoInfo['descripcion'] ?? '';
+        $imagenUrl = $eventoInfo['imagen_url'] ?? '';
+        $fechaInicio = isset($eventoInfo['fecha_inicio']) ? date('d/m/Y H:i', strtotime($eventoInfo['fecha_inicio'])) : '';
+        $fechaFin = isset($eventoInfo['fecha_fin']) ? date('d/m/Y H:i', strtotime($eventoInfo['fecha_fin'])) : '';
+        $horaInicio = isset($eventoInfo['fecha_inicio']) ? date('h:i A', strtotime($eventoInfo['fecha_inicio'])) : '';
+        $horaFin = isset($eventoInfo['fecha_fin']) ? date('h:i A', strtotime($eventoInfo['fecha_fin'])) : '';
 
         // Generar el tag de imagen QR con formato optimizado para móviles y clientes de correo
         $qrImageTag = '';
@@ -217,6 +232,42 @@ class EventoEmailService
             </table>';
         } else {
             $qrImageTag = '<p style="color:#666; margin: 0; padding: 15px; text-align: center;">El código QR no pudo ser generado.</p>';
+        }
+
+        // Generar imagen del evento si está disponible
+        $eventoImagenTag = '';
+        if (!empty($imagenUrl)) {
+            $eventoImagenTag = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 20px 0;">
+                <tr>
+                    <td align="center" style="padding: 0;">
+                        <img src="' . htmlspecialchars($imagenUrl) . '" alt="' . htmlspecialchars($evento) . '" style="max-width: 100%; width: 100%; height: auto; border-radius: 8px; display: block; box-sizing: border-box;">
+                    </td>
+                </tr>
+            </table>';
+        }
+
+        // Generar HTML de descripción
+        $descripcionHtml = '';
+        if (!empty($descripcion)) {
+            $descripcionHtml = '<p style="margin: 0 0 15px 0; padding: 0; color: #666; font-size: 14px; line-height: 1.6;">' . nl2br(htmlspecialchars($descripcion)) . '</p>';
+        }
+
+        // Generar HTML de fecha
+        $fechaHtml = '';
+        if (!empty($fechaInicio) && !empty($fechaFin)) {
+            $fechaHtml = '<p style="margin: 0 0 8px 0; padding: 0; color: #333; font-size: 14px;">
+                <i class="fas fa-calendar" style="color: #39A900; margin-right: 8px;"></i>
+                <strong>Fecha:</strong> ' . htmlspecialchars($fechaInicio) . ' - ' . htmlspecialchars($fechaFin) . '
+            </p>';
+        }
+
+        // Generar HTML de hora
+        $horaHtml = '';
+        if (!empty($horaInicio) && !empty($horaFin)) {
+            $horaHtml = '<p style="margin: 0 0 8px 0; padding: 0; color: #333; font-size: 14px;">
+                <i class="fas fa-clock" style="color: #39A900; margin-right: 8px;"></i>
+                <strong>Horario:</strong> ' . htmlspecialchars($horaInicio) . ' - ' . htmlspecialchars($horaFin) . '
+            </p>';
         }
 
         return <<<HTML
@@ -425,9 +476,24 @@ class EventoEmailService
                         <td class="content" style="padding: 30px 20px; background-color: #ffffff; width: 100%; box-sizing: border-box;">
                             <h2 style="margin: 0 0 15px 0; padding: 0; font-size: 20px; color: #333;">Hola, {$nombre}</h2>
                             
-                            <div class="evento-info" style="background: #f8f9fa; border-left: 4px solid #39A900; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; width: 100%; box-sizing: border-box;">
-                                <p class="evento-nombre" style="margin: 0; padding: 0; color: #333; font-size: 14px;"><strong>Evento:</strong> {$evento}</p>
-                                <p class="evento-tipo" style="margin: 10px 0 0 0; padding: 0; color: #39A900; font-weight: bold; font-size: 14px;">Tipo: QR de {$tipoTexto}</p>
+                            <p style="margin: 0 0 20px 0; padding: 0; font-size: 16px; color: #333; line-height: 1.6;">Te has inscrito exitosamente al siguiente evento:</p>
+                            
+                            {$eventoImagenTag}
+                            
+                            <div class="evento-info" style="background: #f8f9fa; border-left: 4px solid #39A900; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; width: 100%; box-sizing: border-box;">
+                                <p class="evento-nombre" style="margin: 0 0 10px 0; padding: 0; color: #333; font-size: 18px; font-weight: bold;">{$evento}</p>
+                                
+                                {$descripcionHtml}
+                                
+                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
+                                    {$fechaHtml}
+                                    {$horaHtml}
+                                    
+                                    <p class="evento-tipo" style="margin: 10px 0 0 0; padding: 0; color: #39A900; font-weight: bold; font-size: 14px;">
+                                        <i class="fas fa-qrcode" style="margin-right: 8px;"></i>
+                                        Tipo: QR de {$tipoTexto}
+                                    </p>
+                                </div>
                             </div>
                             
                             <p style="margin: 0 0 15px 0; padding: 0; font-size: 14px; color: #666; line-height: 1.6;">{$instruccion}</p>
@@ -468,27 +534,41 @@ HTML;
     /**
      * Genera texto plano del email
      */
-    private function generarTextoPlano(string $nombre, string $evento, string $tipo): string
+    private function generarTextoPlano(string $nombre, string $evento, string $tipo, array $eventoInfo = []): string
     {
         $tipoTexto = $tipo === 'ingreso' ? 'INGRESO' : 'SALIDA';
-        return <<<TEXT
-SENAttend Eventos - Sistema de Gestión de Eventos SENA
-
-Hola, {$nombre}
-
-Evento: {$evento}
-Tipo: QR de {$tipoTexto}
-
-Por favor, revisa el correo en formato HTML para ver tu código QR.
-
-IMPORTANTE: Este código QR es personal e intransferible. No lo compartas con otras personas.
-
----
-Este es un correo automático del sistema SENAttend Eventos.
-Por favor no responda a este mensaje.
-
-© 2024 SENA - Servicio Nacional de Aprendizaje
-TEXT;
+        $descripcion = $eventoInfo['descripcion'] ?? '';
+        $fechaInicio = isset($eventoInfo['fecha_inicio']) ? date('d/m/Y H:i', strtotime($eventoInfo['fecha_inicio'])) : '';
+        $fechaFin = isset($eventoInfo['fecha_fin']) ? date('d/m/Y H:i', strtotime($eventoInfo['fecha_fin'])) : '';
+        $horaInicio = isset($eventoInfo['fecha_inicio']) ? date('h:i A', strtotime($eventoInfo['fecha_inicio'])) : '';
+        $horaFin = isset($eventoInfo['fecha_fin']) ? date('h:i A', strtotime($eventoInfo['fecha_fin'])) : '';
+        
+        $texto = "SENAttend Eventos - Sistema de Gestión de Eventos SENA\n\n";
+        $texto .= "Hola, {$nombre}\n\n";
+        $texto .= "Te has inscrito exitosamente al siguiente evento:\n\n";
+        $texto .= "Evento: {$evento}\n";
+        
+        if (!empty($descripcion)) {
+            $texto .= "Descripción: " . strip_tags($descripcion) . "\n";
+        }
+        
+        if (!empty($fechaInicio) && !empty($fechaFin)) {
+            $texto .= "Fecha: {$fechaInicio} - {$fechaFin}\n";
+        }
+        
+        if (!empty($horaInicio) && !empty($horaFin)) {
+            $texto .= "Horario: {$horaInicio} - {$horaFin}\n";
+        }
+        
+        $texto .= "Tipo: QR de {$tipoTexto}\n\n";
+        $texto .= "Por favor, revisa el correo en formato HTML para ver tu código QR.\n\n";
+        $texto .= "IMPORTANTE: Este código QR es personal e intransferible. No lo compartas con otras personas.\n\n";
+        $texto .= "---\n";
+        $texto .= "Este es un correo automático del sistema SENAttend Eventos.\n";
+        $texto .= "Por favor no responda a este mensaje.\n\n";
+        $texto .= "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje";
+        
+        return $texto;
     }
 }
 
