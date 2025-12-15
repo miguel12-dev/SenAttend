@@ -1189,6 +1189,11 @@ try {
         $eventoQRRepository = new EventoQRRepository();
         $eventoEncryptionService = new EventoEncryptionService();
         $eventoEmailService = new EventoEmailService();
+        $eventoUsuarioRepository = new EventoUsuarioRepository();
+        $eventoAuthService = new EventoAuthService(
+            $eventoUsuarioRepository,
+            $session
+        );
         $eventoQRService = new EventoQRService(
             $eventoQRRepository,
             $eventoParticipanteRepository,
@@ -1197,6 +1202,7 @@ try {
         $controller = new $controllerClass(
             $eventoQRService,
             $eventoEmailService,
+            $eventoAuthService,
             $eventoRepository,
             $eventoParticipanteRepository
         );
