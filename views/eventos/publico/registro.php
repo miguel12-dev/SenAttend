@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="<?= asset('css/components/header-public.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/eventos/publico.css') ?>">
 </head>
-<body>
+<body data-evento-id="<?= $evento['id'] ?>">
     <div class="wrapper">
         <?php require __DIR__ . '/../../components/header-eventos-publico.php'; ?>
 
@@ -223,8 +223,9 @@
 
     <script src="<?= asset('js/app.js') ?>"></script>
     <script>
-        // IMPORTANTE: Definir eventoId ANTES de cargar registro.js
-        const eventoId = <?= $evento['id'] ?>;
+        // IMPORTANTE: Definir eventoId ANTES de cargar registro.js (y exponerlo en dataset)
+        window.eventoId = <?= $evento['id'] ?>;
+        document.body.dataset.eventoId = String(window.eventoId);
     </script>
     <script src="<?= asset('js/eventos/registro.js') ?>"></script>
 </body>

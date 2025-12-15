@@ -79,12 +79,38 @@ class EventoPublicoController
         $documento = trim($data['documento'] ?? '');
         $eventoId = (int)($data['evento_id'] ?? 0);
 
+        // Fallback por si en producción no llega el evento_id desde el frontend
+        if ($eventoId <= 0) {
+            // Intentar inferir el ID del evento desde la URL de referencia
+            $referer = $_SERVER['HTTP_REFERER'] ?? '';
+            if (!empty($referer)) {
+                $path = parse_url($referer, PHP_URL_PATH) ?? '';
+                if (preg_match('#/eventos/registro/(\d+)#', $path, $matches)) {
+                    $eventoId = (int)($matches[1] ?? 0);
+                }
+            }
+        }
+
+        if ($eventoId <= 0) {
+            // Segundo intento: usar la propia URL de la petición por si el referer está bloqueado
+            $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+            if (preg_match('#/eventos/registro/(\d+)#', $requestPath, $matches)) {
+                $eventoId = (int)($matches[1] ?? 0);
+            }
+        }
+
         if (empty($documento)) {
             $this->jsonResponse(['success' => false, 'error' => 'Documento requerido']);
             return;
         }
 
         if ($eventoId <= 0) {
+            // Log adicional para poder depurar en producción
+            error_log('EventoPublicoController::buscarInstructor - Evento no válido. '
+                . 'Raw body: ' . file_get_contents('php://input') . ' | '
+                . 'decoded: ' . json_encode($data) . ' | '
+                . 'referer: ' . ($_SERVER['HTTP_REFERER'] ?? 'N/A'));
+
             $this->jsonResponse(['success' => false, 'error' => 'Evento no válido']);
             return;
         }
