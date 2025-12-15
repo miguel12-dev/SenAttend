@@ -113,6 +113,9 @@ if (!defined('DB_USER')) {
 if (!defined('DB_PASS')) {
     define('DB_PASS', getEnv('DB_PASS', ''));
 }
+if (!defined('DB_TIMEZONE')) {
+    define('DB_TIMEZONE', getEnv('DB_TIMEZONE', 'America/Bogota'));
+}
 if (!defined('ROOT_PATH')) {
     define('ROOT_PATH', dirname(__DIR__));
 }
@@ -151,6 +154,7 @@ return [
         'name' => DB_NAME,
         'user' => DB_USER,
         'pass' => DB_PASS,
+        'timezone' => DB_TIMEZONE,
         'charset' => 'utf8mb4',
         'options' => [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
