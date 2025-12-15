@@ -3,33 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($evento['titulo']) ?> - Gestión de Eventos | SENAttend</title>
+    <title><?= htmlspecialchars($evento['titulo']) ?> - Gestión de Eventos</title>
+    <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/eventos/admin.css') ?>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="/eventos/admin" class="back-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                </svg>
-            </a>
-            <span>Detalle del Evento</span>
-        </div>
-        <div class="navbar-user">
-            <span class="user-name"><?= htmlspecialchars($user['nombre']) ?></span>
-            <a href="/eventos/logout" class="btn-logout" title="Cerrar sesión">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                </svg>
-            </a>
-        </div>
-    </nav>
+    <div class="wrapper">
+        <?php 
+        $currentPage = 'eventos-dashboard';
+        require __DIR__ . '/../../components/header-eventos.php'; 
+        ?>
 
-    <main class="main-content">
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <a href="/eventos/admin" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver
+                    </a>
+                </div>
         <?php if (isset($_GET['mensaje'])): ?>
         <div class="alert alert-success">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
@@ -157,9 +151,16 @@
                     </svg>
                     <span>Eliminar</span>
                 </button>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; <?= date('Y') ?> SENA - Servicio Nacional de Aprendizaje</p>
+            </div>
+        </footer>
+    </div>
 
     <!-- Modal de confirmación -->
     <div id="confirmModal" class="modal" style="display: none;">
@@ -167,9 +168,9 @@
             <h3>¿Estás seguro?</h3>
             <p id="modalMessage"></p>
             <div class="modal-actions">
-                <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
-                    <button type="submit" class="btn-danger">Confirmar</button>
+                    <button type="submit" class="btn btn-primary" style="background: var(--color-danger);">Confirmar</button>
                 </form>
             </div>
         </div>
@@ -212,6 +213,8 @@
             document.getElementById('confirmModal').style.display = 'none';
         }
     </script>
+
+    <script src="<?= asset('js/app.js') ?>"></script>
 </body>
 </html>
 

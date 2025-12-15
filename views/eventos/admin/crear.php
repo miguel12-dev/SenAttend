@@ -3,137 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crear Evento - Gestión de Eventos | SENAttend</title>
+    <title>Crear Evento - Gestión de Eventos</title>
+    <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/eventos/admin.css') ?>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="/eventos/admin" class="back-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                </svg>
-            </a>
-            <span>Crear Nuevo Evento</span>
-        </div>
-        <div class="navbar-user">
-            <span class="user-name"><?= htmlspecialchars($user['nombre']) ?></span>
-            <a href="/eventos/logout" class="btn-logout" title="Cerrar sesión">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                </svg>
-            </a>
-        </div>
-    </nav>
+    <div class="wrapper">
+        <?php 
+        $currentPage = 'eventos-crear';
+        require __DIR__ . '/../../components/header-eventos.php'; 
+        ?>
 
-    <main class="main-content">
-        <div class="form-container">
-            <div class="form-header">
-                <h1>Crear Nuevo Evento</h1>
-                <p>Completa la información del evento</p>
-            </div>
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <a href="/eventos/admin" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver
+                    </a>
+                    <h2>
+                        <i class="fas fa-plus-circle"></i>
+                        Crear Nuevo Evento
+                    </h2>
+                    <p class="subtitle">Completa la información del evento</p>
+                </div>
 
-            <?php if (!empty($error)): ?>
-            <div class="alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-                </svg>
-                <span><?= htmlspecialchars($error) ?></span>
-            </div>
-            <?php endif; ?>
+                <?php if (!empty($error)): ?>
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <?= htmlspecialchars($error) ?>
+                </div>
+                <?php endif; ?>
 
-            <form action="/eventos/admin/crear" method="POST" enctype="multipart/form-data" class="event-form">
-                <div class="form-section">
-                    <h3>Información Básica</h3>
-                    
-                    <div class="form-group">
-                        <label for="titulo">Título del Evento <span class="required">*</span></label>
-                        <input type="text" id="titulo" name="titulo" required 
-                               placeholder="Ej: Capacitación en Nuevas Tecnologías" maxlength="200">
-                    </div>
+                <form action="/eventos/admin/crear" method="POST" enctype="multipart/form-data" class="event-form">
+                    <div class="form-section">
+                        <h3><i class="fas fa-info-circle"></i> Información Básica</h3>
+                        
+                        <div class="form-group">
+                            <label for="titulo">Título del Evento <span style="color: red;">*</span></label>
+                            <input type="text" id="titulo" name="titulo" class="form-control" required 
+                                   placeholder="Ej: Capacitación en Nuevas Tecnologías" maxlength="200">
+                        </div>
 
-                    <div class="form-group">
-                        <label for="descripcion">Descripción <span class="optional">(opcional)</span></label>
-                        <textarea id="descripcion" name="descripcion" rows="4" 
-                                  placeholder="Describe brevemente el evento..."></textarea>
-                    </div>
+                        <div class="form-group">
+                            <label for="descripcion">Descripción</label>
+                            <textarea id="descripcion" name="descripcion" class="form-control" rows="4" 
+                                      placeholder="Describe brevemente el evento..."></textarea>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="imagen">Imagen del Evento <span class="optional">(opcional)</span></label>
-                        <div class="file-upload">
-                            <input type="file" id="imagen" name="imagen" accept="image/*">
-                            <div class="file-upload-label">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                                </svg>
-                                <span>Arrastra una imagen o haz clic para seleccionar</span>
-                                <small>PNG, JPG o GIF (máx. 5MB)</small>
+                        <div class="form-group">
+                            <label for="imagen">Imagen del Evento</label>
+                            <div class="file-upload">
+                                <input type="file" id="imagen" name="imagen" accept="image/*" class="form-control">
+                                <div class="file-preview" id="imagePreview"></div>
                             </div>
-                            <div class="file-preview" id="imagePreview"></div>
+                            <small style="color: #666;">PNG, JPG o GIF (máx. 5MB)</small>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-section">
-                    <h3>Fechas y Horarios</h3>
-                    
-                    <div class="form-row">
+                    <div class="form-section">
+                        <h3><i class="fas fa-calendar-alt"></i> Fechas y Horarios</h3>
+                        
+                        <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="form-group">
+                                <label for="fecha_inicio">Fecha y Hora de Inicio <span style="color: red;">*</span></label>
+                                <input type="datetime-local" id="fecha_inicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fecha_fin">Fecha y Hora de Fin <span style="color: red;">*</span></label>
+                                <input type="datetime-local" id="fecha_fin" name="fecha_fin" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class="fas fa-users"></i> Participantes</h3>
+                        
                         <div class="form-group">
-                            <label for="fecha_inicio">Fecha y Hora de Inicio <span class="required">*</span></label>
-                            <input type="datetime-local" id="fecha_inicio" name="fecha_inicio" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fecha_fin">Fecha y Hora de Fin <span class="required">*</span></label>
-                            <input type="datetime-local" id="fecha_fin" name="fecha_fin" required>
+                            <label for="tipo_participantes">Tipo de Participantes</label>
+                            <select id="tipo_participantes" name="tipo_participantes" class="form-control">
+                                <option value="instructores" selected>Instructores</option>
+                                <option value="aprendices">Aprendices</option>
+                                <option value="todos">Todos</option>
+                            </select>
+                            <small style="color: #666;">Por el momento, el registro está habilitado para instructores.</small>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-section">
-                    <h3>Participantes</h3>
-                    
-                    <div class="form-group">
-                        <label for="tipo_participantes">Tipo de Participantes</label>
-                        <select id="tipo_participantes" name="tipo_participantes">
-                            <option value="instructores" selected>Instructores</option>
-                            <option value="aprendices">Aprendices</option>
-                            <option value="todos">Todos</option>
-                        </select>
-                        <small class="form-help">Por el momento, el registro está habilitado para instructores.</small>
+                    <div class="form-actions" style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <a href="/eventos/admin" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i>
+                            Crear Evento
+                        </button>
                     </div>
-                </div>
+                </form>
+            </div>
+        </main>
 
-                <div class="form-actions">
-                    <a href="/eventos/admin" class="btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
-                        </svg>
-                        <span>Crear Evento</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </main>
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; <?= date('Y') ?> SENA - Servicio Nacional de Aprendizaje</p>
+            </div>
+        </footer>
+    </div>
 
+    <script src="<?= asset('js/app.js') ?>"></script>
     <script>
         // Preview de imagen
         const imageInput = document.getElementById('imagen');
         const preview = document.getElementById('imagePreview');
-        const uploadLabel = document.querySelector('.file-upload-label');
 
         imageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin-top: 1rem;">`;
                     preview.style.display = 'block';
-                    uploadLabel.style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             }

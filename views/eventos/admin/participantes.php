@@ -3,45 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Participantes - <?= htmlspecialchars($evento['titulo']) ?> | SENAttend</title>
+    <title>Participantes - <?= htmlspecialchars($evento['titulo']) ?></title>
+    <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/eventos/admin.css') ?>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="/eventos/admin/<?= $evento['id'] ?>" class="back-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                </svg>
-            </a>
-            <span>Participantes del Evento</span>
-        </div>
-        <div class="navbar-user">
-            <span class="user-name"><?= htmlspecialchars($user['nombre']) ?></span>
-            <a href="/eventos/logout" class="btn-logout" title="Cerrar sesión">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                </svg>
-            </a>
-        </div>
-    </nav>
+    <div class="wrapper">
+        <?php 
+        $currentPage = 'eventos-dashboard';
+        require __DIR__ . '/../../components/header-eventos.php'; 
+        ?>
 
-    <main class="main-content">
-        <header class="page-header">
-            <div class="header-content">
-                <h1><?= htmlspecialchars($evento['titulo']) ?></h1>
-                <p>Lista de participantes registrados</p>
-            </div>
-            <button class="btn-secondary" onclick="actualizarLista()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                </svg>
-                <span>Actualizar</span>
-            </button>
-        </header>
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <a href="/eventos/admin/<?= $evento['id'] ?>" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver
+                    </a>
+                    <h2>
+                        <i class="fas fa-users"></i>
+                        <?= htmlspecialchars($evento['titulo']) ?>
+                    </h2>
+                    <p class="subtitle">Lista de participantes registrados</p>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                    <button class="btn btn-secondary" onclick="actualizarLista()">
+                        <i class="fas fa-sync"></i>
+                        Actualizar
+                    </button>
+                </div>
 
         <!-- Stats Cards -->
         <div class="stats-grid">
@@ -166,10 +160,19 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
-        </div>
-        <?php endif; ?>
-    </main>
+            </div>
+            <?php endif; ?>
+            </div>
+        </main>
 
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; <?= date('Y') ?> SENA - Servicio Nacional de Aprendizaje</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="<?= asset('js/app.js') ?>"></script>
     <script>
         function filtrarParticipantes() {
             const estado = document.getElementById('filterEstado').value.toLowerCase();
