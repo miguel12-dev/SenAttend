@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escáner QR - Eventos | SENAttend</title>
+    <title>Escáner QR - Eventos</title>
+    <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/eventos/admin.css') ?>">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .scanner-container {
             max-width: 600px;
@@ -221,19 +221,26 @@
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="/eventos/admin" class="back-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                </svg>
-            </a>
-            <span>Escáner QR de Eventos</span>
-        </div>
-    </nav>
+    <div class="wrapper">
+        <?php 
+        $currentPage = 'eventos-scanner';
+        require __DIR__ . '/../../components/header-eventos.php'; 
+        ?>
 
-    <main class="main-content">
-        <div class="scanner-container">
+        <main class="main-content">
+            <div class="container">
+                <div class="page-header">
+                    <a href="/eventos/admin" class="btn-back">
+                        <i class="fas fa-arrow-left"></i>
+                        Volver
+                    </a>
+                    <h2>
+                        <i class="fas fa-qrcode"></i>
+                        Escáner QR de Eventos
+                    </h2>
+                </div>
+
+                <div class="scanner-container">
             <div class="scanner-header">
                 <h1>Validar Código QR</h1>
                 <p>Ingresa o escanea el código QR del participante</p>
@@ -287,9 +294,16 @@
                 </div>
                 <h3>Error</h3>
                 <p id="errorMessage"></p>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; <?= date('Y') ?> SENA - Servicio Nacional de Aprendizaje</p>
+            </div>
+        </footer>
+    </div>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
@@ -299,6 +313,7 @@
         </div>
     </div>
 
+    <script src="<?= asset('js/app.js') ?>"></script>
     <script>
         const tokenInput = document.getElementById('qrToken');
         const resultSuccess = document.getElementById('resultSuccess');
