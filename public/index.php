@@ -420,6 +420,11 @@ $routes = [
             'action' => 'showScanner',
             'middleware' => []
         ],
+        '/eventos/qr/historial-hoy' => [
+            'controller' => EventoQRController::class,
+            'action' => 'historialHoy',
+            'middleware' => []
+        ],
     ],
     'POST' => [
         '/auth/login' => [
