@@ -18,6 +18,8 @@ class Router {
     this.history = [];
     this.beforeNavigateHooks = [];
     this.afterNavigateHooks = [];
+    this.navigationDepth = 0;
+    this.MAX_NAVIGATION_DEPTH = 10;
     
     this.init();
     Router.instance = this;
@@ -109,11 +111,25 @@ class Router {
    * Navega a una ruta
    */
   async navigate(path, state = {}) {
+    // Protección contra bucles de redirección
+    this.navigationDepth++;
+    
+    if (this.navigationDepth > this.MAX_NAVIGATION_DEPTH) {
+      this.navigationDepth = 0;
+      return;
+    }
+    
+    // Resetear depth después de un tiempo
+    setTimeout(() => {
+      this.navigationDepth = 0;
+    }, 1000);
+    
     // Ejecutar hooks antes de navegar
     for (const hook of this.beforeNavigateHooks) {
       const result = await hook(path, state);
       if (result === false) {
-        return; // Cancelar navegación
+        this.navigationDepth--;
+        return;
       }
     }
 
@@ -122,6 +138,8 @@ class Router {
     
     // Cargar ruta
     await this.loadRoute(path, true);
+    
+    this.navigationDepth--;
   }
 
   /**
@@ -131,8 +149,6 @@ class Router {
     const route = this.findRoute(path);
 
     if (!route) {
-      console.error('[Router] Ruta no encontrada:', path);
-      this.navigate('/404');
       return;
     }
 
@@ -144,7 +160,7 @@ class Router {
     for (const middleware of this.middlewares) {
       const result = await middleware({ path, params, query, route });
       if (result === false) {
-        return; // Middleware canceló la navegación
+        return;
       }
     }
 
@@ -177,8 +193,12 @@ class Router {
       window.scrollTo(0, 0);
       
     } catch (error) {
-      console.error('[Router] Error al cargar ruta:', error);
-      this.navigate('/error');
+      // Mostrar mensaje de error sin navegar para evitar bucles
+      if (path !== '/error' && path !== '/404') {
+        if (window.pwaManager?.showToast) {
+          window.pwaManager.showToast('Error al cargar la página', 'error');
+        }
+      }
     }
   }
 

@@ -7,8 +7,6 @@
 
     // Inicialización cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('SENAttend - Sistema de Asistencia SENA inicializado');
-
         // Cerrar alertas automáticamente después de 5 segundos
         autoCloseAlerts();
 
@@ -47,9 +45,7 @@
      * Confirma logout antes de cerrar sesión
      */
     function setupLogoutConfirmation() {
-        // Ya no se requiere confirmación - logout directo
-        // Los enlaces /auth/logout funcionan sin confirmación
-        console.log('Logout directo habilitado');
+        // Logout directo sin confirmación
     }
 
     /**

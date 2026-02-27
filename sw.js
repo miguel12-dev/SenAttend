@@ -56,7 +56,7 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         console.log('[SW] Service Worker instalado correctamente');
-        return self.skipWaiting(); // Activar inmediatamente
+        return self.skipWaiting();
       })
       .catch((error) => {
         console.error('[SW] Error al instalar Service Worker:', error);
@@ -77,7 +77,6 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames
             .filter((cacheName) => {
-              // Eliminar caches que no pertenecen a la versión actual
               return cacheName.startsWith('senattend-') && 
                      !cacheName.startsWith(CACHE_VERSION);
             })
@@ -89,7 +88,7 @@ self.addEventListener('activate', (event) => {
       })
       .then(() => {
         console.log('[SW] Service Worker activado');
-        return self.clients.claim(); // Tomar control inmediato
+        return self.clients.claim();
       })
   );
 });
@@ -102,26 +101,19 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Ignorar peticiones no HTTP/HTTPS
   if (!url.protocol.startsWith('http')) {
     return;
   }
 
-  // Estrategia según el tipo de recurso
   if (isOnlineOnlyRoute(url.pathname)) {
-    // Online Only - No cachear
     event.respondWith(fetchOnlineOnly(request));
   } else if (isStaticAsset(request)) {
-    // Cache First para recursos estáticos
     event.respondWith(cacheFirst(request, CACHE_STATIC));
   } else if (isImage(request)) {
-    // Cache First para imágenes
     event.respondWith(cacheFirst(request, CACHE_IMAGES));
   } else if (isAPIRequest(url.pathname)) {
-    // Network First para APIs (con fallback a cache)
     event.respondWith(networkFirst(request, CACHE_API));
   } else {
-    // Stale While Revalidate para páginas HTML
     event.respondWith(staleWhileRevalidate(request, CACHE_DYNAMIC));
   }
 });
@@ -139,7 +131,6 @@ async function cacheFirst(request, cacheName) {
 
     const response = await fetch(request);
     
-    // Solo cachear respuestas exitosas
     if (response && response.status === 200) {
       const cache = await caches.open(cacheName);
       cache.put(request, response.clone());
@@ -163,7 +154,6 @@ async function networkFirst(request, cacheName) {
   try {
     const response = await fetch(request);
     
-    // Cachear respuesta exitosa
     if (response && response.status === 200) {
       const cache = await caches.open(cacheName);
       cache.put(request, response.clone());
@@ -264,125 +254,5 @@ self.addEventListener('message', (event) => {
     );
   }
 });
-
-/**
- * Manejo de sincronización en segundo plano
- */
-self.addEventListener('sync', (event) => {
-  console.log('[SW] Evento de sincronización:', event.tag);
-  
-  if (event.tag === 'sync-asistencias') {
-    event.waitUntil(syncAsistencias());
-  }
-  
-  if (event.tag === 'sync-anomalias') {
-    event.waitUntil(syncAnomalias());
-  }
-});
-
-/**
- * Sincronizar asistencias pendientes
- */
-async function syncAsistencias() {
-  try {
-    // Recuperar asistencias pendientes del IndexedDB
-    const db = await openDB();
-    const pendingRecords = await getAllPendingRecords(db, 'asistencias');
-    
-    for (const record of pendingRecords) {
-      try {
-        const response = await fetch('/asistencia/guardar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(record.data)
-        });
-        
-        if (response.ok) {
-          await deletePendingRecord(db, 'asistencias', record.id);
-          console.log('[SW] Asistencia sincronizada:', record.id);
-        }
-      } catch (error) {
-        console.error('[SW] Error al sincronizar asistencia:', error);
-      }
-    }
-  } catch (error) {
-    console.error('[SW] Error en syncAsistencias:', error);
-  }
-}
-
-/**
- * Sincronizar anomalías pendientes
- */
-async function syncAnomalias() {
-  try {
-    const db = await openDB();
-    const pendingRecords = await getAllPendingRecords(db, 'anomalias');
-    
-    for (const record of pendingRecords) {
-      try {
-        const response = await fetch('/api/asistencia/anomalia/aprendiz', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(record.data)
-        });
-        
-        if (response.ok) {
-          await deletePendingRecord(db, 'anomalias', record.id);
-          console.log('[SW] Anomalía sincronizada:', record.id);
-        }
-      } catch (error) {
-        console.error('[SW] Error al sincronizar anomalía:', error);
-      }
-    }
-  } catch (error) {
-    console.error('[SW] Error en syncAnomalias:', error);
-  }
-}
-
-/**
- * Helpers para IndexedDB
- */
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open('SENAttendDB', 1);
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      
-      if (!db.objectStoreNames.contains('asistencias')) {
-        db.createObjectStore('asistencias', { keyPath: 'id', autoIncrement: true });
-      }
-      
-      if (!db.objectStoreNames.contains('anomalias')) {
-        db.createObjectStore('anomalias', { keyPath: 'id', autoIncrement: true });
-      }
-    };
-  });
-}
-
-function getAllPendingRecords(db, storeName) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], 'readonly');
-    const store = transaction.objectStore(storeName);
-    const request = store.getAll();
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-}
-
-function deletePendingRecord(db, storeName, id) {
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([storeName], 'readwrite');
-    const store = transaction.objectStore(storeName);
-    const request = store.delete(id);
-    
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
-}
 
 console.log('[SW] Service Worker cargado:', CACHE_VERSION);

@@ -13,10 +13,14 @@ import { userStore } from './state/state-manager.js';
  * Middleware de autenticación
  */
 const authMiddleware = async ({ path, route }) => {
+  // Evitar bucle de redirección
+  if (path === '/login') {
+    return true;
+  }
+  
   if (!userStore.isAuthenticated()) {
-    console.log('[Router] Usuario no autenticado, redirigiendo a login');
-    router.navigate('/login');
-    return false; // Cancelar navegación
+    router.replace('/login');
+    return false;
   }
   return true;
 };
@@ -27,8 +31,7 @@ const authMiddleware = async ({ path, route }) => {
 const permissionMiddleware = (permission) => {
   return async ({ path, route }) => {
     if (!userStore.hasPermission(permission)) {
-      console.log(`[Router] Sin permiso: ${permission}`);
-      router.navigate('/dashboard');
+      router.replace('/dashboard');
       window.pwaManager?.showToast('No tienes permisos para esta acción', 'error');
       return false;
     }
@@ -44,7 +47,7 @@ const permissionMiddleware = (permission) => {
 router.register('/', async () => {
   // Si está autenticado, redirigir a dashboard
   if (userStore.isAuthenticated()) {
-    router.navigate('/dashboard');
+    router.replace('/dashboard');
     return;
   }
   
@@ -55,7 +58,7 @@ router.register('/', async () => {
 // Login
 router.register('/login', async () => {
   if (userStore.isAuthenticated()) {
-    router.navigate('/dashboard');
+    router.replace('/dashboard');
     return;
   }
   
@@ -78,7 +81,6 @@ router.register('/dashboard', async () => {
     loadView('dashboard', { user });
     
   } catch (error) {
-    console.error('[Router] Error cargando dashboard:', error);
     window.pwaManager?.showToast('Error al cargar dashboard', 'error');
   } finally {
     window.appStore.setLoading(false);
@@ -104,7 +106,6 @@ router.register('/fichas', async (params, query) => {
     });
     
   } catch (error) {
-    console.error('[Router] Error cargando fichas:', error);
     window.pwaManager?.showToast('Error al cargar fichas', 'error');
   } finally {
     window.appStore.setLoading(false);
@@ -125,7 +126,6 @@ router.register('/fichas/:id', async (params) => {
     loadView('fichas/show', { ficha, aprendices });
     
   } catch (error) {
-    console.error('[Router] Error cargando ficha:', error);
     window.pwaManager?.showToast('Ficha no encontrada', 'error');
     router.navigate('/fichas');
   } finally {
@@ -152,7 +152,7 @@ router.register('/aprendices', async (params, query) => {
     });
     
   } catch (error) {
-    console.error('[Router] Error cargando aprendices:', error);
+    window.pwaManager?.showToast('Error al cargar aprendices', 'error');
   } finally {
     window.appStore.setLoading(false);
   }
@@ -176,7 +176,7 @@ router.register('/qr/escanear', async () => {
     loadView('qr/escanear');
     
   } catch (error) {
-    console.error('[Router] Error cargando escáner QR:', error);
+    window.pwaManager?.showToast('Error al cargar escáner QR', 'error');
   } finally {
     window.appStore.setLoading(false);
   }
@@ -206,7 +206,7 @@ router.register('/anomalias/registrar', async () => {
     loadView('anomalias/registrar', { fichas });
     
   } catch (error) {
-    console.error('[Router] Error cargando registro de anomalías:', error);
+    window.pwaManager?.showToast('Error al cargar registro de anomalías', 'error');
   } finally {
     window.appStore.setLoading(false);
   }
@@ -226,7 +226,7 @@ router.register('/instructor-fichas', async () => {
     loadView('instructor-fichas/index', { estadisticas, instructores });
     
   } catch (error) {
-    console.error('[Router] Error cargando asignaciones:', error);
+    window.pwaManager?.showToast('Error al cargar asignaciones', 'error');
   } finally {
     window.appStore.setLoading(false);
   }
@@ -243,7 +243,7 @@ router.register('/analytics', async () => {
     loadView('analytics/index');
     
   } catch (error) {
-    console.error('[Router] Error cargando analytics:', error);
+    window.pwaManager?.showToast('Error al cargar analytics', 'error');
   } finally {
     window.appStore.setLoading(false);
   }
@@ -261,7 +261,7 @@ router.register('/perfil', async () => {
     loadView('profile/index', { user });
     
   } catch (error) {
-    console.error('[Router] Error cargando perfil:', error);
+    window.pwaManager?.showToast('Error al cargar perfil', 'error');
   } finally {
     window.appStore.setLoading(false);
   }
@@ -288,11 +288,6 @@ router.register('/error', async () => {
  * Hooks globales
  */
 
-// Antes de navegar - Logging
-router.beforeNavigate((path) => {
-  console.log(`[Router] Navegando a: ${path}`);
-});
-
 // Después de navegar - Actualizar título
 router.afterNavigate((path, route) => {
   if (route?.route?.meta?.title) {
@@ -312,7 +307,6 @@ async function loadView(viewPath, data = {}) {
                     document.querySelector('main');
   
   if (!container) {
-    console.error('[Router] Container no encontrado');
     return;
   }
   
@@ -343,7 +337,6 @@ async function loadView(viewPath, data = {}) {
     initializeViewComponents(container, data);
     
   } catch (error) {
-    console.error('[Router] Error cargando vista:', error);
     container.innerHTML = `
       <div class="error-message">
         <i class="fas fa-exclamation-triangle"></i>
@@ -376,7 +369,7 @@ function initializeViewComponents(container, data) {
     try {
       await ComponentFactory.mount(componentName, element, componentProps);
     } catch (error) {
-      console.error(`[Router] Error montando componente ${componentName}:`, error);
+      // Error al montar componente - continuar con otros componentes
     }
   });
   
@@ -429,7 +422,5 @@ document.addEventListener('DOMContentLoaded', () => {
     router.navigate(href);
   });
 });
-
-console.log('[Routes] Rutas SPA configuradas');
 
 export default router;
