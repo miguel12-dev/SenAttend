@@ -1,0 +1,205 @@
+/* ============================================
+   Eventos Auth Styles - Complementarios
+   Usa los estilos base de common/style.css y auth/login.css
+   ============================================ */
+
+/* Override para la página de login de eventos */
+body.eventos-login {
+    background: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.eventos-login .login-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 20px;
+    background: #ffffff;
+    width: 100%;
+    max-width: 550px; /* Más ancho que el login principal */
+    margin: 0 auto;
+}
+
+body.eventos-login .login-box {
+    background: var(--color-white);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    width: 100%;
+}
+
+body.eventos-login .login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+body.eventos-login .login-header h1 {
+    color: var(--color-primary);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+body.eventos-login .login-header p {
+    color: var(--color-gray-600);
+    font-size: 0.95rem;
+    margin: 0.25rem 0;
+}
+
+body.eventos-login .login-header .login-subtitle {
+    color: var(--color-gray-500);
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+body.eventos-login .login-form {
+    margin: 0;
+}
+
+body.eventos-login .login-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+body.eventos-login .login-form .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+body.eventos-login .login-form .form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: 1rem;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+body.eventos-login .login-form .form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(57, 169, 0, 0.1);
+}
+
+body.eventos-login .login-form .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+body.eventos-login .login-form .btn i {
+    font-size: 1rem;
+}
+
+body.eventos-login .login-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+}
+
+body.eventos-login .login-footer .link-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-gray-600);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+}
+
+body.eventos-login .login-footer .link-back:hover {
+    color: var(--color-primary);
+}
+
+body.eventos-login .login-footer .link-back i {
+    font-size: 0.85rem;
+}
+
+/* Alertas */
+body.eventos-login .alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+}
+
+body.eventos-login .alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+body.eventos-login .alert-error i {
+    font-size: 1.1rem;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    body.eventos-login .login-container {
+        padding: 1.5rem 15px;
+        max-width: 100%;
+    }
+
+    body.eventos-login .login-box {
+        padding: 2rem 1.5rem;
+    }
+
+    body.eventos-login .login-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+
+    body.eventos-login .login-header h1 {
+        font-size: 2rem;
+    }
+
+    body.eventos-login .login-header p {
+        font-size: 0.875rem;
+    }
+
+    body.eventos-login .login-form .form-control {
+        padding: 0.75rem 0.875rem;
+        font-size: 0.95rem;
+    }
+
+    body.eventos-login .login-form .btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    body.eventos-login .login-container {
+        padding: 1rem 10px;
+    }
+
+    body.eventos-login .login-box {
+        padding: 1.5rem 1rem;
+    }
+
+    body.eventos-login .login-header h1 {
+        font-size: 1.75rem;
+    }
+
+    body.eventos-login .login-header p {
+        font-size: 0.85rem;
+    }
+}
