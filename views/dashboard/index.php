@@ -1,20 +1,22 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SENAttend</title>
-    <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
-    <link rel="stylesheet" href="<?= asset('css/dashboard-admin/dashboard.css') ?>">
-</head>
-<body>
-    <div class="wrapper">
-        <?php 
-        $currentPage = 'dashboard';
-        require __DIR__ . '/../components/header.php'; 
-        ?>
+<?php 
+$title = 'Dashboard - SENAttend';
+$styles = [
+    'css/dashboard/dashboard.css',
+    'css/dashboard-admin/dashboard.css'
+];
+$scripts = [
+    'js/dashboard-admin/dashboard.js'
+];
+
+ob_start();
+?>
+
+<!-- Dashboard Content -->
+<div class="wrapper">
+    <?php 
+    $currentPage = 'dashboard';
+    require __DIR__ . '/../components/header.php'; 
+    ?>
 
         <main class="main-content">
             <div class="container">
@@ -242,9 +244,9 @@
                 <p>&copy; <?= date('Y') ?> SENA - Servicio Nacional de Aprendizaje</p>
             </div>
         </footer>
-    </div>
+</div>
 
-    <script src="<?= asset('js/app.js') ?>"></script>
-    <script src="<?= asset('js/dashboard-admin/dashboard.js') ?>"></script>
-</body>
-</html>
+<?php
+$content = ob_get_clean();
+require __DIR__ . '/../layouts/pwa-base.php';
+?>
