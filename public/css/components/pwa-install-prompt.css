@@ -1,0 +1,262 @@
+/**
+ * Estilos para el componente de instalación PWA
+ * Siguiendo principios de Clean Code y separación de responsabilidades
+ */
+
+/* ============================================
+   PROMPT DE INSTALACIÓN
+   ============================================ */
+
+.pwa-install-prompt {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 600px;
+    width: calc(100% - 40px);
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 24px;
+    z-index: 9999;
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.pwa-install-prompt__content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.pwa-install-prompt__icon {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #39A900 0%, #2d8500 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 28px;
+}
+
+.pwa-install-prompt__text {
+    flex: 1;
+    min-width: 0;
+}
+
+.pwa-install-prompt__title {
+    margin: 0 0 8px 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.pwa-install-prompt__description {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #666666;
+}
+
+.pwa-install-prompt__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.pwa-install-prompt__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.pwa-install-prompt__btn--primary {
+    background: linear-gradient(135deg, #39A900 0%, #2d8500 100%);
+    color: #ffffff;
+}
+
+.pwa-install-prompt__btn--primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(57, 169, 0, 0.4);
+}
+
+.pwa-install-prompt__btn--primary:active {
+    transform: translateY(0);
+}
+
+.pwa-install-prompt__btn--secondary {
+    background: #f5f5f5;
+    color: #666666;
+}
+
+.pwa-install-prompt__btn--secondary:hover {
+    background: #e0e0e0;
+}
+
+.pwa-install-prompt__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #999999;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pwa-install-prompt__close:hover {
+    background: #f5f5f5;
+    color: #666666;
+}
+
+/* ============================================
+   MENSAJE DE ÉXITO
+   ============================================ */
+
+.pwa-install-success {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    padding: 16px 24px;
+    z-index: 10000;
+    animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.pwa-install-success__content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pwa-install-success__icon {
+    color: #39A900;
+    font-size: 1.5rem;
+}
+
+.pwa-install-success__message {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (min-width: 768px) {
+    .pwa-install-prompt__content {
+        flex-direction: row;
+    }
+    
+    .pwa-install-prompt__actions {
+        flex-direction: row;
+        margin-top: 0;
+        margin-left: auto;
+    }
+    
+    .pwa-install-prompt__btn {
+        padding: 12px 24px;
+    }
+}
+
+@media (max-width: 767px) {
+    .pwa-install-prompt {
+        bottom: 0;
+        left: 0;
+        transform: none;
+        max-width: 100%;
+        width: 100%;
+        border-radius: 16px 16px 0 0;
+        padding: 20px;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .pwa-install-prompt__content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .pwa-install-prompt__icon {
+        margin: 0 auto;
+    }
+    
+    .pwa-install-success {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        width: auto;
+    }
+}
+
+/* ============================================
+   ESTADOS ESPECIALES
+   ============================================ */
+
+.pwa-install-prompt[aria-hidden="true"] {
+    display: none;
+}
+
+.pwa-install-prompt__btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pwa-install-prompt__btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}

@@ -87,6 +87,22 @@ $requestMethod = $_SERVER['REQUEST_METHOD'];
 $uri = strtok($requestUri, '?');
 $uri = rtrim($uri, '/') ?: '/';
 
+// Servir archivos PWA desde la raíz del proyecto
+if ($uri === '/manifest.json' || $uri === '/sw.js') {
+    $filePath = __DIR__ . '/../' . basename($uri);
+    
+    if (file_exists($filePath)) {
+        $contentType = $uri === '/manifest.json' ? 'application/manifest+json' : 'application/javascript';
+        
+        header('Content-Type: ' . $contentType);
+        header('Cache-Control: public, max-age=0');
+        header('Service-Worker-Allowed: /');
+        
+        readfile($filePath);
+        exit;
+    }
+}
+
 // Inicializar dependencias
 $session = new SessionManager();
 $userRepository = new UserRepository();

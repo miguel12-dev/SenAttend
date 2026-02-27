@@ -53,7 +53,16 @@ if (!function_exists('asset')) {
         // Siempre servir assets desde la raíz pública del dominio.
         // Esto evita errores cuando las rutas amigables cambian (por ejemplo /eventos/admin/9)
         // y garantiza que CSS/JS/imagenes se resuelvan correctamente.
-        return '/' . ltrim(str_replace('\\', '/', $path), '/');
+        $assetPath = '/' . ltrim(str_replace('\\', '/', $path), '/');
+        
+        // Agregar versión basada en el timestamp del archivo para cache-busting
+        $fullPath = __DIR__ . '/../public/' . ltrim($path, '/');
+        if (file_exists($fullPath)) {
+            $version = filemtime($fullPath);
+            $assetPath .= '?v=' . $version;
+        }
+        
+        return $assetPath;
     }
 }
 

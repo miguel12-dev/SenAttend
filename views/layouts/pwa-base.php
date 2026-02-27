@@ -21,7 +21,7 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="SENAttend - Sistema de Asistencia SENA">
     <meta property="og:description" content="Sistema de gestión de asistencia para el SENA">
-    <meta property="og:image" content="<?= asset('assets/icons/icon-512x512.png') ?>">
+    <meta property="og:image" content="<?= asset('assets/icons/web-app-manifest-512x512.png') ?>">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary">
@@ -31,25 +31,21 @@
     <title><?= $title ?? 'SENAttend - Sistema de Asistencia SENA' ?></title>
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="<?= asset('manifest.json') ?>">
+    <link rel="manifest" href="/manifest.json">
     
     <!-- Favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="<?= asset('assets/icons/favicon-32x32.png') ?>">
-    <link rel="icon" type="image/png" sizes="16x16" href="<?= asset('assets/icons/favicon-16x16.png') ?>">
+    <link rel="icon" type="image/png" sizes="96x96" href="<?= asset('assets/icons/favicon-96x96.png') ?>">
+    <link rel="shortcut icon" href="<?= asset('assets/icons/favicon-96x96.png') ?>">
     
     <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset('assets/icons/apple-touch-icon.png') ?>">
-    <link rel="apple-touch-icon" sizes="152x152" href="<?= asset('assets/icons/icon-152x152.png') ?>">
-    <link rel="apple-touch-icon" sizes="144x144" href="<?= asset('assets/icons/icon-144x144.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('assets/icons/apple-touch-icon.png') ?>">
     
     <!-- Splash Screens iOS -->
-    <link rel="apple-touch-startup-image" href="<?= asset('assets/splash/splash-640x1136.png') ?>" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
-    <link rel="apple-touch-startup-image" href="<?= asset('assets/splash/splash-750x1334.png') ?>" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
-    <link rel="apple-touch-startup-image" href="<?= asset('assets/splash/splash-1242x2208.png') ?>" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+    <!-- Las splash screens se pueden generar bajo demanda por iOS -->
     
     <!-- MS Tiles -->
     <meta name="msapplication-TileColor" content="#39A900">
-    <meta name="msapplication-TileImage" content="<?= asset('assets/icons/icon-144x144.png') ?>">
+    <meta name="msapplication-TileImage" content="<?= asset('assets/icons/web-app-manifest-192x192.png') ?>">
     
     <!-- Preconnect para performance -->
     <link rel="preconnect" href="<?= getEnv('APP_URL', 'http://localhost:8000') ?>">
