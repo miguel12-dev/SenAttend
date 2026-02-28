@@ -12,17 +12,11 @@ const CACHE_IMAGES = `${CACHE_VERSION}-images`;
 const CACHE_API = `${CACHE_VERSION}-api`;
 
 // Recursos estáticos críticos que siempre deben estar disponibles offline
+// Nota: Solo incluir recursos que existen y son críticos
 const STATIC_ASSETS = [
-  '/',
-  '/dashboard',
   '/manifest.json',
-  '/css/common/style.css',
-  '/css/common/components.css',
-  '/css/dashboard/dashboard.css',
-  '/js/app.js',
-  '/js/common/app.js',
-  '/js/common/components.js',
-  '/assets/vendor/fontawesome/css/all.min.css',
+  '/offline.html',
+  // Los demás archivos se cachearán bajo demanda
 ];
 
 // Rutas que requieren estar online (no se cachean)
@@ -52,7 +46,15 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_STATIC)
       .then((cache) => {
         console.log('[SW] Pre-cacheando recursos estáticos');
-        return cache.addAll(STATIC_ASSETS);
+        // Usar Promise.allSettled para que no falle si un recurso no existe
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url => 
+            cache.add(url).catch(err => {
+              console.warn('[SW] No se pudo cachear:', url, err);
+              return null;
+            })
+          )
+        );
       })
       .then(() => {
         console.log('[SW] Service Worker instalado correctamente');
@@ -60,6 +62,8 @@ self.addEventListener('install', (event) => {
       })
       .catch((error) => {
         console.error('[SW] Error al instalar Service Worker:', error);
+        // Aún así continuar con la instalación
+        return self.skipWaiting();
       })
   );
 });
@@ -101,7 +105,18 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
+  // Solo interceptar peticiones HTTP/HTTPS
   if (!url.protocol.startsWith('http')) {
+    return;
+  }
+  
+  // Solo interceptar peticiones del mismo origen o assets conocidos
+  if (url.origin !== location.origin) {
+    return;
+  }
+  
+  // No interceptar peticiones POST/PUT/DELETE/PATCH en APIs críticas
+  if (request.method !== 'GET') {
     return;
   }
 
@@ -139,9 +154,26 @@ async function cacheFirst(request, cacheName) {
     return response;
   } catch (error) {
     console.error('[SW] Error en cacheFirst:', error);
-    return caches.match('/offline.html') || new Response('Sin conexión', {
+    
+    // Intentar obtener desde cache una vez más
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    
+    // Si es un recurso HTML, intentar devolver la página offline
+    if (request.destination === 'document') {
+      const offlinePage = await caches.match('/offline.html');
+      if (offlinePage) {
+        return offlinePage;
+      }
+    }
+    
+    // Último recurso: devolver una respuesta genérica
+    return new Response('Sin conexión - Recurso no disponible offline', {
       status: 503,
-      statusText: 'Service Unavailable'
+      statusText: 'Service Unavailable',
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
     });
   }
 }
@@ -186,14 +218,27 @@ async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
   
-  const fetchPromise = fetch(request).then((response) => {
-    if (response && response.status === 200) {
-      cache.put(request, response.clone());
-    }
-    return response;
-  }).catch(() => cachedResponse);
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response && response.status === 200) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch((error) => {
+      console.log('[SW] Fetch failed en staleWhileRevalidate:', error);
+      return cachedResponse;
+    });
   
-  return cachedResponse || fetchPromise;
+  // Si hay respuesta en cache, devolverla inmediatamente
+  // Si no, esperar por la red
+  if (cachedResponse) {
+    // Actualizar en segundo plano pero no esperar
+    fetchPromise.catch(() => {});
+    return cachedResponse;
+  }
+  
+  return fetchPromise;
 }
 
 /**
