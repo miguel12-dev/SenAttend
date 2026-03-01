@@ -89,16 +89,40 @@ $uri = rtrim($uri, '/') ?: '/';
 
 // Servir archivos PWA desde la raíz del proyecto
 if ($uri === '/manifest.json' || $uri === '/sw.js') {
-    $filePath = __DIR__ . '/../' . basename($uri);
-    
-    if (file_exists($filePath)) {
+    try {
+        $filePath = __DIR__ . '/../' . basename($uri);
+        
+        if (!file_exists($filePath)) {
+            http_response_code(404);
+            echo json_encode(['error' => 'File not found']);
+            exit;
+        }
+        
         $contentType = $uri === '/manifest.json' ? 'application/manifest+json' : 'application/javascript';
         
         header('Content-Type: ' . $contentType);
         header('Cache-Control: public, max-age=0');
-        header('Service-Worker-Allowed: /');
         
-        readfile($filePath);
+        if ($uri === '/sw.js') {
+            header('Service-Worker-Allowed: /');
+        }
+        
+        $content = file_get_contents($filePath);
+        if ($content === false) {
+            throw new Exception('Unable to read file');
+        }
+        
+        echo $content;
+        exit;
+    } catch (Exception $e) {
+        error_log('PWA file serving error: ' . $e->getMessage());
+        http_response_code(500);
+        
+        if (defined('APP_ENV') && APP_ENV === 'local') {
+            echo json_encode(['error' => $e->getMessage()]);
+        } else {
+            echo json_encode(['error' => 'Internal server error']);
+        }
         exit;
     }
 }

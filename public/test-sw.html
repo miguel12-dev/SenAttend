@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Service Worker - SENAttend</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #39A900;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #39A900;
+        }
+        
+        .test-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #ddd;
+        }
+        
+        .test-item.success {
+            border-left-color: #4ade80;
+            background: #f0fdf4;
+        }
+        
+        .test-item.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        
+        .test-item.warning {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        button {
+            background: #39A900;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #2d7f00;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .button-group {
+            margin: 20px 0;
+        }
+        
+        #results {
+            margin-top: 20px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #39A900;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Diagnóstico del Service Worker</h1>
+        <p>Herramienta de diagnóstico para verificar el estado del Service Worker de SENAttend PWA</p>
+        
+        <div class="button-group">
+            <button onclick="runAllTests()">Ejecutar Todos los Tests</button>
+            <button onclick="unregisterSW()">Desregistrar SW</button>
+            <button onclick="clearAllCaches()">Limpiar Caches</button>
+            <button onclick="window.location.reload()">Recargar Página</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('results');
+
+        function addResult(title, status, message, details = '') {
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const item = document.createElement('div');
+            item.className = `test-item ${status}`;
+            item.innerHTML = `
+                <strong><span class="icon">${icons[status]}</span>${title}</strong>
+                <p>${message}</p>
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+            resultsDiv.appendChild(item);
+        }
+
+        function clearResults() {
+            resultsDiv.innerHTML = '';
+        }
+
+        async function runAllTests() {
+            clearResults();
+            
+            addResult('Iniciando Tests', 'info', 'Ejecutando suite de diagnóstico del Service Worker...');
+            
+            await test1_CheckSWSupport();
+            await test2_CheckRegistration();
+            await test3_CheckCaches();
+            await test4_CheckOfflinePage();
+            await test5_CheckManifest();
+            await test6_FetchTest();
+            await test7_CheckConsoleErrors();
+            
+            addResult('Tests Completados', 'success', 'Todos los tests han finalizado. Revisa los resultados arriba.');
+        }
+
+        async function test1_CheckSWSupport() {
+            if ('serviceWorker' in navigator) {
+                addResult(
+                    'Test 1: Soporte de Service Worker',
+                    'success',
+                    'El navegador soporta Service Workers'
+                );
+            } else {
+                addResult(
+                    'Test 1: Soporte de Service Worker',
+                    'error',
+                    'El navegador NO soporta Service Workers. La PWA no funcionará.'
+                );
+            }
+        }
+
+        async function test2_CheckRegistration() {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                
+                if (registrations.length > 0) {
+                    const details = registrations.map((reg, i) => 
+                        `SW ${i + 1}:\n` +
+                        `  Scope: ${reg.scope}\n` +
+                        `  Estado: ${reg.active ? 'Activo' : reg.installing ? 'Instalando' : 'Inactivo'}\n` +
+                        `  Actualización: ${reg.updateViaCache}`
+                    ).join('\n\n');
+                    
+                    addResult(
+                        'Test 2: Service Workers Registrados',
+                        'success',
+                        `Se encontraron ${registrations.length} Service Worker(s) registrado(s)`,
+                        details
+                    );
+                } else {
+                    addResult(
+                        'Test 2: Service Workers Registrados',
+                        'warning',
+                        'No se encontraron Service Workers registrados. La PWA no está activa.'
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'Test 2: Service Workers Registrados',
+                    'error',
+                    'Error al verificar registros: ' + error.message
+                );
+            }
+        }
+
+        async function test3_CheckCaches() {
+            try {
+                const cacheNames = await caches.keys();
+                
+                if (cacheNames.length > 0) {
+                    let details = `Caches encontrados (${cacheNames.length}):\n\n`;
+                    
+                    for (const cacheName of cacheNames) {
+                        const cache = await caches.open(cacheName);
+                        const keys = await cache.keys();
+                        details += `${cacheName} (${keys.length} recursos)\n`;
+                        
+                        // Mostrar algunos recursos
+                        keys.slice(0, 5).forEach(req => {
+                            details += `  - ${req.url}\n`;
+                        });
+                        if (keys.length > 5) {
+                            details += `  ... y ${keys.length - 5} más\n`;
+                        }
+                        details += '\n';
+                    }
+                    
+                    addResult(
+                        'Test 3: Caches',
+                        'success',
+                        'Caches encontrados y funcionando',
+                        details
+                    );
+                } else {
+                    addResult(
+                        'Test 3: Caches',
+                        'warning',
+                        'No se encontraron caches. Los recursos no están disponibles offline.'
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'Test 3: Caches',
+                    'error',
+                    'Error al verificar caches: ' + error.message
+                );
+            }
+        }
+
+        async function test4_CheckOfflinePage() {
+            try {
+                const response = await fetch('/offline.html');
+                
+                if (response.ok) {
+                    addResult(
+                        'Test 4: Página Offline',
+                        'success',
+                        'La página offline (/offline.html) existe y es accesible'
+                    );
+                    
+                    // Verificar si está en cache
+                    const cached = await caches.match('/offline.html');
+                    if (cached) {
+                        addResult(
+                            'Test 4b: Página Offline en Cache',
+                            'success',
+                            'La página offline está cacheada correctamente'
+                        );
+                    } else {
+                        addResult(
+                            'Test 4b: Página Offline en Cache',
+                            'warning',
+                            'La página offline NO está en cache. No funcionará sin conexión.'
+                        );
+                    }
+                } else {
+                    addResult(
+                        'Test 4: Página Offline',
+                        'error',
+                        `La página offline devuelve error ${response.status}`
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'Test 4: Página Offline',
+                    'error',
+                    'No se pudo verificar la página offline: ' + error.message
+                );
+            }
+        }
+
+        async function test5_CheckManifest() {
+            try {
+                const response = await fetch('/manifest.json');
+                
+                if (response.ok) {
+                    const manifest = await response.json();
+                    const details = JSON.stringify(manifest, null, 2);
+                    
+                    addResult(
+                        'Test 5: Manifest',
+                        'success',
+                        'El manifest.json se carga correctamente',
+                        details.substring(0, 500) + (details.length > 500 ? '...' : '')
+                    );
+                } else {
+                    addResult(
+                        'Test 5: Manifest',
+                        'error',
+                        `El manifest.json devuelve error ${response.status}`
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'Test 5: Manifest',
+                    'error',
+                    'Error al cargar manifest.json: ' + error.message
+                );
+            }
+        }
+
+        async function test6_FetchTest() {
+            try {
+                const testUrls = [
+                    '/sw.js',
+                    '/manifest.json',
+                    '/offline.html'
+                ];
+                
+                let allPassed = true;
+                let details = 'Resultados de fetch:\n\n';
+                
+                for (const url of testUrls) {
+                    try {
+                        const response = await fetch(url);
+                        const status = response.ok ? '✓' : '✗';
+                        details += `${status} ${url} - ${response.status} ${response.statusText}\n`;
+                        if (!response.ok) allPassed = false;
+                    } catch (error) {
+                        details += `✗ ${url} - Error: ${error.message}\n`;
+                        allPassed = false;
+                    }
+                }
+                
+                addResult(
+                    'Test 6: Fetch de Recursos PWA',
+                    allPassed ? 'success' : 'warning',
+                    allPassed ? 'Todos los recursos se pueden obtener' : 'Algunos recursos fallaron',
+                    details
+                );
+            } catch (error) {
+                addResult(
+                    'Test 6: Fetch de Recursos PWA',
+                    'error',
+                    'Error en test de fetch: ' + error.message
+                );
+            }
+        }
+
+        async function test7_CheckConsoleErrors() {
+            addResult(
+                'Test 7: Errores de Consola',
+                'info',
+                'Abre DevTools > Console y verifica que no haya errores relacionados con:\n' +
+                '• "Failed to fetch"\n' +
+                '• "Failed to convert value to \'Response\'"\n' +
+                '• Errores del Service Worker'
+            );
+        }
+
+        async function unregisterSW() {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const reg of registrations) {
+                    await reg.unregister();
+                }
+                alert('Todos los Service Workers han sido desregistrados. Recarga la página.');
+            } catch (error) {
+                alert('Error al desregistrar: ' + error.message);
+            }
+        }
+
+        async function clearAllCaches() {
+            try {
+                const cacheNames = await caches.keys();
+                for (const cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                }
+                alert(`${cacheNames.length} cache(s) eliminado(s). Recarga la página.`);
+            } catch (error) {
+                alert('Error al limpiar caches: ' + error.message);
+            }
+        }
+
+        // Ejecutar tests automáticamente al cargar
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>
