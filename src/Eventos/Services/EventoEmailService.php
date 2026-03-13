@@ -53,7 +53,6 @@ class EventoEmailService
     private function configurarMailer(): void
     {
         try {
-            // Configuración del servidor
             $this->mailer->isSMTP();
             $this->mailer->Host = $this->config['host'];
             $this->mailer->SMTPAuth = true;
@@ -63,13 +62,10 @@ class EventoEmailService
             $this->mailer->Port = $this->config['port'];
             $this->mailer->CharSet = 'UTF-8';
 
-            // Remitente
             $this->mailer->setFrom($this->config['from_email'], $this->config['from_name']);
 
-            // Configuración adicional
             $this->mailer->isHTML(true);
             
-            // Log de configuración (solo en desarrollo, sin mostrar password completo)
             if (defined('APP_ENV') && (APP_ENV === 'local' || APP_ENV === 'development')) {
                 error_log("EventoEmailService: Config SMTP - Host: {$this->config['host']}, Port: {$this->config['port']}, User: " . 
                     (empty($this->config['username']) ? 'VACÍO' : substr($this->config['username'], 0, 5) . '***') . 
@@ -79,6 +75,69 @@ class EventoEmailService
         } catch (Exception $e) {
             error_log("EventoEmailService: Error configurando mailer: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Adjunta el logo del SENA como imagen embebida
+     */
+    private function attachSenaLogo(): ?string
+    {
+        try {
+            $logoPath = __DIR__ . '/../../../public/images/logo_sena_blanco.png';
+            
+            if (!file_exists($logoPath)) {
+                error_log("Logo SENA no encontrado en: {$logoPath}");
+                return null;
+            }
+
+            $cid = 'logo_sena_' . uniqid();
+            $this->mailer->addEmbeddedImage($logoPath, $cid, 'logo_sena_blanco.png', 'base64', 'image/png');
+            
+            return $cid;
+        } catch (Exception $e) {
+            error_log("Error adjuntando logo SENA: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Genera el mensaje legal del SENA
+     */
+    private function getLegalDisclaimer(): string
+    {
+        return '<div style="background-color: #f8f9fa; border-top: 2px solid #dee2e6; padding: 20px; margin-top: 20px; font-size: 11px; color: #6c757d; line-height: 1.5;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #495057;">Aviso Legal:</p>
+            <p style="margin: 0 0 10px 0; text-align: justify;">
+                Este mensaje y cualquier archivo adjunto pueden contener información pública clasificada y/o reservada bajo custodia o propiedad del SENA, 
+                destinada exclusivamente a su(s) destinatario(s). Dicha información debe ser utilizada únicamente para la finalidad con la que fue enviada 
+                y en cumplimiento de la normativa aplicable.
+            </p>
+            <p style="margin: 0 0 10px 0; text-align: justify;">
+                Si usted no es el destinatario autorizado o ha recibido este mensaje por error, le solicitamos que omita su contenido, informe de inmediato 
+                al remitente por correo electrónico con copia a <a href="mailto:servicioalciudadano@sena.edu.co" style="color: #39A900;">servicioalciudadano@sena.edu.co</a> 
+                y elimine el mensaje. La retención, difusión, distribución o copia de este mensaje está prohibida y puede acarrear sanciones legales.
+            </p>
+            <p style="margin: 0; text-align: justify;">
+                Para más información, consulte nuestras Políticas de Seguridad y Privacidad de la Información y las Políticas de Tratamiento para la 
+                Protección de Datos Personales, disponibles en el sitio web del SENA.
+            </p>
+        </div>';
+    }
+
+    /**
+     * Genera el texto plano del mensaje legal
+     */
+    private function getLegalDisclaimerPlainText(): string
+    {
+        return "\n\nAVISO LEGAL:\n\n" .
+               "Este mensaje y cualquier archivo adjunto pueden contener información pública clasificada y/o reservada bajo custodia o propiedad del SENA, " .
+               "destinada exclusivamente a su(s) destinatario(s). Dicha información debe ser utilizada únicamente para la finalidad con la que fue enviada " .
+               "y en cumplimiento de la normativa aplicable.\n\n" .
+               "Si usted no es el destinatario autorizado o ha recibido este mensaje por error, le solicitamos que omita su contenido, informe de inmediato " .
+               "al remitente por correo electrónico con copia a servicioalciudadano@sena.edu.co y elimine el mensaje. La retención, difusión, distribución " .
+               "o copia de este mensaje está prohibida y puede acarrear sanciones legales.\n\n" .
+               "Para más información, consulte nuestras Políticas de Seguridad y Privacidad de la Información y las Políticas de Tratamiento para la " .
+               "Protección de Datos Personales, disponibles en el sitio web del SENA.";
     }
 
     /**
@@ -128,13 +187,15 @@ class EventoEmailService
             $this->mailer->addAddress($email, $nombreCompleto);
             $this->mailer->Subject = "Acceso al Módulo de Eventos | SENAttend";
 
+            $logoCid = $this->attachSenaLogo();
+
             $baseUrl = $_ENV['APP_URL'] ?? getenv('APP_URL') ?? 'https://senattend.adso.pro';
             $loginUrl = $loginPath;
             if (!empty($baseUrl) && !preg_match('#^https?://#i', $loginPath)) {
                 $loginUrl = rtrim($baseUrl, '/') . $loginPath;
             }
 
-            $this->mailer->Body = $this->generarCuerpoCredenciales($nombreCompleto, $email, $passwordPlano, $rol, $loginUrl);
+            $this->mailer->Body = $this->generarCuerpoCredenciales($nombreCompleto, $email, $passwordPlano, $rol, $loginUrl, $logoCid);
             $this->mailer->AltBody = $this->generarTextoPlanoCredenciales($nombreCompleto, $email, $passwordPlano, $rol, $loginUrl);
 
             $this->mailer->send();
@@ -180,35 +241,25 @@ class EventoEmailService
             $tipoTexto = $tipo === 'ingreso' ? 'Ingreso' : 'Salida';
             $this->mailer->Subject = "QR de {$tipoTexto} - {$eventoTitulo} | SENAttend Eventos";
 
-            // Adjuntar imagen QR
+            $logoCid = $this->attachSenaLogo();
+
             $cid = null;
             if (!empty($qrImageBase64)) {
                 try {
-                    // Decodificar la imagen
                     $imageData = base64_decode($qrImageBase64, true);
                     if ($imageData !== false && !empty($imageData)) {
-                        // Crear un CID único para la imagen
                         $cid = 'qr_evento_' . uniqid();
                         
-                        // Crear archivo temporal para la imagen
                         $tempFile = sys_get_temp_dir() . '/' . $cid . '.png';
                         file_put_contents($tempFile, $imageData);
                         
-                        // Agregar como imagen embebida (igual que EmailService principal)
                         $this->mailer->addEmbeddedImage($tempFile, $cid, 'qr_code.png', 'base64', 'image/png');
                         
-                        if (defined('APP_ENV') && (APP_ENV === 'local' || APP_ENV === 'development')) {
-                            error_log("EventoEmailService: QR image attached as embedded image with CID: " . $cid . ", file size: " . strlen($imageData));
-                        }
-                        
-                        // Limpiar archivo temporal después de enviar
                         register_shutdown_function(function() use ($tempFile) {
                             if (file_exists($tempFile)) {
                                 @unlink($tempFile);
                             }
                         });
-                    } else {
-                        error_log("EventoEmailService: Failed to decode QR image base64");
                     }
                 } catch (Exception $e) {
                     error_log("EventoEmailService: Error attaching QR image: " . $e->getMessage());
@@ -220,7 +271,8 @@ class EventoEmailService
                 $eventoTitulo, 
                 $tipo, 
                 $cid,
-                $eventoInfo
+                $eventoInfo,
+                $logoCid
             );
             $this->mailer->AltBody = $this->generarTextoPlano($nombreCompleto, $eventoTitulo, $tipo, $eventoInfo);
 
@@ -234,7 +286,6 @@ class EventoEmailService
             $errorInfo = $this->mailer->ErrorInfo;
             error_log("EventoEmailService: Error enviando email: " . $e->getMessage());
             error_log("EventoEmailService: PHPMailer ErrorInfo: " . $errorInfo);
-            error_log("EventoEmailService: Config SMTP - Host: " . ($this->config['host'] ?? 'N/A') . ", Port: " . ($this->config['port'] ?? 'N/A') . ", User: " . (empty($this->config['username']) ? 'VACÍO' : substr($this->config['username'], 0, 3) . '***'));
             
             return [
                 'success' => false,
@@ -252,14 +303,21 @@ class EventoEmailService
         string $evento,
         string $tipo,
         ?string $cid,
-        array $eventoInfo = []
+        array $eventoInfo = [],
+        ?string $logoCid = null
     ): string {
         $tipoTexto = $tipo === 'ingreso' ? 'INGRESO' : 'SALIDA';
         $instruccion = $tipo === 'ingreso' 
             ? 'Presenta este código QR al ingresar al evento.'
             : 'Presenta este código QR al salir del evento para completar tu asistencia.';
 
-        // Información del evento
+        $logoHtml = '';
+        if ($logoCid) {
+            $logoHtml = '<div style="text-align: center; margin-bottom: 15px;">
+                <img src="cid:' . htmlspecialchars($logoCid) . '" alt="Logo SENA" style="max-width: 150px; height: auto;">
+            </div>';
+        }
+
         $descripcion = $eventoInfo['descripcion'] ?? '';
         $imagenUrl = $eventoInfo['imagen_url'] ?? '';
         $fechaInicio = isset($eventoInfo['fecha_inicio']) ? date('d/m/Y H:i', strtotime($eventoInfo['fecha_inicio'])) : '';
@@ -267,10 +325,8 @@ class EventoEmailService
         $horaInicio = isset($eventoInfo['fecha_inicio']) ? date('h:i A', strtotime($eventoInfo['fecha_inicio'])) : '';
         $horaFin = isset($eventoInfo['fecha_fin']) ? date('h:i A', strtotime($eventoInfo['fecha_fin'])) : '';
 
-        // Generar el tag de imagen QR con formato optimizado para móviles y clientes de correo
         $qrImageTag = '';
         if ($cid) {
-            // Usar tabla HTML para mejor compatibilidad con clientes de correo (como en EmailService)
             $qrImageTag = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0 auto;">
                 <tr>
                     <td align="center" style="padding: 0;">
@@ -282,7 +338,6 @@ class EventoEmailService
             $qrImageTag = '<p style="color:#666; margin: 0; padding: 15px; text-align: center;">El código QR no pudo ser generado.</p>';
         }
 
-        // Generar imagen del evento si está disponible
         $eventoImagenTag = '';
         if (!empty($imagenUrl)) {
             $eventoImagenTag = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 20px 0;">
@@ -294,280 +349,90 @@ class EventoEmailService
             </table>';
         }
 
-        // Generar HTML de descripción
         $descripcionHtml = '';
         if (!empty($descripcion)) {
             $descripcionHtml = '<p style="margin: 0 0 15px 0; padding: 0; color: #666; font-size: 14px; line-height: 1.6;">' . nl2br(htmlspecialchars($descripcion)) . '</p>';
         }
 
-        // Generar HTML de fecha
         $fechaHtml = '';
         if (!empty($fechaInicio) && !empty($fechaFin)) {
             $fechaHtml = '<p style="margin: 0 0 8px 0; padding: 0; color: #333; font-size: 14px;">
-                <i class="fas fa-calendar" style="color: #39A900; margin-right: 8px;"></i>
                 <strong>Fecha:</strong> ' . htmlspecialchars($fechaInicio) . ' - ' . htmlspecialchars($fechaFin) . '
             </p>';
         }
 
-        // Generar HTML de hora
         $horaHtml = '';
         if (!empty($horaInicio) && !empty($horaFin)) {
             $horaHtml = '<p style="margin: 0 0 8px 0; padding: 0; color: #333; font-size: 14px;">
-                <i class="fas fa-clock" style="color: #39A900; margin-right: 8px;"></i>
                 <strong>Horario:</strong> ' . htmlspecialchars($horaInicio) . ' - ' . htmlspecialchars($horaFin) . '
             </p>';
         }
 
-        return <<<HTML
+        return '
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        /* Reset para clientes de correo */
-        body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-        img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
-        
-        body { 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            font-family: Arial, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            background-color: #f4f4f4;
-            width: 100% !important;
-        }
-        
-        .wrapper {
-            width: 100% !important;
-            table-layout: fixed;
-            background-color: #f4f4f4;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .container { 
-            max-width: 600px; 
-            width: 100% !important;
-            margin: 0 auto; 
-            padding: 0;
-            background-color: #ffffff;
-        }
-        
-        .header { 
-            background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); 
-            color: white; 
-            padding: 30px 20px; 
-            text-align: center; 
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .header h1 {
-            margin: 0;
-            padding: 0;
-            font-size: 24px;
-        }
-        
-        .header p {
-            margin: 10px 0 0 0;
-            padding: 0;
-            font-size: 14px;
-            color: rgba(255,255,255,0.9);
-        }
-        
-        .content { 
-            padding: 30px 20px; 
-            background-color: #ffffff; 
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .content h2 {
-            margin: 0 0 15px 0;
-            padding: 0;
-            font-size: 20px;
-            color: #333;
-        }
-        
-        .content p {
-            margin: 0 0 15px 0;
-            padding: 0;
-            font-size: 14px;
-            color: #666;
-            line-height: 1.6;
-        }
-        
-        .evento-info {
-            background: #f8f9fa;
-            border-left: 4px solid #39A900;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .evento-info p {
-            margin: 0;
-            padding: 0;
-        }
-        
-        .evento-info .evento-nombre {
-            color: #333;
-            font-weight: normal;
-        }
-        
-        .evento-info .evento-tipo {
-            color: #39A900;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        
-        .qr-container { 
-            text-align: center; 
-            margin: 20px auto; 
-            width: 100%;
-            max-width: 300px;
-            box-sizing: border-box;
-            padding: 20px;
-            background: #fafafa;
-            border-radius: 8px;
-        }
-        
-        .warning { 
-            background-color: #fff3cd; 
-            border: 1px solid #ffc107; 
-            padding: 15px; 
-            margin: 20px 0;
-            border-radius: 8px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .warning p {
-            margin: 0;
-            padding: 0;
-            color: #856404;
-            font-size: 14px;
-        }
-        
-        .footer { 
-            text-align: center; 
-            padding: 20px; 
-            font-size: 12px; 
-            color: #666;
-            background: #f8f9fa;
-            border-top: 1px solid #eee;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        .footer p {
-            margin: 5px 0;
-            padding: 0;
-        }
-        
-        .footer .copyright {
-            color: #999;
-            font-size: 11px;
-            margin-top: 10px;
-        }
-        
-        /* Media queries para móviles */
-        @media only screen and (max-width: 600px) {
-            .container {
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-            
-            .content {
-                padding: 20px 15px !important;
-            }
-            
-            .header {
-                padding: 20px 15px !important;
-            }
-            
-            .header h1 {
-                font-size: 20px !important;
-            }
-            
-            .qr-container {
-                max-width: 100% !important;
-                margin: 15px 0 !important;
-                padding: 15px !important;
-            }
-            
-            .footer {
-                padding: 15px !important;
-            }
-        }
-    </style>
 </head>
 <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; width: 100%;">
-    <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0; padding: 0; background-color: #f4f4f4;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; background-color: #f4f4f4;">
         <tr>
             <td align="center" style="padding: 20px 0;">
-                <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <!-- Header -->
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden;">
                     <tr>
-                        <td class="header" style="background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); color: white; padding: 30px 20px; text-align: center; width: 100%; box-sizing: border-box;">
+                        <td style="background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); color: white; padding: 30px 20px; text-align: center;">
+                            ' . $logoHtml . '
                             <h1 style="margin: 0; padding: 0; font-size: 24px;">SENAttend Eventos</h1>
                             <p style="margin: 10px 0 0 0; padding: 0; font-size: 14px; color: rgba(255,255,255,0.9);">Sistema de Gestión de Eventos SENA</p>
                         </td>
                     </tr>
-                    <!-- Content -->
                     <tr>
-                        <td class="content" style="padding: 30px 20px; background-color: #ffffff; width: 100%; box-sizing: border-box;">
-                            <h2 style="margin: 0 0 15px 0; padding: 0; font-size: 20px; color: #333;">Hola, {$nombre}</h2>
+                        <td style="padding: 30px 20px;">
+                            <h2 style="margin: 0 0 15px 0; font-size: 20px; color: #333;">Hola, ' . htmlspecialchars($nombre) . '</h2>
                             
-                            <p style="margin: 0 0 20px 0; padding: 0; font-size: 16px; color: #333; line-height: 1.6;">Te has inscrito exitosamente al siguiente evento:</p>
+                            <p style="margin: 0 0 20px 0; font-size: 16px; color: #333;">Te has inscrito exitosamente al siguiente evento:</p>
                             
-                            {$eventoImagenTag}
+                            ' . $eventoImagenTag . '
                             
-                            <div class="evento-info" style="background: #f8f9fa; border-left: 4px solid #39A900; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; width: 100%; box-sizing: border-box;">
-                                <p class="evento-nombre" style="margin: 0 0 10px 0; padding: 0; color: #333; font-size: 18px; font-weight: bold;">{$evento}</p>
+                            <div style="background: #f8f9fa; border-left: 4px solid #39A900; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+                                <p style="margin: 0 0 10px 0; color: #333; font-size: 18px; font-weight: bold;">' . htmlspecialchars($evento) . '</p>
                                 
-                                {$descripcionHtml}
+                                ' . $descripcionHtml . '
                                 
                                 <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #dee2e6;">
-                                    {$fechaHtml}
-                                    {$horaHtml}
+                                    ' . $fechaHtml . '
+                                    ' . $horaHtml . '
                                     
-                                    <p class="evento-tipo" style="margin: 10px 0 0 0; padding: 0; color: #39A900; font-weight: bold; font-size: 14px;">
-                                        <i class="fas fa-qrcode" style="margin-right: 8px;"></i>
-                                        Tipo: QR de {$tipoTexto}
+                                    <p style="margin: 10px 0 0 0; color: #39A900; font-weight: bold; font-size: 14px;">
+                                        Tipo: QR de ' . $tipoTexto . '
                                     </p>
                                 </div>
                             </div>
                             
-                            <p style="margin: 0 0 15px 0; padding: 0; font-size: 14px; color: #666; line-height: 1.6;">{$instruccion}</p>
+                            <p style="margin: 0 0 15px 0; font-size: 14px; color: #666;">' . $instruccion . '</p>
                             
-                            <!-- QR Code Container -->
-                            <div class="qr-container" style="text-align: center; margin: 20px auto; width: 100%; max-width: 300px; box-sizing: border-box; padding: 20px; background: #fafafa; border-radius: 8px;">
-                                {$qrImageTag}
+                            <div style="text-align: center; margin: 20px auto; max-width: 300px; padding: 20px; background: #fafafa; border-radius: 8px;">
+                                ' . $qrImageTag . '
                             </div>
                             
-                            <div class="warning" style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 8px; width: 100%; box-sizing: border-box;">
-                                <p style="margin: 0; padding: 0; color: #856404; font-size: 14px;">
+                            <div style="background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 8px;">
+                                <p style="margin: 0; color: #856404; font-size: 14px;">
                                     <strong>⚠️ Importante:</strong> Este código QR es personal e intransferible. No lo compartas con otras personas.
                                 </p>
                             </div>
                         </td>
                     </tr>
-                    <!-- Footer -->
                     <tr>
-                        <td class="footer" style="text-align: center; padding: 20px; font-size: 12px; color: #666; background: #f8f9fa; border-top: 1px solid #eee; width: 100%; box-sizing: border-box;">
-                            <p style="margin: 5px 0; padding: 0;">
-                                Este es un correo automático del sistema SENAttend Eventos.<br>
-                                Por favor no responda a este mensaje.
-                            </p>
-                            <p class="copyright" style="color: #999; font-size: 11px; margin: 10px 0 0 0; padding: 0;">
-                                © 2025 SENA - Servicio Nacional de Aprendizaje
-                            </p>
+                        <td style="text-align: center; padding: 20px; font-size: 12px; color: #666; background: #f8f9fa; border-top: 1px solid #eee;">
+                            <p style="margin: 5px 0;">Este es un correo automático del sistema SENAttend Eventos.</p>
+                            <p style="margin: 5px 0;">Por favor no responda a este mensaje.</p>
+                            <p style="color: #999; font-size: 11px; margin: 10px 0 0 0;">© ' . date('Y') . ' SENA - Servicio Nacional de Aprendizaje</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            ' . $this->getLegalDisclaimer() . '
                         </td>
                     </tr>
                 </table>
@@ -575,8 +440,7 @@ class EventoEmailService
         </tr>
     </table>
 </body>
-</html>
-HTML;
+</html>';
     }
 
     /**
@@ -615,6 +479,7 @@ HTML;
         $texto .= "Este es un correo automático del sistema SENAttend Eventos.\n";
         $texto .= "Por favor no responda a este mensaje.\n\n";
         $texto .= "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje";
+        $texto .= $this->getLegalDisclaimerPlainText();
         
         return $texto;
     }
@@ -627,9 +492,17 @@ HTML;
         string $email,
         string $password,
         string $rol,
-        string $loginUrl
+        string $loginUrl,
+        ?string $logoCid = null
     ): string {
         $rolLabel = $rol === 'admin' ? 'Administrador' : 'Administrativo';
+
+        $logoHtml = '';
+        if ($logoCid) {
+            $logoHtml = '<div style="text-align: center; margin-bottom: 15px;">
+                <img src="cid:' . htmlspecialchars($logoCid) . '" alt="Logo SENA" style="max-width: 150px; height: auto;">
+            </div>';
+        }
 
         return <<<HTML
 <!DOCTYPE html>
@@ -637,58 +510,48 @@ HTML;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { margin:0; padding:0; font-family: Arial, sans-serif; background: #f4f4f4; color:#333; }
-        .wrapper { width:100%; padding:20px 0; background:#f4f4f4; }
-        .card { max-width: 640px; margin:0 auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.1); }
-        .card__header { background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); color:#fff; padding:24px; text-align:center; }
-        .card__header h1 { margin:0; font-size:22px; }
-        .card__body { padding:24px; }
-        .pill { display:inline-block; padding:6px 12px; border-radius:20px; background:#eef6ff; color:#0b64c0; font-weight:600; font-size:12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom:12px; }
-        .info { background:#f8f9fa; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0; }
-        .info p { margin:6px 0; }
-        .credentials { margin:16px 0; padding:16px; border-radius:10px; background:#f0fff4; border:1px solid #c6f6d5; }
-        .credentials code { display:block; background:#fff; border:1px dashed #a0aec0; padding:10px; border-radius:8px; margin-top:8px; font-family: 'Courier New', monospace; }
-        .cta { display:inline-block; padding:12px 18px; background:#39A900; color:#fff; border-radius:8px; text-decoration:none; font-weight:700; }
-        .footer { text-align:center; padding:18px; font-size:12px; color:#6b7280; background:#f8f9fa; }
-        @media (max-width: 640px) {
-            .card__body { padding:20px 16px; }
-            .card__header h1 { font-size:20px; }
-        }
-    </style>
 </head>
-<body>
-    <div class="wrapper">
-        <div class="card">
-            <div class="card__header">
-                <h1>Acceso a Gestión de Eventos</h1>
+<body style="margin:0; padding:0; font-family: Arial, sans-serif; background: #f4f4f4; color:#333;">
+    <div style="width:100%; padding:20px 0; background:#f4f4f4;">
+        <div style="max-width: 640px; margin:0 auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.1);">
+            <div style="background: linear-gradient(135deg, #39A900 0%, #2d8a00 100%); color:#fff; padding:24px; text-align:center;">
+                {$logoHtml}
+                <h1 style="margin:0; font-size:22px;">Acceso a Gestión de Eventos</h1>
                 <p style="margin:8px 0 0 0; color: rgba(255,255,255,0.9); font-size:14px;">SENAttend</p>
             </div>
-            <div class="card__body">
-                <span class="pill">Nuevo usuario {$rolLabel}</span>
+            <div style="padding:24px;">
+                <span style="display:inline-block; padding:6px 12px; border-radius:20px; background:#eef6ff; color:#0b64c0; font-weight:600; font-size:12px; text-transform: uppercase; margin-bottom:12px;">Nuevo usuario {$rolLabel}</span>
                 <h2 style="margin:0 0 10px 0; font-size:18px;">Hola, {$nombre}</h2>
                 <p style="margin:0 0 12px 0; color:#4b5563;">Te han creado una cuenta para gestionar los Eventos SENA. Usa estas credenciales para ingresar.</p>
-                <div class="credentials">
+                <div style="margin:16px 0; padding:16px; border-radius:10px; background:#f0fff4; border:1px solid #c6f6d5;">
                     <strong>Credenciales de acceso</strong>
-                    <code>Usuario: {$email}<br>Contraseña: {$password}</code>
+                    <div style="display:block; background:#fff; border:1px dashed #a0aec0; padding:10px; border-radius:8px; margin-top:8px; font-family: 'Courier New', monospace;">Usuario: {$email}<br>Contraseña: {$password}</div>
                     <p style="margin:10px 0 0 0; color:#22543d; font-size:13px;">Por seguridad, cambia tu contraseña al ingresar.</p>
                 </div>
-                <div class="info">
-                    <p><strong>Rol asignado:</strong> {$rolLabel}</p>
-                    <p><strong>URL de ingreso:</strong> <a href="{$loginUrl}" style="color:#0b64c0;">{$loginUrl}</a></p>
-                    <p style="margin-top:8px; color:#6b7280;">Si no solicitaste este acceso, contacta al administrador.</p>
+                <div style="background:#f8f9fa; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin:16px 0;">
+                    <p style="margin:6px 0;"><strong>Rol asignado:</strong> {$rolLabel}</p>
+                    <p style="margin:6px 0;"><strong>URL de ingreso:</strong> <a href="{$loginUrl}" style="color:#0b64c0;">{$loginUrl}</a></p>
+                    <p style="margin:8px 0 0 0; color:#6b7280;">Si no solicitaste este acceso, contacta al administrador.</p>
                 </div>
-                <a href="{$loginUrl}" class="cta">Ir al módulo de eventos</a>
+                <a href="{$loginUrl}" style="display:inline-block; padding:12px 18px; background:#39A900; color:#fff; border-radius:8px; text-decoration:none; font-weight:700;">Ir al módulo de eventos</a>
             </div>
-            <div class="footer">
+            <div style="text-align:center; padding:18px; font-size:12px; color:#6b7280; background:#f8f9fa;">
                 Correo automático de SENAttend Eventos. No responder.<br>
-                © 2025 SENA - Servicio Nacional de Aprendizaje
+                © {$this->getCurrentYear()} SENA - Servicio Nacional de Aprendizaje
+            </div>
+            <div>
+                {$this->getLegalDisclaimer()}
             </div>
         </div>
     </div>
 </body>
 </html>
 HTML;
+    }
+
+    private function getCurrentYear(): string
+    {
+        return date('Y');
     }
 
     /**
@@ -712,9 +575,9 @@ HTML;
         $texto .= "Cambia tu contraseña al iniciar sesión.\n";
         $texto .= "---\n";
         $texto .= "Correo automático de SENAttend Eventos. No responder.\n";
-        $texto .= "© 2025 SENA - Servicio Nacional de Aprendizaje";
+        $texto .= "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje";
+        $texto .= $this->getLegalDisclaimerPlainText();
 
         return $texto;
     }
 }
-
