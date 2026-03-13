@@ -211,6 +211,68 @@
     .equipos-grid {
         grid-template-columns: 1fr;
     }
+
+    .aprendiz-equipos-list table,
+    .aprendiz-equipos-list thead,
+    .aprendiz-equipos-list tbody,
+    .aprendiz-equipos-list th,
+    .aprendiz-equipos-list td,
+    .aprendiz-equipos-list tr {
+        display: block;
+    }
+
+    .aprendiz-equipos-list thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .aprendiz-equipos-list tr {
+        margin-bottom: 1.5rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fafafa;
+    }
+
+    .aprendiz-equipos-list td {
+        border: none;
+        position: relative;
+        padding: 0.75rem 0.5rem;
+        padding-left: 45%;
+        text-align: right;
+        border-bottom: 1px solid #eee;
+    }
+
+    .aprendiz-equipos-list td:last-child {
+        border-bottom: none;
+    }
+
+    .aprendiz-equipos-list td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0.5rem;
+        width: 40%;
+        padding-right: 10px;
+        text-align: left;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .aprendiz-equipos-list td:first-child {
+        text-align: center;
+        padding-left: 0.5rem;
+        padding-top: 1rem;
+    }
+
+    .aprendiz-equipos-list td:first-child:before {
+        display: none;
+    }
+
+    .equipo-thumb {
+        width: 80px;
+        height: 80px;
+    }
 }
 
 
