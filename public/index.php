@@ -14,6 +14,7 @@ require_once __DIR__ . '/../config/config.php';
 // Importar clases necesarias
 use App\Controllers\AuthController;
 use App\Controllers\AprendizAuthController;
+use App\Controllers\PasswordResetController;
 use App\GestionEquipos\Controllers\AprendizEquipoController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
@@ -28,8 +29,10 @@ use App\Repositories\FichaRepository;
 use App\Repositories\AprendizRepository;
 use App\Repositories\CodigoQRRepository;
 use App\Repositories\InstructorFichaRepository;
+use App\Repositories\PasswordResetTokenRepository;
 use App\Services\AuthService;
 use App\Services\AprendizAuthService;
+use App\Services\PasswordResetService;
 use App\GestionEquipos\Repositories\AprendizEquipoRepository;
 use App\GestionEquipos\Repositories\EquipoRepository;
 use App\GestionEquipos\Repositories\QrEquipoRepository;
@@ -136,8 +139,11 @@ $codigoQRRepository = new CodigoQRRepository();
 $instructorFichaRepository = new InstructorFichaRepository();
 $asistenciaRepository = new \App\Repositories\AsistenciaRepository();
 $turnoConfigRepository = new \App\Repositories\TurnoConfigRepository();
+$passwordResetTokenRepository = new PasswordResetTokenRepository();
 $authService = new AuthService($userRepository, $aprendizRepository, $session);
 $aprendizAuthService = new AprendizAuthService($aprendizRepository, $session);
+$emailService = new EmailService();
+$passwordResetService = new PasswordResetService($passwordResetTokenRepository, $userRepository, $aprendizRepository, $emailService);
 $aprendizEquipoRepository = new AprendizEquipoRepository();
 $equipoRepository = new EquipoRepository();
 $qrEquipoRepository = new QrEquipoRepository();
@@ -149,7 +155,6 @@ $qrEncryptionService = new QREncryptionService();
 $equipoRegistroService = new EquipoRegistroService($equipoRepository, $aprendizEquipoRepository, $qrEquipoRepository, $qrEncryptionService);
 $equipoQRService = new EquipoQRService($qrEquipoRepository);
 $porteroIngresoService = new PorteroIngresoService($qrEquipoRepository, $ingresoEquipoRepository, $anomaliaEquipoRepository, $equipoRepository, $aprendizRepository, $qrEncryptionService);
-$emailService = new EmailService();
 $qrService = new QRService($codigoQRRepository, $aprendizRepository, $emailService);
 $turnoConfigService = new \App\Services\TurnoConfigService($turnoConfigRepository);
 $asistenciaService = new \App\Services\AsistenciaService($asistenciaRepository, $aprendizRepository, $fichaRepository, $turnoConfigService);
@@ -179,6 +184,16 @@ $routes = [
         '/login' => [
             'controller' => AuthController::class,
             'action' => 'viewLogin',
+            'middleware' => []
+        ],
+        '/password/forgot' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'showForgotPasswordForm',
+            'middleware' => []
+        ],
+        '/password/reset' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'showResetPasswordForm',
             'middleware' => []
         ],
         '/aprendiz/panel' => [
@@ -476,6 +491,16 @@ $routes = [
         '/auth/login' => [
             'controller' => AuthController::class,
             'action' => 'login',
+            'middleware' => []
+        ],
+        '/password/forgot' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'processForgotPassword',
+            'middleware' => []
+        ],
+        '/password/reset' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'processResetPassword',
             'middleware' => []
         ],
         '/aprendiz/equipos' => [
@@ -1058,6 +1083,8 @@ try {
     // Inyectar dependencias según el controlador
     if ($controllerClass === AuthController::class) {
         $controller = new $controllerClass($authService, $session);
+    } elseif ($controllerClass === PasswordResetController::class) {
+        $controller = new $controllerClass($passwordResetService, $session);
     } elseif ($controllerClass === AprendizAuthController::class) {
         $asistenciaRepositoryForAprendiz = new \App\Repositories\AsistenciaRepository();
         $controller = new $controllerClass($authService, $session, $aprendizEquipoService, $asistenciaRepositoryForAprendiz);

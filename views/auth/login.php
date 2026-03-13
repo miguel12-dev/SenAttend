@@ -62,6 +62,12 @@
                     <i class="fas fa-sign-in-alt"></i>
                     Ingresar
                 </button>
+
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="/password/forgot" style="color: #39A900; text-decoration: none; font-size: 14px;">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
             </form>
         </div>
     </div>

@@ -409,6 +409,127 @@ class EmailService
     }
 
     /**
+     * Envía un correo con token de recuperación de contraseña
+     */
+    public function enviarTokenRecuperacion(string $email, string $nombre, string $token): array
+    {
+        try {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return [
+                    'success' => false,
+                    'message' => 'El correo electrónico no es válido'
+                ];
+            }
+
+            $this->mailer->clearAddresses();
+            $this->mailer->clearAttachments();
+            $this->mailer->addAddress($email, $nombre);
+
+            $this->mailer->Subject = 'Recuperación de contraseña - SENAttend';
+
+            $resetUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") 
+                . "://" . $_SERVER['HTTP_HOST'] . "/password/reset?token=" . urlencode($token);
+
+            $this->mailer->Body = $this->generatePasswordResetEmailBody($nombre, $resetUrl, $token);
+            $this->mailer->AltBody = $this->generatePasswordResetEmailPlainText($nombre, $resetUrl);
+
+            $this->mailer->send();
+
+            return [
+                'success' => true,
+                'message' => 'Correo de recuperación enviado exitosamente'
+            ];
+        } catch (Exception $e) {
+            error_log("Error sending password reset email: " . $this->mailer->ErrorInfo);
+            return [
+                'success' => false,
+                'message' => 'Error al enviar el correo: ' . $this->mailer->ErrorInfo
+            ];
+        }
+    }
+
+    private function generatePasswordResetEmailBody(string $nombre, string $resetUrl, string $token): string
+    {
+        return '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body, table, td, p, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+                body { margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; width: 100%; }
+                .container { max-width: 600px; width: 100%; margin: 0 auto; background-color: #ffffff; }
+                .header { background-color: #39A900; color: white; padding: 20px; text-align: center; }
+                .content { padding: 30px 20px; }
+                .button { display: inline-block; padding: 12px 30px; margin: 20px 0; background-color: #39A900; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; }
+                .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
+                .warning { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }
+                .token-box { background-color: #f5f5f5; padding: 15px; margin: 20px 0; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; word-break: break-all; }
+            </style>
+        </head>
+        <body>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
+                <tr>
+                    <td align="center" style="padding: 20px 0;">
+                        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td class="header">
+                                    <h1 style="margin: 0;">SENAttend</h1>
+                                    <p style="margin: 10px 0 0 0;">Sistema de Asistencia SENA</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="content">
+                                    <h2 style="margin: 0 0 20px 0; color: #333;">Recuperación de Contraseña</h2>
+                                    <p>Hola <strong>' . htmlspecialchars($nombre) . '</strong>,</p>
+                                    <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.</p>
+                                    <p>Para continuar, haz clic en el siguiente botón:</p>
+                                    <div style="text-align: center;">
+                                        <a href="' . htmlspecialchars($resetUrl) . '" class="button" style="color: white;">Restablecer Contraseña</a>
+                                    </div>
+                                    <p>O copia y pega el siguiente enlace en tu navegador:</p>
+                                    <div class="token-box">
+                                        <a href="' . htmlspecialchars($resetUrl) . '" style="color: #39A900; word-break: break-all;">' . htmlspecialchars($resetUrl) . '</a>
+                                    </div>
+                                    <div class="warning">
+                                        <strong>⚠️ Importante:</strong>
+                                        <ul style="margin: 10px 0 0 20px; padding: 0;">
+                                            <li>Este enlace es válido por <strong>1 hora</strong></li>
+                                            <li>Si no solicitaste este cambio, ignora este correo</li>
+                                            <li>Tu contraseña no cambiará hasta que accedas al enlace y completes el proceso</li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="footer">
+                                    <p>Este es un correo automático, por favor no respondas.</p>
+                                    <p>&copy; ' . date('Y') . ' SENA - Servicio Nacional de Aprendizaje</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>';
+    }
+
+    private function generatePasswordResetEmailPlainText(string $nombre, string $resetUrl): string
+    {
+        return "Hola {$nombre},\n\n" .
+               "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.\n\n" .
+               "Para continuar, accede al siguiente enlace:\n{$resetUrl}\n\n" .
+               "IMPORTANTE:\n" .
+               "- Este enlace es válido por 1 hora\n" .
+               "- Si no solicitaste este cambio, ignora este correo\n" .
+               "- Tu contraseña no cambiará hasta que accedas al enlace y completes el proceso\n\n" .
+               "Este es un correo automático, por favor no respondas.\n\n" .
+               "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje";
+    }
+
+    /**
      * Envía un correo de prueba
      */
     public function enviarCorreoPrueba(string $email): array
