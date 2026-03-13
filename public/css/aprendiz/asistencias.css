@@ -17,6 +17,74 @@
     color: #555;
 }
 
+@media screen and (max-width: 768px) {
+    .asistencias-table {
+        border: 0;
+    }
+
+    .asistencias-table thead {
+        display: none;
+    }
+
+    .asistencias-table tbody {
+        display: block;
+    }
+
+    .asistencias-table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .asistencias-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        text-align: right;
+    }
+
+    .asistencias-table td:last-child {
+        border-bottom: none;
+    }
+
+    .asistencias-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #555;
+        text-align: left;
+        flex-shrink: 0;
+        margin-right: 1rem;
+        padding-top: 0.125rem;
+    }
+
+    .asistencias-table td > * {
+        text-align: right;
+        max-width: 60%;
+        word-wrap: break-word;
+    }
+
+    .asistencias-table td small {
+        display: block;
+        text-align: right;
+    }
+
+    .ficha-info {
+        text-align: right;
+        display: block;
+    }
+
+    .observaciones-text,
+    .observaciones-empty {
+        display: block;
+        word-break: break-word;
+    }
+}
+
 .badge-presente {
     background-color: #d4edda;
     color: #155724;
@@ -67,6 +135,10 @@
 
 .ficha-nombre {
     color: #666;
+}
+
+.ficha-info {
+    display: inline-block;
 }
 
 .instructor-no-disponible {

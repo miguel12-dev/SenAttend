@@ -21,58 +21,7 @@ if (!isset($user)) {
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/dashboard-admin/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/aprendiz/panel.css') ?>">
-    <style>
-        .asistencias-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1.5rem;
-        }
-        .asistencias-table th,
-        .asistencias-table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-        .asistencias-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #555;
-        }
-        .badge-presente {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .badge-ausente {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .badge-tardanza {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 0.25rem 0.75rem;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: #666;
-        }
-        .empty-state i {
-            font-size: 4rem;
-            color: #999;
-            margin-bottom: 1rem;
-        }
-    </style>
+    <link rel="stylesheet" href="<?= asset('css/aprendiz/asistencias.css') ?>">
 </head>
 <body>
     <div class="wrapper">
@@ -126,7 +75,7 @@ if (!isset($user)) {
 
                 <!-- Debug temporal -->
                 <?php if (defined('APP_ENV') && APP_ENV === 'local'): ?>
-                    <div style="background: #f0f0f0; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; font-size: 0.85rem;">
+                    <div class="debug-info">
                         <strong>Debug Info:</strong><br>
                         Aprendiz ID: <?= htmlspecialchars($user['id'] ?? 'N/A') ?><br>
                         Total asistencias: <?= count($asistencias ?? []) ?><br>
@@ -157,7 +106,7 @@ if (!isset($user)) {
                             <tbody>
                                 <?php foreach ($asistencias as $asistencia): ?>
                                     <tr>
-                                        <td>
+                                        <td data-label="Fecha">
                                             <?php 
                                             try {
                                                 echo date('d/m/Y', strtotime($asistencia['fecha']));
@@ -166,7 +115,7 @@ if (!isset($user)) {
                                             }
                                             ?>
                                         </td>
-                                        <td>
+                                        <td data-label="Hora">
                                             <?php 
                                             try {
                                                 echo date('H:i', strtotime($asistencia['hora']));
@@ -175,7 +124,7 @@ if (!isset($user)) {
                                             }
                                             ?>
                                         </td>
-                                        <td>
+                                        <td data-label="Estado">
                                             <?php
                                             $estado = $asistencia['estado'];
                                             $badgeClass = 'badge-' . $estado;
@@ -185,29 +134,31 @@ if (!isset($user)) {
                                                 <?= htmlspecialchars($estadoTexto) ?>
                                             </span>
                                         </td>
-                                        <td>
-                                            <strong><?= htmlspecialchars($asistencia['numero_ficha']) ?></strong>
-                                            <?php if (!empty($asistencia['ficha_nombre'])): ?>
-                                                <br>
-                                                <small style="color: #666;">
-                                                    <?= htmlspecialchars($asistencia['ficha_nombre']) ?>
-                                                </small>
-                                            <?php endif; ?>
+                                        <td data-label="Ficha">
+                                            <div class="ficha-info">
+                                                <strong><?= htmlspecialchars($asistencia['numero_ficha']) ?></strong>
+                                                <?php if (!empty($asistencia['ficha_nombre'])): ?>
+                                                    <br>
+                                                    <small class="ficha-nombre">
+                                                        <?= htmlspecialchars($asistencia['ficha_nombre']) ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
-                                        <td>
+                                        <td data-label="Instructor">
                                             <?php if (!empty($asistencia['instructor_nombre_completo'])): ?>
                                                 <?= htmlspecialchars($asistencia['instructor_nombre_completo']) ?>
                                             <?php else: ?>
-                                                <span style="color: #999;">No disponible</span>
+                                                <span class="instructor-no-disponible">No disponible</span>
                                             <?php endif; ?>
                                         </td>
-                                        <td>
+                                        <td data-label="Observaciones">
                                             <?php if (!empty($asistencia['observaciones'])): ?>
-                                                <span style="color: #666; font-size: 0.9rem;">
+                                                <span class="observaciones-text">
                                                     <?= htmlspecialchars($asistencia['observaciones']) ?>
                                                 </span>
                                             <?php else: ?>
-                                                <span style="color: #999;">-</span>
+                                                <span class="observaciones-empty">-</span>
                                             <?php endif; ?>
                                         </td>
                                     </tr>
@@ -220,8 +171,8 @@ if (!isset($user)) {
                 <section class="aprendiz-equipos-card">
                     <div class="empty-state">
                         <i class="fas fa-calendar-times"></i>
-                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No tienes asistencias registradas aún.</p>
-                        <p style="color: #999;">Las asistencias aparecerán aquí una vez que sean registradas por tu instructor.</p>
+                        <p class="empty-state-title">No tienes asistencias registradas aún.</p>
+                        <p class="empty-state-subtitle">Las asistencias aparecerán aquí una vez que sean registradas por tu instructor.</p>
                     </div>
                 </section>
                 <?php endif; ?>
