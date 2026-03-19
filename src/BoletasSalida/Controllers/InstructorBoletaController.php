@@ -34,8 +34,9 @@ class InstructorBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'instructor') {
-            Response::notFound();
+        if (!$user) {
+            Response::redirect('/login');
+            return;
         }
 
         $boletasPendientes = $this->boletaRepository->findPendientesByInstructor($user['id']);
@@ -52,8 +53,9 @@ class InstructorBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'instructor') {
-            Response::notFound();
+        if (!$user) {
+            Response::redirect('/login');
+            return;
         }
 
         $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
@@ -78,7 +80,7 @@ class InstructorBoletaController
 
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'instructor') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -101,7 +103,7 @@ class InstructorBoletaController
 
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'instructor') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -122,7 +124,7 @@ class InstructorBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'instructor') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }

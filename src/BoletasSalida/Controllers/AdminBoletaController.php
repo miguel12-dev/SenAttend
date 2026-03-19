@@ -34,8 +34,9 @@ class AdminBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || !in_array($user['rol'], ['admin', 'administrativo'])) {
-            Response::notFound();
+        if (!$user) {
+            Response::redirect('/login');
+            return;
         }
 
         $boletasPendientes = $this->boletaRepository->findPendientesAdmin();
@@ -52,8 +53,9 @@ class AdminBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || !in_array($user['rol'], ['admin', 'administrativo'])) {
-            Response::notFound();
+        if (!$user) {
+            Response::redirect('/login');
+            return;
         }
 
         $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
@@ -87,7 +89,7 @@ class AdminBoletaController
 
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || !in_array($user['rol'], ['admin', 'administrativo'])) {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -110,7 +112,7 @@ class AdminBoletaController
 
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || !in_array($user['rol'], ['admin', 'administrativo'])) {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -131,7 +133,7 @@ class AdminBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || !in_array($user['rol'], ['admin', 'administrativo'])) {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -154,7 +156,7 @@ class AdminBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || !in_array($user['rol'], ['admin', 'administrativo'])) {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }

@@ -34,8 +34,9 @@ class PorteroBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'portero') {
-            Response::notFound();
+        if (!$user) {
+            Response::redirect('/login');
+            return;
         }
 
         $boletasAprobadas = $this->boletaRepository->findAprobadas();
@@ -58,7 +59,7 @@ class PorteroBoletaController
 
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'portero') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -81,7 +82,7 @@ class PorteroBoletaController
 
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'portero') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -102,7 +103,7 @@ class PorteroBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'portero') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -125,7 +126,7 @@ class PorteroBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'portero') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
@@ -143,7 +144,7 @@ class PorteroBoletaController
     {
         $user = $this->authService->getCurrentUser();
 
-        if (!$user || $user['rol'] !== 'portero') {
+        if (!$user) {
             Response::json(['success' => false, 'message' => 'No autorizado'], 401);
             return;
         }
