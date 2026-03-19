@@ -257,4 +257,28 @@ class GestionInstructoresController
         echo $template;
         exit;
     }
+
+    /**
+     * API: Buscar instructores por nombre (autocomplete)
+     * GET /api/instructores/buscar?q=nombre
+     */
+    public function apiBuscar(): void
+    {
+        $query = filter_input(INPUT_GET, 'q', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+        
+        if (empty($query) || strlen($query) < 2) {
+            Response::json(['success' => true, 'data' => []]);
+            return;
+        }
+
+        $fichaId = filter_input(INPUT_GET, 'ficha_id', FILTER_VALIDATE_INT);
+
+        try {
+            $instructores = $this->instructorRepository->buscarPorNombre($query, $fichaId);
+            Response::json(['success' => true, 'data' => $instructores]);
+        } catch (\Exception $e) {
+            error_log("Error buscando instructores: " . $e->getMessage());
+            Response::json(['success' => false, 'message' => 'Error en la búsqueda'], 500);
+        }
+    }
 }

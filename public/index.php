@@ -67,6 +67,16 @@ use App\Eventos\Repositories\EventoParticipanteRepository;
 use App\Eventos\Repositories\EventoQRRepository;
 use App\Eventos\Middleware\EventoAuthMiddleware;
 
+// Módulo de Boletas de Salida
+use App\BoletasSalida\Controllers\AprendizBoletaController;
+use App\BoletasSalida\Controllers\InstructorBoletaController;
+use App\BoletasSalida\Controllers\AdminBoletaController;
+use App\BoletasSalida\Controllers\PorteroBoletaController;
+use App\BoletasSalida\Services\BoletaSalidaService;
+use App\BoletasSalida\Services\BoletaNotificationService;
+use App\BoletasSalida\Repositories\BoletaSalidaRepository;
+
+
 // Manejo de errores global
 set_exception_handler(function ($exception) {
     error_log('Uncaught Exception: ' . $exception->getMessage());
@@ -158,6 +168,12 @@ $porteroIngresoService = new PorteroIngresoService($qrEquipoRepository, $ingreso
 $qrService = new QRService($codigoQRRepository, $aprendizRepository, $emailService);
 $turnoConfigService = new \App\Services\TurnoConfigService($turnoConfigRepository);
 $asistenciaService = new \App\Services\AsistenciaService($asistenciaRepository, $aprendizRepository, $fichaRepository, $turnoConfigService);
+
+// Servicios y repositorios de Boletas de Salida
+$boletaSalidaRepository = new BoletaSalidaRepository();
+$boletaNotificationService = new BoletaNotificationService($emailService);
+$boletaSalidaService = new BoletaSalidaService($boletaSalidaRepository, $aprendizRepository, $fichaRepository, $userRepository, $boletaNotificationService);
+
 $authMiddleware = new AuthMiddleware($session);
 // Cargar configuración de permisos (RBAC)
 $permissionsConfig = require __DIR__ . '/../config/permissions_config.php';
@@ -444,6 +460,69 @@ $routes = [
             'middleware' => ['auth']
         ],
         // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas GET
+        // ============================================
+        // Aprendiz
+        '/aprendiz/boletas-salida' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'index',
+            'middleware' => []
+        ],
+        '/api/aprendiz/boletas-salida' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'apiHistorial',
+            'middleware' => []
+        ],
+        // Instructor
+        '/instructor/boletas-salida' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/instructor/boletas-salida/historial' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'historial',
+            'middleware' => ['auth']
+        ],
+        // Admin
+        '/admin/boletas-salida' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/admin/boletas-salida/historial' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'historial',
+            'middleware' => ['auth']
+        ],
+        '/api/admin/boletas-salida/estadisticas' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiEstadisticas',
+            'middleware' => ['auth']
+        ],
+        // Portero
+        '/portero/boletas-salida' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/api/portero/boletas-salida/aprobadas' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiAprobadas',
+            'middleware' => ['auth']
+        ],
+        '/api/portero/boletas-salida/reingresos-pendientes' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiReingresosPendientes',
+            'middleware' => ['auth']
+        ],
+        // API búsqueda instructores
+        '/api/instructores/buscar' => [
+            'controller' => \App\Controllers\GestionInstructoresController::class,
+            'action' => 'apiBuscar',
+            'middleware' => []
+        ],
+        // ============================================
         // MÓDULO DE EVENTOS - Rutas GET
         // ============================================
         '/eventos' => [
@@ -694,6 +773,14 @@ $routes = [
             'middleware' => ['auth']
         ],
         // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas POST
+        // ============================================
+        '/aprendiz/boletas-salida' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'store',
+            'middleware' => []
+        ],
+        // ============================================
         // MÓDULO DE EVENTOS - Rutas POST
         // ============================================
         '/eventos/login' => [
@@ -901,6 +988,27 @@ $dynamicRoutes = [
             'middleware' => [],
             'params' => ['id']
         ],
+        // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas Dinámicas GET
+        // ============================================
+        '/api/instructor/boletas-salida/(\d+)' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/admin/boletas-salida/(\d+)' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/portero/boletas-salida/(\d+)' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
     ],
     'POST' => [
         '/fichas/(\d+)' => [
@@ -972,6 +1080,45 @@ $dynamicRoutes = [
         '/api/aprendices/(\d+)/desvincular' => [
             'controller' => \App\Controllers\AprendizController::class,
             'action' => 'apiDesvincularFicha',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas Dinámicas POST
+        // ============================================
+        '/api/instructor/boletas-salida/(\d+)/aprobar' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiAprobar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/instructor/boletas-salida/(\d+)/rechazar' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiRechazar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/admin/boletas-salida/(\d+)/aprobar' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiAprobar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/admin/boletas-salida/(\d+)/rechazar' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiRechazar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/portero/boletas-salida/(\d+)/validar-salida' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiValidarSalida',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/portero/boletas-salida/(\d+)/validar-reingreso' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiValidarReingreso',
             'middleware' => ['auth'],
             'params' => ['id']
         ],
@@ -1220,6 +1367,35 @@ try {
             $session,
             $analyticsService,
             $excelExportService
+        );
+    // ============================================
+    // MÓDULO DE BOLETAS DE SALIDA - Controladores
+    // ============================================
+    } elseif ($controllerClass === AprendizBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $aprendizAuthService,
+            $instructorFichaRepository,
+            $session
+        );
+    } elseif ($controllerClass === InstructorBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $authService
+        );
+    } elseif ($controllerClass === AdminBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $authService
+        );
+    } elseif ($controllerClass === PorteroBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $authService
         );
     // ============================================
     // MÓDULO DE EVENTOS - Controladores

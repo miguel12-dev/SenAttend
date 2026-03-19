@@ -66,6 +66,31 @@
                         </div>
                     </section>
 
+                    <!-- Acceso Rápido a Boletas de Salida -->
+                    <section class="portero-quick-access">
+                        <h3 style="margin-bottom: 1rem;"><i class="fas fa-th-large"></i> Accesos Rápidos</h3>
+                        <div class="quick-access-grid">
+                            <a href="/portero/boletas-salida" class="quick-access-card">
+                                <div class="quick-icon">
+                                    <i class="fas fa-file-export"></i>
+                                </div>
+                                <div class="quick-info">
+                                    <h4>Boletas de Salida</h4>
+                                    <p>Validar salidas y reingresos de aprendices</p>
+                                </div>
+                            </a>
+                            <a href="/portero/escanear" class="quick-access-card">
+                                <div class="quick-icon">
+                                    <i class="fas fa-qrcode"></i>
+                                </div>
+                                <div class="quick-info">
+                                    <h4>Escanear Equipos</h4>
+                                    <p>Registrar ingreso de equipos</p>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+
                     <section class="portero-ingresos-card">
                         <div class="portero-ingresos-header">
                             <h2>Ingresos activos (sin salida)</h2>

@@ -120,6 +120,21 @@
                                 </a>
                             </div>
                         </div>
+
+                        <!-- Boletas de Salida -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-file-export"></i>
+                            </div>
+                            <h4>Boletas de Salida</h4>
+                            <p>Solicita permisos de salida temporal o definitiva del CTA.</p>
+                            <div class="action-buttons">
+                                <a href="/aprendiz/boletas-salida" class="btn-sena">
+                                    <i class="fas fa-plus"></i>
+                                    Solicitar Boleta
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

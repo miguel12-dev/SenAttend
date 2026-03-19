@@ -104,6 +104,21 @@ ob_start();
                         </div>
                         <?php endif; ?>
 
+                        <!-- Boletas de Salida (Instructor) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                            <h4>Boletas de Salida</h4>
+                            <p>Revisar y aprobar solicitudes de boletas de salida de aprendices.</p>
+                            <div class="action-buttons">
+                                <a href="/instructor/boletas-salida" class="btn-sena">
+                                    <i class="fas fa-tasks"></i>
+                                    Revisar Solicitudes
+                                </a>
+                            </div>
+                        </div>
+
                         <?php endif; ?>
 
 
@@ -209,6 +224,21 @@ ob_start();
                                 <a href="/analytics" class="btn-sena">
                                     <i class="fas fa-file-excel"></i>
                                     Ver Analítica
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Boletas de Salida (Admin) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <h4>Boletas de Salida</h4>
+                            <p>Aprobar solicitudes de boletas de salida ya revisadas por instructores.</p>
+                            <div class="action-buttons">
+                                <a href="/admin/boletas-salida" class="btn-sena">
+                                    <i class="fas fa-check-double"></i>
+                                    Gestionar Boletas
                                 </a>
                             </div>
                         </div>

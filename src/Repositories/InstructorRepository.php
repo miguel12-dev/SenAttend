@@ -427,4 +427,47 @@ class InstructorRepository
             throw $e;
         }
     }
+
+    /**
+     * Buscar instructores por nombre (para autocomplete)
+     * Prioriza instructores de una ficha específica si se proporciona
+     * 
+     * @param string $query Texto de búsqueda
+     * @param int|null $fichaId ID de ficha para priorizar
+     * @param int $limit Límite de resultados
+     * @return array
+     */
+    public function buscarPorNombre(string $query, ?int $fichaId = null, int $limit = 10): array
+    {
+        try {
+            $db = Connection::getInstance();
+            
+            $sql = "SELECT 
+                        u.id,
+                        u.nombre,
+                        u.email,
+                        u.documento,
+                        IF(inf.instructor_id IS NOT NULL, 1, 0) as es_de_ficha
+                    FROM usuarios u
+                    LEFT JOIN instructor_fichas inf ON u.id = inf.instructor_id 
+                        AND inf.ficha_id = :ficha_id 
+                        AND inf.activo = 1
+                    WHERE u.rol = 'instructor'
+                    AND u.nombre LIKE :query
+                    ORDER BY es_de_ficha DESC, u.nombre ASC
+                    LIMIT :limit";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->bindValue(':query', '%' . $query . '%', PDO::PARAM_STR);
+            $stmt->bindValue(':ficha_id', $fichaId, PDO::PARAM_INT);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Error en InstructorRepository::buscarPorNombre - " . $e->getMessage());
+            throw $e;
+        }
+    }
 }
