@@ -70,12 +70,30 @@ class AprendizAuthService
         $this->session->remove('aprendiz_apellido');
         $this->session->remove('aprendiz_documento');
         $this->session->remove('aprendiz_login_time');
+
+        // Compatibilidad: si la sesión fue creada por AuthService (sistema unificado),
+        // limpia también las claves unificadas para evitar bucles de redirect.
+        $this->session->remove('authenticated');
+        $this->session->remove('user_id');
+        $this->session->remove('user_email');
+        $this->session->remove('user_nombre');
+        $this->session->remove('user_role');
+        $this->session->remove('user_documento');
+        $this->session->remove('login_time');
     }
 
     public function isAuthenticated(): bool
     {
         $this->session->start();
-        return (bool) $this->session->get('aprendiz_authenticated', false);
+        if ($this->session->get('aprendiz_authenticated', false)) {
+            return true;
+        }
+
+        // Compatibilidad con el sistema de sesión unificado (AuthService)
+        return (bool)(
+            $this->session->get('authenticated', false)
+            && $this->session->get('user_role') === 'aprendiz'
+        );
     }
 
     public function getCurrentAprendiz(): ?array
@@ -83,7 +101,41 @@ class AprendizAuthService
         $this->session->start();
 
         if (!$this->session->get('aprendiz_authenticated')) {
-            return null;
+            // Compatibilidad con el sistema de sesión unificado (AuthService)
+            $isUnifiedAprendiz = $this->session->get('authenticated', false)
+                && $this->session->get('user_role') === 'aprendiz';
+
+            if (!$isUnifiedAprendiz) {
+                return null;
+            }
+
+            $id = $this->session->get('user_id');
+            if (!$id) {
+                return null;
+            }
+
+            $aprendiz = $this->aprendizRepository->findById((int)$id);
+            if (!$aprendiz) {
+                $this->logout();
+                return null;
+            }
+
+            // Hydrate ficha_id para compatibilidad con AprendizBoletaController
+            $fichas = $this->aprendizRepository->getFichas((int)$id);
+            $fichaId = null;
+            foreach ($fichas as $ficha) {
+                $estado = $ficha['estado'] ?? null;
+                if ($estado && in_array($estado, ['activo', 'activa'], true)) {
+                    $fichaId = (int) ($ficha['id'] ?? 0);
+                    break;
+                }
+            }
+            if ($fichaId === null && !empty($fichas) && isset($fichas[0]['id'])) {
+                $fichaId = (int) $fichas[0]['id'];
+            }
+
+            $aprendiz['ficha_id'] = $fichaId;
+            return $aprendiz;
         }
 
         $id = $this->session->get('aprendiz_id');
@@ -97,6 +149,21 @@ class AprendizAuthService
             return null;
         }
 
+        // Hydrate ficha_id para compatibilidad con AprendizBoletaController
+        $fichas = $this->aprendizRepository->getFichas((int)$id);
+        $fichaId = null;
+        foreach ($fichas as $ficha) {
+            $estado = $ficha['estado'] ?? null;
+            if ($estado && in_array($estado, ['activo', 'activa'], true)) {
+                $fichaId = (int) ($ficha['id'] ?? 0);
+                break;
+            }
+        }
+        if ($fichaId === null && !empty($fichas) && isset($fichas[0]['id'])) {
+            $fichaId = (int) $fichas[0]['id'];
+        }
+
+        $aprendiz['ficha_id'] = $fichaId;
         return $aprendiz;
     }
 }

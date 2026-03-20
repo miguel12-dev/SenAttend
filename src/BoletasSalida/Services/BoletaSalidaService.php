@@ -112,6 +112,34 @@ class BoletaSalidaService
 
         if (empty($data['hora_salida_solicitada'])) {
             $errors[] = 'La hora de salida es requerida';
+        } else {
+            // Validar que la hora de salida sea futura (hora de Colombia: America/Bogota)
+            date_default_timezone_set('America/Bogota');
+            $ahora = new \DateTime();
+            $hoy = $ahora->format('Y-m-d');
+            
+            // Crear DateTime con la hora solicitada
+            $horaSalidaStr = $hoy . ' ' . $data['hora_salida_solicitada'];
+            $horaSalida = \DateTime::createFromFormat('Y-m-d H:i', $horaSalidaStr);
+            
+            if ($horaSalida === false) {
+                $errors[] = 'Formato de hora de salida inválido';
+            } else {
+                // Cambiar margen a 5 minutos
+                $margenMinutos = 5;
+                $ahoraConMargen = clone $ahora;
+                $ahoraConMargen->modify("+{$margenMinutos} minutes");
+                
+                if ($horaSalida <= $ahoraConMargen) {
+                    // Formato 12 horas con AM/PM
+                    $horasActual = (int)$ahora->format('H');
+                    $horas12 = $horasActual % 12;
+                    if ($horas12 === 0) $horas12 = 12;
+                    $periodo = $horasActual >= 12 ? 'PM' : 'AM';
+                    $horaActualStr = $horas12 . ':' . $ahora->format('i') . ' ' . $periodo;
+                    $errors[] = "La hora de salida debe ser al menos {$margenMinutos} minutos posterior a la hora actual ({$horaActualStr})";
+                }
+            }
         }
 
         if ($data['tipo_salida'] === 'temporal') {

@@ -516,6 +516,11 @@ $routes = [
             'action' => 'apiReingresosPendientes',
             'middleware' => ['auth']
         ],
+        '/api/instructor/boletas-salida/pendientes' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiPendientes',
+            'middleware' => ['auth']
+        ],
         // API búsqueda instructores
         '/api/instructores/buscar' => [
             'controller' => \App\Controllers\GestionInstructoresController::class,
@@ -780,6 +785,11 @@ $routes = [
             'action' => 'store',
             'middleware' => []
         ],
+        '/api/aprendiz/boletas-salida/crear' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'apiCrear',
+            'middleware' => []
+        ],
         // ============================================
         // MÓDULO DE EVENTOS - Rutas POST
         // ============================================
@@ -991,6 +1001,12 @@ $dynamicRoutes = [
         // ============================================
         // MÓDULO DE BOLETAS DE SALIDA - Rutas Dinámicas GET
         // ============================================
+        '/api/aprendiz/boletas-salida/(\d+)' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => [],
+            'params' => ['id']
+        ],
         '/api/instructor/boletas-salida/(\d+)' => [
             'controller' => InstructorBoletaController::class,
             'action' => 'apiDetalle',

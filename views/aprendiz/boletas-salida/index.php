@@ -19,6 +19,7 @@ $title = 'Boletas de Salida - SENAttend';
     <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/common/notification-modal.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/boletas-salida/boletas.css') ?>">
 </head>
 <body>
@@ -107,12 +108,33 @@ $title = 'Boletas de Salida - SENAttend';
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="hora_salida_solicitada" class="required">Hora de Salida Solicitada</label>
-                                    <input type="time" name="hora_salida_solicitada" id="hora_salida_solicitada" class="form-control" required>
+                                    <div class="time-input-group">
+                                        <input type="number" id="hora_salida_hora" class="form-control time-input" min="1" max="12" placeholder="HH" required>
+                                        <span class="time-separator">:</span>
+                                        <input type="number" id="hora_salida_minuto" class="form-control time-input" min="0" max="59" placeholder="MM" required>
+                                        <select id="hora_salida_periodo" class="form-control time-period" required>
+                                            <option value="AM">AM</option>
+                                            <option value="PM">PM</option>
+                                        </select>
+                                        <input type="hidden" name="hora_salida_solicitada" id="hora_salida_solicitada">
+                                    </div>
+                                    <small class="form-hint">
+                                        <i class="fas fa-clock"></i> Hora actual: <strong id="hora-actual">--:--</strong> (mínimo 5 minutos después)
+                                    </small>
                                 </div>
 
                                 <div class="form-group" id="horaReingresoGroup">
                                     <label for="hora_reingreso_solicitada" class="required">Hora de Reingreso Solicitada</label>
-                                    <input type="time" name="hora_reingreso_solicitada" id="hora_reingreso_solicitada" class="form-control">
+                                    <div class="time-input-group">
+                                        <input type="number" id="hora_reingreso_hora" class="form-control time-input" min="1" max="12" placeholder="HH">
+                                        <span class="time-separator">:</span>
+                                        <input type="number" id="hora_reingreso_minuto" class="form-control time-input" min="0" max="59" placeholder="MM">
+                                        <select id="hora_reingreso_periodo" class="form-control time-period">
+                                            <option value="AM">AM</option>
+                                            <option value="PM">PM</option>
+                                        </select>
+                                        <input type="hidden" name="hora_reingreso_solicitada" id="hora_reingreso_solicitada">
+                                    </div>
                                 </div>
                             </div>
 
@@ -239,6 +261,11 @@ $title = 'Boletas de Salida - SENAttend';
         </footer>
     </div>
 
+    <script>
+        // Variable global con el ficha_id del aprendiz
+        window.FICHA_ID = <?= (int)$aprendiz['ficha_id'] ?>;
+    </script>
+    <script src="<?= asset('js/common/notification-modal.js') ?>"></script>
     <script src="<?= asset('js/boletas-salida/aprendiz-form.js') ?>"></script>
 </body>
 </html>

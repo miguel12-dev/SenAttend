@@ -3,6 +3,7 @@
 namespace App\Middleware;
 
 use App\Session\SessionManager;
+use App\Support\Response;
 
 /**
  * Middleware centralizado de permisos (RBAC)
@@ -58,6 +59,10 @@ class PermissionMiddleware
         // Si la ruta exige roles, pero no hay usuario autenticado, bloquear
         if (!$userRole) {
             $this->logDeniedAccess($method, $uri, null, 'NO_AUTH');
+            if ($this->isApiRequest($uri)) {
+                Response::json(['success' => false, 'error' => 'No autorizado'], 401);
+            }
+
             $this->redirectForbidden('/login');
         }
 
@@ -71,9 +76,18 @@ class PermissionMiddleware
             // Si ya estamos en la ruta de destino, evitar bucle infinito
             if ($uri === $redirectTo) {
                 $this->session->destroy();
+
+                if ($this->isApiRequest($uri)) {
+                    Response::json(['success' => false, 'error' => 'access_denied'], 403);
+                }
+
                 $this->redirectForbidden('/login?error=access_denied');
             }
-            
+
+            if ($this->isApiRequest($uri)) {
+                Response::json(['success' => false, 'error' => 'access_denied', 'redirect' => $redirectTo], 403);
+            }
+
             $this->redirectForbidden($redirectTo);
         }
 
@@ -155,9 +169,16 @@ class PermissionMiddleware
      */
     private function redirectForbidden(string $redirectTo): void
     {
-        http_response_code(403);
+        // Usar un estado de redirect (302) para que el navegador respete Location.
+        // Si se usa 403, algunos navegadores no siguen el header Location y la vista puede verse "sin CSS".
+        http_response_code(302);
         header('Location: ' . $redirectTo);
         exit;
+    }
+
+    private function isApiRequest(string $uri): bool
+    {
+        return str_starts_with($uri, '/api/');
     }
 }
 

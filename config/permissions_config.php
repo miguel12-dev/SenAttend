@@ -127,10 +127,12 @@ return [
                 // Módulo Boletas de Salida - Aprendiz
                 '/aprendiz/boletas-salida' => [ROLE_APRENDIZ],
                 '/api/aprendiz/boletas-salida' => [ROLE_APRENDIZ],
+                '/api/aprendiz/boletas-salida/crear' => [ROLE_APRENDIZ],
 
                 // Módulo Boletas de Salida - Instructor
                 '/instructor/boletas-salida' => [ROLE_INSTRUCTOR],
                 '/instructor/boletas-salida/historial' => [ROLE_INSTRUCTOR],
+                '/api/instructor/boletas-salida/pendientes' => [ROLE_INSTRUCTOR],
 
                 // Módulo Boletas de Salida - Admin
                 '/admin/boletas-salida' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO],
@@ -205,6 +207,7 @@ return [
 
                 // Módulo Boletas de Salida - POST
                 '/aprendiz/boletas-salida' => [ROLE_APRENDIZ],
+                '/api/aprendiz/boletas-salida/crear' => [ROLE_APRENDIZ],
             ],
             // PUT y DELETE se manejan en 'patterns' porque tienen parámetros dinámicos
         ],
@@ -283,6 +286,10 @@ return [
                 [
                     'pattern' => '#^/api/portero/boletas-salida/(\d+)$#',
                     'roles' => [ROLE_PORTERO],
+                ],
+                [
+                    'pattern' => '#^/api/aprendiz/boletas-salida/(\d+)$#',
+                    'roles' => [ROLE_APRENDIZ],
                 ],
             ],
             'POST' => [

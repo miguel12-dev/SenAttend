@@ -5,18 +5,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     let boletaIdActual = null;
 
+    const modalValidarSalida = document.getElementById('modalValidarSalida');
     const modalReingreso = document.getElementById('modalReingreso');
     const modalDetalle = document.getElementById('modalDetalle');
     const observacionesReingreso = document.getElementById('observacionesReingreso');
+    const btnCancelarSalida = document.getElementById('btnCancelarSalida');
+    const btnConfirmarSalida = document.getElementById('btnConfirmarSalida');
     const btnCancelarReingreso = document.getElementById('btnCancelarReingreso');
     const btnConfirmarReingreso = document.getElementById('btnConfirmarReingreso');
 
-    const btnsValidarSalida = document.querySelectorAll('.btn-validar-salida');
-    const btnsValidarReingreso = document.querySelectorAll('.btn-validar-reingreso');
-    const btnsDetalle = document.querySelectorAll('.btn-detalle');
     const modalCloses = document.querySelectorAll('.modal-close');
     const tabLinks = document.querySelectorAll('.tab-link');
+    const tabSalidasList = document.querySelector('#tab-salidas .boletas-list');
+    const tabReingresosList = document.querySelector('#tab-reingresos .boletas-list');
 
+    // Navegación entre tabs
     tabLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
@@ -30,46 +33,61 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    btnsValidarSalida.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const boletaId = this.dataset.id;
-            if (confirm('¿Confirma la salida física del aprendiz?')) {
-                validarSalida(boletaId);
-            }
-        });
+    // Confirmar salida
+    btnConfirmarSalida.addEventListener('click', function() {
+        modalValidarSalida.classList.remove('active');
+        validarSalida(boletaIdActual);
     });
 
-    btnsValidarReingreso.forEach(btn => {
-        btn.addEventListener('click', function() {
-            boletaIdActual = this.dataset.id;
-            observacionesReingreso.value = '';
-            modalReingreso.classList.add('active');
-        });
+    // Cancelar salida
+    btnCancelarSalida.addEventListener('click', function() {
+        modalValidarSalida.classList.remove('active');
+        boletaIdActual = null;
     });
 
+    // Cancelar reingreso
     btnCancelarReingreso.addEventListener('click', function() {
         modalReingreso.classList.remove('active');
         boletaIdActual = null;
     });
 
+    // Confirmar reingreso
     btnConfirmarReingreso.addEventListener('click', function() {
         const observaciones = observacionesReingreso.value.trim();
         validarReingreso(boletaIdActual, observaciones);
     });
 
-    btnsDetalle.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const boletaId = this.dataset.id;
-            verDetalle(boletaId);
-        });
+    // Eventos delegados para botones dinámicos (render por AJAX)
+    document.addEventListener('click', function(event) {
+        const btnValidarSalida = event.target.closest('.btn-validar-salida');
+        if (btnValidarSalida) {
+            boletaIdActual = btnValidarSalida.dataset.id;
+            modalValidarSalida.classList.add('active');
+            return;
+        }
+
+        const btnValidarReingreso = event.target.closest('.btn-validar-reingreso');
+        if (btnValidarReingreso) {
+            boletaIdActual = btnValidarReingreso.dataset.id;
+            observacionesReingreso.value = '';
+            modalReingreso.classList.add('active');
+            return;
+        }
+
+        const btnDetalle = event.target.closest('.btn-detalle');
+        if (btnDetalle) {
+            verDetalle(btnDetalle.dataset.id);
+        }
     });
 
+    // Cerrar modales
     modalCloses.forEach(btn => {
         btn.addEventListener('click', function() {
             this.closest('.modal').classList.remove('active');
         });
     });
 
+    // Cerrar modal al hacer clic fuera
     window.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal')) {
             e.target.classList.remove('active');
@@ -88,14 +106,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (result.success) {
-                alert('Salida validada correctamente. Hora registrada: ' + new Date().toLocaleTimeString('es-CO'));
-                location.reload();
+                const horaActual = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+                if (window.showSuccess) {
+                    window.showSuccess(`Salida validada correctamente. Hora registrada: ${horaActual}`);
+                }
+                await recargarDatosPortero();
             } else {
-                alert('Error: ' + (result.message || 'No se pudo validar la salida'));
+                if (window.showError) {
+                    window.showError('Error al validar', [result.message || 'No se pudo validar la salida']);
+                } else {
+                    alert('Error: ' + (result.message || 'No se pudo validar la salida'));
+                }
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al procesar la validación');
+            if (window.showError) {
+                window.showError('Error de conexión', ['No se pudo procesar la validación']);
+            } else {
+                alert('Error al procesar la validación');
+            }
         }
     }
 
@@ -113,14 +142,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.success) {
                 modalReingreso.classList.remove('active');
-                alert('Reingreso validado correctamente. Hora registrada: ' + new Date().toLocaleTimeString('es-CO'));
-                location.reload();
+                const horaActual = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+                if (window.showSuccess) {
+                    window.showSuccess(`Reingreso validado correctamente. Hora registrada: ${horaActual}`);
+                }
+                await recargarDatosPortero(true);
             } else {
-                alert('Error: ' + (result.message || 'No se pudo validar el reingreso'));
+                if (window.showError) {
+                    window.showError('Error al validar', [result.message || 'No se pudo validar el reingreso']);
+                } else {
+                    alert('Error: ' + (result.message || 'No se pudo validar el reingreso'));
+                }
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al procesar la validación');
+            if (window.showError) {
+                window.showError('Error de conexión', ['No se pudo procesar la validación']);
+            } else {
+                alert('Error al procesar la validación');
+            }
         }
     }
 
@@ -132,12 +172,173 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.success) {
                 mostrarDetalle(result.data);
             } else {
-                alert('Error: ' + (result.message || 'No se pudo obtener el detalle'));
+                if (window.showError) {
+                    window.showError('Error', [result.message || 'No se pudo obtener el detalle']);
+                } else {
+                    alert('Error: ' + (result.message || 'No se pudo obtener el detalle'));
+                }
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error al cargar el detalle');
+            if (window.showError) {
+                window.showError('Error de conexión', ['No se pudo cargar el detalle']);
+            } else {
+                alert('Error al cargar el detalle');
+            }
         }
+    }
+
+    function mostrarEstadoVacio(tab) {
+        const boletasList = document.querySelector(`#tab-${tab} .boletas-list`);
+        if (boletasList) {
+            const mensaje = tab === 'salidas' 
+                ? 'No hay salidas pendientes de validación' 
+                : 'No hay reingresos pendientes';
+            const submensaje = tab === 'salidas'
+                ? 'Todas las salidas aprobadas han sido validadas.'
+                : 'Todas las salidas temporales han sido completadas.';
+                
+            boletasList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-check"></i>
+                    <h3>${mensaje}</h3>
+                    <p>${submensaje}</p>
+                </div>
+            `;
+        }
+    }
+
+    async function recargarDatosPortero(incrementarCompletados = false) {
+        try {
+            const [salidasResponse, reingresosResponse] = await Promise.all([
+                fetch('/api/portero/boletas-salida/aprobadas'),
+                fetch('/api/portero/boletas-salida/reingresos-pendientes'),
+            ]);
+
+            const [salidasPayload, reingresosPayload] = await Promise.all([
+                salidasResponse.json(),
+                reingresosResponse.json(),
+            ]);
+
+            if (!salidasPayload.success || !reingresosPayload.success) {
+                throw new Error('No se pudieron recargar los datos de portería');
+            }
+
+            const salidas = salidasPayload.data ?? [];
+            const reingresos = reingresosPayload.data ?? [];
+
+            renderTabSalidas(salidas);
+            renderTabReingresos(reingresos);
+            actualizarContadoresDesdeDatos(salidas.length, reingresos.length, incrementarCompletados);
+        } catch (error) {
+            console.error('Error recargando datos de portería:', error);
+        }
+    }
+
+    function actualizarContadoresDesdeDatos(totalSalidas, totalReingresos, incrementarCompletados = false) {
+        const salidasElement = document.querySelector('.stat-card:nth-child(1) .stat-info h3');
+        const reingresosElement = document.querySelector('.stat-card:nth-child(2) .stat-info h3');
+        const completadosElement = document.querySelector('.stat-card:nth-child(3) .stat-info h3');
+
+        if (salidasElement) salidasElement.textContent = String(totalSalidas);
+        if (reingresosElement) reingresosElement.textContent = String(totalReingresos);
+        if (completadosElement && incrementarCompletados) {
+            const actual = parseInt(completadosElement.textContent, 10) || 0;
+            completadosElement.textContent = String(actual + 1);
+        }
+    }
+
+    function renderTabSalidas(boletas) {
+        if (!tabSalidasList) return;
+        if (boletas.length === 0) {
+            mostrarEstadoVacio('salidas');
+            return;
+        }
+
+        tabSalidasList.innerHTML = boletas.map((boleta) => `
+            <div class="boleta-card">
+                <div class="boleta-header">
+                    <div class="boleta-title">
+                        <h3>${escapeHtml(`${boleta.aprendiz_nombre ?? ''} ${boleta.aprendiz_apellido ?? ''}`.trim())}</h3>
+                        <span class="badge badge-${boleta.tipo_salida === 'temporal' ? 'info' : 'warning'}">
+                            ${boleta.tipo_salida === 'temporal' ? 'Temporal' : 'Definitiva'}
+                        </span>
+                    </div>
+                    <div class="boleta-date">
+                        <i class="far fa-calendar"></i>
+                        Solicitada: ${formatDateTime(boleta.created_at)}
+                    </div>
+                </div>
+                <div class="boleta-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Documento:</span>
+                        <span class="detail-value">${escapeHtml(boleta.aprendiz_documento ?? '')}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Ficha:</span>
+                        <span class="detail-value">${escapeHtml(boleta.numero_ficha ?? '')}</span>
+                    </div>
+                </div>
+                <div class="boleta-actions">
+                    <button type="button" class="btn btn-success btn-validar-salida" data-id="${boleta.id}">
+                        <i class="fas fa-check"></i> Validar Salida
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-detalle" data-id="${boleta.id}">
+                        <i class="fas fa-eye"></i> Ver Detalle
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderTabReingresos(boletas) {
+        if (!tabReingresosList) return;
+        if (boletas.length === 0) {
+            mostrarEstadoVacio('reingresos');
+            return;
+        }
+
+        tabReingresosList.innerHTML = boletas.map((boleta) => `
+            <div class="boleta-card">
+                <div class="boleta-header">
+                    <div class="boleta-title">
+                        <h3>${escapeHtml(`${boleta.aprendiz_nombre ?? ''} ${boleta.aprendiz_apellido ?? ''}`.trim())}</h3>
+                        <span class="badge badge-warning">Pendiente Reingreso</span>
+                    </div>
+                    <div class="boleta-date">
+                        <i class="far fa-clock"></i>
+                        Salida: ${formatDateTime(boleta.fecha_salida_real)}
+                    </div>
+                </div>
+                <div class="boleta-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Documento:</span>
+                        <span class="detail-value">${escapeHtml(boleta.aprendiz_documento ?? '')}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Hora esperada:</span>
+                        <span class="detail-value">${formatTime(boleta.hora_reingreso_solicitada)}</span>
+                    </div>
+                </div>
+                <div class="boleta-actions">
+                    <button type="button" class="btn btn-primary btn-validar-reingreso" data-id="${boleta.id}">
+                        <i class="fas fa-sign-in-alt"></i> Validar Reingreso
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-detalle" data-id="${boleta.id}">
+                        <i class="fas fa-eye"></i> Ver Detalle
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
     }
 
     function mostrarDetalle(boleta) {
@@ -252,18 +453,31 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatTime(time) {
         if (!time) return 'N/A';
         const parts = time.split(':');
-        return `${parts[0]}:${parts[1]}`;
+        let hora = parseInt(parts[0]);
+        const minuto = parts[1];
+        
+        let hora12 = hora % 12;
+        if (hora12 === 0) hora12 = 12;
+        const periodo = hora >= 12 ? 'PM' : 'AM';
+        
+        return `${hora12}:${minuto} ${periodo}`;
     }
 
     function formatDateTime(dateTime) {
         if (!dateTime) return 'N/A';
         const date = new Date(dateTime);
-        return date.toLocaleString('es-CO', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit', 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        const horas = date.getHours();
+        let horas12 = horas % 12;
+        if (horas12 === 0) horas12 = 12;
+        const periodo = horas >= 12 ? 'PM' : 'AM';
+        
+        return date.toLocaleDateString('es-CO', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }) + ' ' + horas12 + ':' + date.getMinutes().toString().padStart(2, '0') + ' ' + periodo;
     }
+
+    // Sincronizar datos al cargar pantalla
+    recargarDatosPortero();
 });

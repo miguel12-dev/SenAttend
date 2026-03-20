@@ -86,33 +86,33 @@ class AuthController
             Response::redirect('/login');
         }
 
-        // Login exitoso - redirigir según el rol del usuario
-        $intendedUrl = $this->session->get('intended_url');
-        $this->session->remove('intended_url');
-
-        // Si no hay URL previa, redirigir según el rol
-        if (!$intendedUrl) {
-            $userRole = $user['rol'] ?? null;
-            
-            // Redirigir al panel específico según el rol
-            switch ($userRole) {
-                case 'portero':
-                    $intendedUrl = '/portero/panel';
-                    break;
-                case 'aprendiz':
-                    // Los aprendices van a su panel específico
-                    $intendedUrl = '/aprendiz/panel';
-                    break;
-                case 'admin':
-                case 'administrativo':
-                case 'instructor':
-                default:
-                    $intendedUrl = '/dashboard';
-                    break;
-            }
+        // Login exitoso - obtener el rol desde la sesión (ya está establecido por AuthService)
+        $this->session->start();
+        $userRole = $this->session->get('user_role') ?? $user['rol'] ?? null;
+        
+        // Redirigir al panel específico según el rol (ignorar intended_url para evitar conflictos)
+        switch ($userRole) {
+            case 'portero':
+                $redirectUrl = '/portero/panel';
+                break;
+            case 'aprendiz':
+                $redirectUrl = '/aprendiz/panel';
+                break;
+            case 'admin':
+            case 'administrativo':
+            case 'instructor':
+                $redirectUrl = '/dashboard';
+                break;
+            default:
+                // Si el rol no es reconocido, cerrar sesión y volver a login
+                $this->authService->logout();
+                $this->session->start();
+                $this->session->flash('error', 'Rol de usuario no válido');
+                Response::redirect('/login');
+                return;
         }
 
-        Response::redirect($intendedUrl);
+        Response::redirect($redirectUrl);
     }
 
     /**
@@ -130,7 +130,9 @@ class AuthController
         $this->session->start();
         $this->session->flash('message', 'Sesión cerrada exitosamente');
         
+        // Agregar flag para limpiar cache PWA en el cliente
+        $this->session->set('clear_pwa_cache', true);
+        
         Response::redirect('/login');
     }
 }
-

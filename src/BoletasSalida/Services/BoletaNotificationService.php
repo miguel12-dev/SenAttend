@@ -30,6 +30,12 @@ class BoletaNotificationService
             $tipoSalida = $boleta['tipo_salida'] === 'temporal' ? 'Temporal' : 'Definitiva';
             $motivoLabel = $this->getMotivLabel($boleta['motivo']);
 
+            // Agregar descripción si el motivo es "otro"
+            $motivoDetalle = '';
+            if ($boleta['motivo'] === 'otro' && !empty($boleta['motivo_otro'])) {
+                $motivoDetalle = "<p><strong>Descripción:</strong> " . htmlspecialchars($boleta['motivo_otro']) . "</p>";
+            }
+
             $subject = 'Nueva solicitud de boleta de salida - SENAttend';
             
             $body = $this->generateEmailTemplate(
@@ -49,6 +55,7 @@ class BoletaNotificationService
                     <h3 style='margin-top: 0; color: #0056b3;'>Detalles de la Solicitud</h3>
                     <p><strong>Tipo de salida:</strong> {$tipoSalida}</p>
                     <p><strong>Motivo:</strong> {$motivoLabel}</p>
+                    {$motivoDetalle}
                     <p><strong>Hora de salida solicitada:</strong> {$boleta['hora_salida_solicitada']}</p>
                     " . ($boleta['hora_reingreso_solicitada'] ? "<p><strong>Hora de reingreso solicitada:</strong> {$boleta['hora_reingreso_solicitada']}</p>" : "") . "
                 </div>

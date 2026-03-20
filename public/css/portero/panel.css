@@ -67,6 +67,78 @@
     font-size: 0.9rem;
 }
 
+/* Accesos Rápidos */
+.portero-quick-access {
+    margin-bottom: 2rem;
+}
+
+.portero-quick-access h3 {
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.quick-access-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.quick-access-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    border: 2px solid transparent;
+}
+
+.quick-access-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(57, 169, 0, 0.2);
+    border-color: var(--color-primary);
+}
+
+.quick-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #39A900 0%, #2d8600 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.quick-icon i {
+    font-size: 1.75rem;
+    color: white;
+}
+
+.quick-info {
+    flex: 1;
+}
+
+.quick-info h4 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.quick-info p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
 .portero-ingresos-card {
     background: white;
     border-radius: 8px;
@@ -138,12 +210,43 @@
         gap: 1rem;
     }
 
+    .quick-access-grid {
+        grid-template-columns: 1fr;
+    }
+
     .portero-ingresos-list {
         overflow-x: auto;
     }
 
     .portero-ingresos-list table {
         min-width: 800px;
+    }
+}
+
+@media (max-width: 480px) {
+    .portero-dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .quick-access-card {
+        padding: 1.25rem;
+    }
+
+    .quick-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .quick-icon i {
+        font-size: 1.5rem;
+    }
+
+    .quick-info h4 {
+        font-size: 1rem;
+    }
+
+    .quick-info p {
+        font-size: 0.85rem;
     }
 }
 

@@ -61,8 +61,13 @@ class InstructorFichaRepository
     public function findInstructoresByFicha(int $fichaId, bool $soloActivos = true): array
     {
         try {
-            $sql = 'SELECT u.id, u.documento, u.nombre, u.email, u.rol,
-                           inf.fecha_asignacion, inf.activo as asignacion_activa,
+            $sql = 'SELECT u.id as instructor_id, 
+                           u.documento, 
+                           CONCAT(u.nombre, " ", COALESCE(u.apellido, "")) as instructor_nombre,
+                           u.email, 
+                           u.rol,
+                           inf.fecha_asignacion, 
+                           inf.activo as asignacion_activa,
                            inf.created_at as fecha_asignacion_creada
                     FROM instructor_fichas inf
                     INNER JOIN usuarios u ON inf.instructor_id = u.id

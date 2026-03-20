@@ -5,7 +5,7 @@
  * @version 1.0.0
  */
 
-const CACHE_VERSION = 'senattend-v1.0.0';
+const CACHE_VERSION = 'senattend-v1.1.0';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 const CACHE_IMAGES = `${CACHE_VERSION}-images`;
@@ -20,11 +20,33 @@ const STATIC_ASSETS = [
 ];
 
 // Rutas que requieren estar online (no se cachean)
+// CRÍTICO: Incluir todas las rutas que contienen datos específicos del usuario
 const ONLINE_ONLY_ROUTES = [
   '/auth/login',
   '/auth/logout',
   '/api/qr/procesar',
   '/asistencia/guardar',
+  // Rutas de dashboard y datos privados por rol
+  '/dashboard',
+  '/admin',
+  '/instructor',
+  '/portero',
+  '/aprendiz/panel',
+  '/aprendiz/boletas-salida',
+  '/aprendiz/equipos',
+  '/aprendiz/asistencias',
+  // APIs con datos sensibles
+  '/api/aprendices',
+  '/api/fichas',
+  '/api/instructor-fichas',
+  '/api/admin',
+  '/api/instructor',
+  '/api/portero',
+  '/api/aprendiz',
+  // Boletas de salida
+  '/boletas-salida',
+  // Perfil
+  '/perfil',
 ];
 
 // Rutas API que se pueden cachear temporalmente
@@ -115,8 +137,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // No interceptar peticiones POST/PUT/DELETE/PATCH en APIs críticas
+  // No interceptar peticiones POST/PUT/DELETE/PATCH
   if (request.method !== 'GET') {
+    return;
+  }
+
+  // CRÍTICO: No cachear documentos HTML privados
+  if (request.destination === 'document' && isPrivateRoute(url.pathname)) {
+    event.respondWith(fetchOnlineOnly(request));
     return;
   }
 
@@ -129,6 +157,7 @@ self.addEventListener('fetch', (event) => {
   } else if (isAPIRequest(url.pathname)) {
     event.respondWith(networkFirst(request, CACHE_API));
   } else {
+    // Para páginas públicas usar staleWhileRevalidate
     event.respondWith(staleWhileRevalidate(request, CACHE_DYNAMIC));
   }
 });
@@ -264,6 +293,30 @@ async function fetchOnlineOnly(request) {
  */
 function isOnlineOnlyRoute(pathname) {
   return ONLINE_ONLY_ROUTES.some(route => pathname.includes(route));
+}
+
+function isPrivateRoute(pathname) {
+  // Rutas que contienen datos sensibles del usuario
+  const privatePatterns = [
+    '/dashboard',
+    '/admin/',
+    '/instructor/',
+    '/portero/',
+    '/aprendiz/panel',
+    '/aprendiz/boletas-salida',
+    '/aprendiz/equipos',
+    '/aprendiz/asistencias',
+    '/perfil',
+    '/boletas-salida',
+    '/fichas',
+    '/aprendices',
+    '/gestion-',
+    '/instructor-fichas',
+    '/qr/escanear',
+    '/configuracion/'
+  ];
+  
+  return privatePatterns.some(pattern => pathname.includes(pattern));
 }
 
 function isStaticAsset(request) {

@@ -92,6 +92,54 @@
             }
         });
     </script>
+
+    <?php if (isset($_SESSION['clear_pwa_cache']) && $_SESSION['clear_pwa_cache']): ?>
+    <script>
+        // Limpiar cache PWA al hacer logout
+        (async function() {
+            try {
+                // Limpiar cache del Service Worker
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.ready;
+                    if (registration.active) {
+                        registration.active.postMessage({ type: 'CLEAR_CACHE' });
+                    }
+                }
+
+                // Limpiar Cache Storage manualmente
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    await Promise.all(
+                        cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                }
+
+                // Limpiar IndexedDB
+                if ('indexedDB' in window) {
+                    const dbs = ['SENAttendDB'];
+                    for (const dbName of dbs) {
+                        indexedDB.deleteDatabase(dbName);
+                    }
+                }
+
+                // Limpiar sessionStorage y localStorage (excepto configuración de instalación)
+                const installPromptDismissed = localStorage.getItem('pwa_install_prompt_dismissed');
+                sessionStorage.clear();
+                localStorage.clear();
+                if (installPromptDismissed) {
+                    localStorage.setItem('pwa_install_prompt_dismissed', installPromptDismissed);
+                }
+
+                console.log('[PWA] Cache y datos locales limpiados exitosamente');
+            } catch (error) {
+                console.error('[PWA] Error al limpiar cache:', error);
+            }
+        })();
+    </script>
+    <?php 
+        unset($_SESSION['clear_pwa_cache']); 
+    ?>
+    <?php endif; ?>
 </body>
 </html>
 

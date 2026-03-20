@@ -6,6 +6,7 @@ use App\BoletasSalida\Services\BoletaSalidaService;
 use App\BoletasSalida\Repositories\BoletaSalidaRepository;
 use App\Services\AuthService;
 use App\Support\Response;
+use App\Support\CacheHeaders;
 
 /**
  * Controlador para gestión de boletas de salida (rol admin/administrativo)
@@ -39,6 +40,9 @@ class AdminBoletaController
             return;
         }
 
+        // Evitar caché de la página
+        CacheHeaders::noCache();
+
         $boletasPendientes = $this->boletaRepository->findPendientesAdmin();
         $contadores = $this->boletaService->getContadores($user['id'], 'admin');
 
@@ -57,6 +61,9 @@ class AdminBoletaController
             Response::redirect('/login');
             return;
         }
+
+        // Evitar caché de la página
+        CacheHeaders::noCache();
 
         $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
         $limit = 100;

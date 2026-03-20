@@ -187,12 +187,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatDateTime(dateTime) {
         if (!dateTime) return 'N/A';
         const date = new Date(dateTime);
-        return date.toLocaleString('es-CO', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit', 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        const horas = date.getHours();
+        let horas12 = horas % 12;
+        if (horas12 === 0) horas12 = 12;
+        const periodo = horas >= 12 ? 'PM' : 'AM';
+        
+        return date.toLocaleDateString('es-CO', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }) + ' ' + horas12 + ':' + date.getMinutes().toString().padStart(2, '0') + ' ' + periodo;
     }
 });

@@ -102,9 +102,17 @@ ob_start();
                                         </span>
                                     </td>
                                     <td>
-                                        <?php if ($boleta['instructor_aprobado_por']): ?>
+                                        <?php
+                                        $estadoActual = (string)($boleta['estado'] ?? '');
+                                        $estadoNormalizado = strtolower($estadoActual);
+                                        $esRechazada = str_contains($estadoNormalizado, 'rechazada') || str_contains($estadoNormalizado, 'rechazado');
+
+                                        if ($esRechazada):
+                                        ?>
+                                            <span class="badge badge-danger">Rechazada</span>
+                                        <?php elseif (!empty($boleta['instructor_aprobado_por'])): ?>
                                             <span class="badge badge-success">Aprobada</span>
-                                        <?php elseif ($boleta['instructor_rechazado_por']): ?>
+                                        <?php elseif (!empty($boleta['instructor_rechazado_por'])): ?>
                                             <span class="badge badge-danger">Rechazada</span>
                                         <?php else: ?>
                                             <span class="badge badge-secondary">-</span>

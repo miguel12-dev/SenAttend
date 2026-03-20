@@ -1,7 +1,13 @@
 <?php
 $title = 'Boletas de Salida - Validación';
-$styles = ['css/boletas-salida/boletas.css'];
-$scripts = ['js/boletas-salida/portero-panel.js'];
+$styles = [
+    'css/common/notification-modal.css',
+    'css/boletas-salida/boletas.css'
+];
+$scripts = [
+    'js/common/notification-modal.js',
+    'js/boletas-salida/portero-panel.js'
+];
 ob_start();
 ?>
 
@@ -20,7 +26,7 @@ ob_start();
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-icon bg-info">
+                    <div class="stat-icon">
                         <i class="fas fa-sign-out-alt"></i>
                     </div>
                     <div class="stat-info">
@@ -29,7 +35,7 @@ ob_start();
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon bg-warning">
+                    <div class="stat-icon">
                         <i class="fas fa-sign-in-alt"></i>
                     </div>
                     <div class="stat-info">
@@ -38,7 +44,7 @@ ob_start();
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon bg-success">
+                    <div class="stat-icon">
                         <i class="fas fa-check-circle"></i>
                     </div>
                     <div class="stat-info">
@@ -156,6 +162,24 @@ ob_start();
             <p>&copy; <?= date('Y') ?> SENA - Servicio Nacional de Aprendizaje. Todos los derechos reservados.</p>
         </div>
     </footer>
+</div>
+
+<!-- Modal de confirmación de salida -->
+<div id="modalValidarSalida" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Validar Salida</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>¿Confirma la salida física del aprendiz?</p>
+            <p class="text-muted">Se registrará la hora actual de salida.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btnCancelarSalida">Cancelar</button>
+            <button type="button" class="btn btn-success" id="btnConfirmarSalida">Confirmar Salida</button>
+        </div>
+    </div>
 </div>
 
 <div id="modalReingreso" class="modal">

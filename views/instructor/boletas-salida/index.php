@@ -7,9 +7,11 @@
 $pageTitle = 'Boletas de Salida - Solicitudes Pendientes';
 $title = 'Boletas de Salida - Solicitudes Pendientes';
 $styles = [
+    'css/common/notification-modal.css',
     'css/boletas-salida/boletas.css'
 ];
 $scripts = [
+    'js/common/notification-modal.js',
     'js/boletas-salida/instructor-panel.js'
 ];
 
@@ -28,37 +30,6 @@ ob_start();
                 <div class="page-header">
                     <h1><i class="fas fa-file-export"></i> Boletas de Salida</h1>
                     <p>Solicitudes pendientes de aprobación</p>
-                </div>
-
-                <!-- Estadísticas -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon bg-warning">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3><?= $contadores['pendientes'] ?? 0 ?></h3>
-                            <p>Pendientes</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon bg-success">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3><?= $contadores['aprobadas'] ?? 0 ?></h3>
-                            <p>Aprobadas</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon bg-danger">
-                            <i class="fas fa-times-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3><?= $contadores['rechazadas'] ?? 0 ?></h3>
-                            <p>Rechazadas</p>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Navegación de pestañas -->
@@ -164,20 +135,58 @@ ob_start();
     </footer>
 </div>
 
+<!-- Modal de confirmación de aprobación -->
+<div id="modalAprobar" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-check-circle"></i> Aprobar Solicitud</h3>
+            <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>¿Está seguro de que desea aprobar esta solicitud de salida?</p>
+            <p class="text-muted">La solicitud será enviada a revisión administrativa para su aprobación final.</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="btnCancelarAprobacion">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-success" id="btnConfirmarAprobacion">
+                <i class="fas fa-check"></i> Confirmar Aprobación
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de rechazo -->
 <div id="modalRechazar" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Rechazar Solicitud</h3>
+            <h3><i class="fas fa-times-circle"></i> Rechazar Solicitud</h3>
             <button class="modal-close">&times;</button>
         </div>
         <div class="modal-body">
-            <p>Por favor, indique el motivo del rechazo:</p>
-            <textarea id="motivoRechazo" class="form-control" rows="4" placeholder="Escriba el motivo..."></textarea>
+            <p>Para rechazar esta solicitud, debe proporcionar un motivo claro que permita al aprendiz comprender la razón de la decisión.</p>
+            <label for="motivoRechazo" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50;">
+                Motivo del rechazo <span style="color: #e74c3c;">*</span>
+            </label>
+            <textarea 
+                id="motivoRechazo" 
+                class="form-control" 
+                rows="4" 
+                placeholder="Ejemplo: La solicitud no cuenta con la documentación requerida..."
+                required
+            ></textarea>
+            <small class="text-muted" style="display: block; margin-top: 0.5rem;">
+                <i class="fas fa-info-circle"></i> Sea específico y profesional en su respuesta.
+            </small>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" id="btnCancelarRechazo">Cancelar</button>
-            <button type="button" class="btn btn-danger" id="btnConfirmarRechazo">Confirmar Rechazo</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelarRechazo">
+                <i class="fas fa-arrow-left"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-danger" id="btnConfirmarRechazo">
+                <i class="fas fa-check"></i> Confirmar Rechazo
+            </button>
         </div>
     </div>
 </div>
@@ -186,14 +195,16 @@ ob_start();
 <div id="modalDetalle" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Detalle de Solicitud</h3>
+            <h3><i class="fas fa-file-alt"></i> Detalle de Solicitud</h3>
             <button class="modal-close">&times;</button>
         </div>
         <div class="modal-body" id="detalleContent">
             <!-- Contenido dinámico -->
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary modal-close">Cerrar</button>
+            <button type="button" class="btn btn-secondary modal-close">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
         </div>
     </div>
 </div>

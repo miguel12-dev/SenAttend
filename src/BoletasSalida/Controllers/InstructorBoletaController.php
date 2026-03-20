@@ -6,6 +6,7 @@ use App\BoletasSalida\Services\BoletaSalidaService;
 use App\BoletasSalida\Repositories\BoletaSalidaRepository;
 use App\Services\AuthService;
 use App\Support\Response;
+use App\Support\CacheHeaders;
 
 /**
  * Controlador para gestión de boletas de salida (rol instructor)
@@ -39,6 +40,9 @@ class InstructorBoletaController
             return;
         }
 
+        // Evitar caché de la página
+        CacheHeaders::noCache();
+
         $boletasPendientes = $this->boletaRepository->findPendientesByInstructor($user['id']);
         $contadores = $this->boletaService->getContadores($user['id'], 'instructor');
 
@@ -57,6 +61,9 @@ class InstructorBoletaController
             Response::redirect('/login');
             return;
         }
+
+        // Evitar caché de la página
+        CacheHeaders::noCache();
 
         $page = filter_input(INPUT_GET, 'page', FILTER_VALIDATE_INT) ?: 1;
         $limit = 50;
@@ -142,5 +149,28 @@ class InstructorBoletaController
         }
 
         Response::json(['success' => true, 'data' => $boleta]);
+    }
+
+    /**
+     * API: Obtener solicitudes pendientes del instructor autenticado
+     * GET /api/instructor/boletas-salida/pendientes
+     */
+    public function apiPendientes(): void
+    {
+        $user = $this->authService->getCurrentUser();
+
+        if (!$user) {
+            Response::json(['success' => false, 'message' => 'No autorizado'], 401);
+            return;
+        }
+
+        $boletas = $this->boletaRepository->findPendientesByInstructor((int)$user['id']);
+
+        Response::json([
+            'success' => true,
+            'data' => [
+                'boletas' => $boletas,
+            ],
+        ]);
     }
 }

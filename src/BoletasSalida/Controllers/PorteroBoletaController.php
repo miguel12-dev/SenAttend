@@ -6,6 +6,7 @@ use App\BoletasSalida\Services\BoletaSalidaService;
 use App\BoletasSalida\Repositories\BoletaSalidaRepository;
 use App\Services\AuthService;
 use App\Support\Response;
+use App\Support\CacheHeaders;
 
 /**
  * Controlador para gestión de boletas de salida (rol portero)
@@ -38,6 +39,9 @@ class PorteroBoletaController
             Response::redirect('/login');
             return;
         }
+
+        // Evitar caché de la página
+        CacheHeaders::noCache();
 
         $boletasAprobadas = $this->boletaRepository->findAprobadas();
         $reingresosPendientes = $this->boletaRepository->findPendientesReingreso();
