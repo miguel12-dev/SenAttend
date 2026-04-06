@@ -1,0 +1,297 @@
+/* ============================================================
+   reportes-equipos.css
+   Estilos del módulo Reporte de Ingresos/Salidas de Equipos
+   Paleta SENA: Verde #39A900, Blanco #FFFFFF
+   ============================================================ */
+
+/* ── Contenedor principal ── */
+.reporte-equipos-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+}
+
+/* ── Encabezado de página ── */
+.reporte-header {
+    margin-bottom: 1.75rem;
+}
+
+.reporte-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.reporte-header h2 i {
+    color: #39A900;
+}
+
+.reporte-header .subtitle-page {
+    color: #555;
+    margin-top: 0.4rem;
+    font-size: 0.95rem;
+}
+
+/* ── Panel de filtros ── */
+.filter-panel {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.filter-panel h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #39A900;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.filter-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.filter-group input[type="date"] {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #1a1a1a;
+    background: #fafafa;
+    transition: border-color 0.2s;
+}
+
+.filter-group input[type="date"]:focus {
+    outline: none;
+    border-color: #39A900;
+    background: #fff;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+/* ── Botones ── */
+.btn-sena-primary {
+    background-color: #39A900;
+    color: #ffffff;
+    border: none;
+    padding: 0.58rem 1.2rem;
+    border-radius: 7px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s, transform 0.1s;
+    white-space: nowrap;
+}
+
+.btn-sena-primary:hover {
+    background-color: #2d8600;
+    transform: translateY(-1px);
+}
+
+.btn-sena-secondary {
+    background-color: #ffffff;
+    color: #39A900;
+    border: 2px solid #39A900;
+    padding: 0.52rem 1.1rem;
+    border-radius: 7px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.btn-sena-secondary:hover {
+    background-color: #39A900;
+    color: #ffffff;
+}
+
+/* ── Barra de info + exportar ── */
+.result-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.result-bar .result-count {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.result-bar .result-count strong {
+    color: #39A900;
+}
+
+/* ── Tabla ── */
+.reporte-table-wrapper {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.reporte-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.reporte-table thead tr {
+    background-color: #39A900;
+    color: #ffffff;
+}
+
+.reporte-table thead th {
+    padding: 0.8rem 0.9rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.reporte-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.15s;
+}
+
+.reporte-table tbody tr:hover {
+    background-color: #f0fbe6;
+}
+
+.reporte-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.reporte-table tbody td {
+    padding: 0.7rem 0.9rem;
+    color: #333;
+    vertical-align: middle;
+}
+
+.badge-sin-salida {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 0.18rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* ── Estado vacío ── */
+.empty-reporte {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #888;
+}
+
+.empty-reporte i {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    color: #c8e6b0;
+}
+
+.empty-reporte p {
+    font-size: 0.95rem;
+}
+
+/* ── Paginación ── */
+.pagination-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 1.4rem;
+    flex-wrap: wrap;
+}
+
+.pagination-bar a,
+.pagination-bar span {
+    padding: 0.42rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    color: #444;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.pagination-bar a:hover {
+    background-color: #39A900;
+    color: #fff;
+    border-color: #39A900;
+}
+
+.pagination-bar span.active {
+    background-color: #39A900;
+    color: #fff;
+    border-color: #39A900;
+}
+
+.pagination-bar span.disabled {
+    color: #bbb;
+    cursor: default;
+}
+
+/* ── Alerta de error ── */
+.alert-danger-sena {
+    background-color: #fdecea;
+    border: 1px solid #f5c6cb;
+    color: #842029;
+    padding: 0.8rem 1rem;
+    border-radius: 7px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+    }
+    .filter-group {
+        min-width: 100%;
+    }
+}

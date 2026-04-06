@@ -228,6 +228,21 @@ ob_start();
                             </div>
                         </div>
 
+                        <!-- Reporte de Equipos (Admin y Administrativo) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <h4>Reporte de Equipos</h4>
+                            <p>Consultar y exportar registros de ingresos y salidas de equipos por rango de fechas.</p>
+                            <div class="action-buttons">
+                                <a href="/reportes-equipos" class="btn-sena">
+                                    <i class="fas fa-file-export"></i>
+                                    Ver Reporte
+                                </a>
+                            </div>
+                        </div>
+
                         <!-- Boletas de Salida (Admin) -->
                         <div class="action-card-sena">
                             <div class="action-icon-sena">

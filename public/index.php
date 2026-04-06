@@ -22,6 +22,7 @@ use App\Controllers\ProfileController;
 use App\Controllers\QRController;
 use App\Controllers\WelcomeController;
 use App\Gestion_reportes\Controllers\ReportesController;
+use App\Controllers\ReporteEquiposController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\PermissionMiddleware;
 use App\Repositories\UserRepository;
@@ -344,6 +345,19 @@ $routes = [
         '/analytics' => [
             'controller' => \App\Controllers\AnalyticsController::class,
             'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        // ============================================
+        // MÓDULO DE REPORTE DE EQUIPOS - Rutas GET
+        // ============================================
+        '/reportes-equipos' => [
+            'controller' => ReporteEquiposController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/reportes-equipos/exportar' => [
+            'controller' => ReporteEquiposController::class,
+            'action' => 'export',
             'middleware' => ['auth']
         ],
         // Test de rutas (solo en desarrollo)
@@ -1383,6 +1397,20 @@ try {
             $session,
             $analyticsService,
             $excelExportService
+        );
+    // ============================================
+    // MÓDULO DE REPORTE DE EQUIPOS - Controlador
+    // ============================================
+    } elseif ($controllerClass === ReporteEquiposController::class) {
+        $reporteEquiposRepository = new \App\Repositories\ReporteEquiposRepository();
+        $reporteEquiposService = new \App\Services\ReporteEquiposService(
+            $reporteEquiposRepository,
+            $turnoConfigRepository
+        );
+        $controller = new $controllerClass(
+            $authService,
+            $reporteEquiposService,
+            $session
         );
     // ============================================
     // MÓDULO DE BOLETAS DE SALIDA - Controladores

@@ -88,6 +88,15 @@
                                     <p>Registrar ingreso de equipos</p>
                                 </div>
                             </a>
+                            <a href="/reportes-equipos" class="quick-access-card">
+                                <div class="quick-icon">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                <div class="quick-info">
+                                    <h4>Reporte de Equipos</h4>
+                                    <p>Consultar y exportar ingresos/salidas</p>
+                                </div>
+                            </a>
                         </div>
                     </section>
 
