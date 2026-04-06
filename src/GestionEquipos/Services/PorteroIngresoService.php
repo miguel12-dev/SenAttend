@@ -328,17 +328,17 @@ class PorteroIngresoService
     /**
      * Obtiene ingresos activos (sin salida)
      */
-    public function getIngresosActivos(int $limit = 50, int $offset = 0): array
+    public function getIngresosActivos(int $limit = 50, int $offset = 0, ?string $fecha = null): array
     {
-        return $this->ingresoEquipoRepository->findIngresosActivos($limit, $offset);
+        return $this->ingresoEquipoRepository->findIngresosActivos($limit, $offset, $fecha);
     }
 
     /**
      * Obtiene el conteo de ingresos activos
      */
-    public function countIngresosActivos(): int
+    public function countIngresosActivos(?string $fecha = null): int
     {
-        return $this->ingresoEquipoRepository->countIngresosActivos();
+        return $this->ingresoEquipoRepository->countIngresosActivos($fecha);
     }
 
     /**

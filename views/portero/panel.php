@@ -62,7 +62,7 @@
                                 <i class="fas fa-laptop"></i>
                             </div>
                             <div class="stat-info">
-                                <h3><?= $totalActivos ?></h3>
+                                <h3 id="totalEquipos"><?= $totalActivos ?></h3>
                                 <p>Equipos dentro del CTA</p>
                             </div>
                         </div>
@@ -138,7 +138,7 @@
                                             <th>Observaciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="ingresosTableBody">
                                         <?php foreach ($ingresosActivos as $ingreso): ?>
                                             <tr>
                                                 <td data-label="Hora ingreso">

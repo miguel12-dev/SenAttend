@@ -162,10 +162,10 @@ async function procesarQR(qrData) {
             });
             
             const tipoTexto = registro.tipo === 'ingreso' ? 'INGRESO' : 'SALIDA';
-            const nombreEquipo = registro.equipo?.marca || 'Equipo';
-            const serialEquipo = registro.equipo?.numero_serial || '';
-            const nombreAprendiz = registro.aprendiz?.nombre || 'Aprendiz';
-            const apellidoAprendiz = registro.aprendiz?.apellido || '';
+            const nombreEquipo = registro.equipo?.marca || registro.marca || 'Equipo';
+            const serialEquipo = registro.equipo?.numero_serial || registro.numero_serial || '';
+            const nombreAprendiz = registro.aprendiz?.nombre || registro.aprendiz_nombre || 'Aprendiz';
+            const apellidoAprendiz = registro.aprendiz?.apellido || registro.aprendiz_apellido || '';
             
             mostrarMensaje(
                 `<i class="fas fa-check"></i> ${tipoTexto} registrado: ${nombreEquipo} (${serialEquipo}) - ${nombreAprendiz} ${apellidoAprendiz}`,
@@ -236,8 +236,8 @@ function actualizarHistorial() {
                 <div class="historial-info">
                     <span class="historial-numero">#${historialIngresos.length - index}</span>
                     <div class="historial-datos">
-                        <strong>${registro.equipo?.marca || 'Equipo'} - ${registro.equipo?.numero_serial || 'N/A'}</strong>
-                        <span class="historial-doc">${registro.aprendiz?.nombre || ''} ${registro.aprendiz?.apellido || ''}</span>
+                        <strong>${escapeHtml(registro.marca || registro.equipo?.marca || 'Equipo')} - ${escapeHtml(registro.numero_serial || registro.equipo?.numero_serial || 'N/A')}</strong>
+                        <span class="historial-doc">${escapeHtml(registro.aprendiz_nombre || registro.aprendiz?.nombre || '')} ${escapeHtml(registro.aprendiz_apellido || registro.aprendiz?.apellido || '')}</span>
                     </div>
                 </div>
                 <div class="historial-estado">
@@ -294,8 +294,10 @@ async function cargarHistorialIngresos() {
             // Convertir ingresos activos a formato de historial
             historialIngresos = result.data.map(ingreso => ({
                 id: ingreso.id,
-                equipo: ingreso.equipo || {},
-                aprendiz: ingreso.aprendiz || {},
+                marca: ingreso.marca,
+                numero_serial: ingreso.numero_serial,
+                aprendiz_nombre: ingreso.aprendiz_nombre,
+                aprendiz_apellido: ingreso.aprendiz_apellido,
                 tipo: ingreso.fecha_salida ? 'salida' : 'ingreso',
                 fecha: ingreso.fecha_ingreso || '',
                 hora: ingreso.hora_ingreso || '',
@@ -339,3 +341,15 @@ window.addEventListener('beforeunload', () => {
         detenerScanner();
     }
 });
+
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ * @param {string} text 
+ * @returns {string}
+ */
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}

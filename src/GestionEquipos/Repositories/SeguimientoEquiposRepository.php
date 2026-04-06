@@ -21,8 +21,9 @@ class SeguimientoEquiposRepository
                 'UPDATE ingresos_equipos 
                  SET observaciones = IF(observaciones IS NULL OR observaciones = "", 
                                         "Cierre automático: Salida no registrada", 
-                                        CONCAT(observaciones, " | Cierre automático: Salida no registrada"))
-                 WHERE fecha_salida IS NULL 
+                                        CONCAT(observaciones, " | Cierre automático: Salida no registrada")),
+                     procesado = TRUE
+                 WHERE procesado = FALSE 
                    AND fecha_ingreso < CURRENT_DATE()'
             );
 
@@ -44,19 +45,20 @@ class SeguimientoEquiposRepository
                 'SELECT 
                     a.id AS id_aprendiz,
                     a.documento,
-                    CONCAT(a.nombre, " ", a.apellido) AS nombre_completo,
+                    CONCAT_WS(" ", a.nombre, a.apellido) AS nombre_completo,
                     f.numero_ficha,
                     COUNT(ie.id) AS total_infracciones
                  FROM ingresos_equipos ie
                  INNER JOIN aprendices a ON ie.id_aprendiz = a.id
                  LEFT JOIN fichas f ON a.id_ficha = f.id
-                 WHERE ie.fecha_salida IS NULL 
-                   AND ie.observaciones LIKE "%Cierre automático: Salida no registrada%"
+                 WHERE ie.observaciones LIKE "%Cierre automático: Salida no registrada%"
                    AND ie.fecha_ingreso BETWEEN :fecha_inicio AND :fecha_fin
+                   AND ie.procesado = TRUE
                  GROUP BY a.id, a.documento, a.nombre, a.apellido, f.numero_ficha
                  HAVING COUNT(ie.id) >= 3
                  ORDER BY total_infracciones DESC'
             );
+
 
             $stmt->execute([
                 ':fecha_inicio' => $fechaInicio,
@@ -90,7 +92,7 @@ class SeguimientoEquiposRepository
                     ie.fecha_ingreso,
                     ie.hora_ingreso,
                     a.documento AS documento_aprendiz,
-                    CONCAT(a.nombre, ' ', a.apellido) AS nombre_aprendiz,
+                    CONCAT_WS(' ', a.nombre, a.apellido) AS nombre_aprendiz,
                     f.numero_ficha,
                     e.marca AS marca_equipo,
                     e.numero_serial,
@@ -100,10 +102,11 @@ class SeguimientoEquiposRepository
                  LEFT JOIN fichas f ON a.id_ficha = f.id
                  INNER JOIN equipos e ON ie.id_equipo = e.id
                  WHERE ie.id_aprendiz IN ($inClause)
-                   AND ie.fecha_salida IS NULL 
                    AND ie.observaciones LIKE '%Cierre automático: Salida no registrada%'
                    AND ie.fecha_ingreso BETWEEN ? AND ?
+                   AND ie.procesado = TRUE
                  ORDER BY a.nombre ASC, a.apellido ASC, ie.fecha_ingreso ASC";
+
 
             $stmt = Connection::prepare($query);
             

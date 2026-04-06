@@ -63,12 +63,14 @@ class PorteroController
         $message = $this->session->getFlash('message');
         $success = $this->session->getFlash('success');
 
-        // Obtener ingresos activos
-        $ingresosActivos = $this->porteroIngresoService->getIngresosActivos(20, 0);
-        $totalActivos = $this->porteroIngresoService->countIngresosActivos();
+        // Obtener ingresos activos del día actual
+        $fechaActual = date('Y-m-d');
+        $ingresosActivos = $this->porteroIngresoService->getIngresosActivos(20, 0, $fechaActual);
+        $totalActivos = $this->porteroIngresoService->countIngresosActivos($fechaActual);
 
         require __DIR__ . '/../../../views/portero/panel.php';
     }
+
 
     /**
      * Vista de escaneo de QR
@@ -187,8 +189,10 @@ class PorteroController
         $limit = filter_input(INPUT_GET, 'limit', FILTER_VALIDATE_INT) ?: 20;
         $offset = ($page - 1) * $limit;
 
-        $ingresos = $this->porteroIngresoService->getIngresosActivos($limit, $offset);
-        $total = $this->porteroIngresoService->countIngresosActivos();
+        // Filtrar por día actual para ingresos activos
+        $fechaActual = date('Y-m-d');
+        $ingresos = $this->porteroIngresoService->getIngresosActivos($limit, $offset, $fechaActual);
+        $total = $this->porteroIngresoService->countIngresosActivos($fechaActual);
 
         Response::json([
             'success' => true,

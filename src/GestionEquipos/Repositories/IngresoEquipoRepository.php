@@ -18,9 +18,9 @@ class IngresoEquipoRepository
         try {
             $stmt = Connection::prepare(
                 'INSERT INTO ingresos_equipos 
-                 (id_equipo, id_aprendiz, fecha_ingreso, hora_ingreso, id_portero, observaciones)
+                 (id_equipo, id_aprendiz, fecha_ingreso, hora_ingreso, id_portero, observaciones, procesado)
                  VALUES 
-                 (:id_equipo, :id_aprendiz, :fecha_ingreso, :hora_ingreso, :id_portero, :observaciones)'
+                 (:id_equipo, :id_aprendiz, :fecha_ingreso, :hora_ingreso, :id_portero, :observaciones, :procesado)'
             );
 
             $stmt->execute([
@@ -30,6 +30,7 @@ class IngresoEquipoRepository
                 'hora_ingreso' => $data['hora_ingreso'],
                 'id_portero' => $data['id_portero'],
                 'observaciones' => $data['observaciones'] ?? null,
+                'procesado' => 0 // FALSE
             ]);
 
             return (int) Connection::lastInsertId();
@@ -45,13 +46,14 @@ class IngresoEquipoRepository
     public function registrarSalida(int $ingresoId, int $porteroId, ?string $observaciones = null): bool
     {
         try {
-            $stmt = Connection::prepare(
+             $stmt = Connection::prepare(
                 'UPDATE ingresos_equipos 
                  SET fecha_salida = CURDATE(),
                      hora_salida = CURTIME(),
-                     observaciones = COALESCE(:observaciones, observaciones)
+                     observaciones = COALESCE(:observaciones, observaciones),
+                     procesado = TRUE
                  WHERE id = :ingreso_id 
-                   AND fecha_salida IS NULL'
+                   AND procesado = FALSE'
             );
 
             return $stmt->execute([
@@ -70,11 +72,10 @@ class IngresoEquipoRepository
     public function findIngresoActivo(int $equipoId): ?array
     {
         try {
-            $stmt = Connection::prepare(
+             $stmt = Connection::prepare(
                 'SELECT * FROM ingresos_equipos 
                  WHERE id_equipo = :equipo_id 
-                   AND fecha_salida IS NULL 
-                   AND hora_salida IS NULL
+                   AND procesado = FALSE
                  ORDER BY fecha_ingreso DESC, hora_ingreso DESC
                  LIMIT 1'
             );
@@ -89,52 +90,65 @@ class IngresoEquipoRepository
     }
 
     /**
-     * Obtiene todos los ingresos activos (sin salida)
+     * Obtiene todos los ingresos activos (sin salida) filtrados opcionalmente por fecha
      */
-    public function findIngresosActivos(int $limit = 50, int $offset = 0): array
+    public function findIngresosActivos(int $limit = 50, int $offset = 0, ?string $fecha = null): array
     {
         try {
-            $stmt = Connection::prepare(
-                'SELECT 
-                    ie.*,
-                    e.numero_serial,
-                    e.marca,
-                    a.nombre as aprendiz_nombre,
-                    a.apellido as aprendiz_apellido,
-                    a.documento as aprendiz_documento,
-                    u.nombre as portero_nombre
-                 FROM ingresos_equipos ie
-                 INNER JOIN equipos e ON ie.id_equipo = e.id
-                 INNER JOIN aprendices a ON ie.id_aprendiz = a.id
-                 INNER JOIN usuarios u ON ie.id_portero = u.id
-                 WHERE ie.fecha_salida IS NULL 
-                   AND ie.hora_salida IS NULL
-                 ORDER BY ie.fecha_ingreso DESC, ie.hora_ingreso DESC
-                 LIMIT :limit OFFSET :offset'
-            );
+            $sql = 'SELECT 
+                        ie.*,
+                        e.numero_serial,
+                        e.marca,
+                        a.nombre as aprendiz_nombre,
+                        a.apellido as aprendiz_apellido,
+                        a.documento as aprendiz_documento,
+                        u.nombre as portero_nombre
+                     FROM ingresos_equipos ie
+                     INNER JOIN equipos e ON ie.id_equipo = e.id
+                     INNER JOIN aprendices a ON ie.id_aprendiz = a.id
+                     INNER JOIN usuarios u ON ie.id_portero = u.id
+                     WHERE ie.procesado = FALSE';
+            
+            if ($fecha) {
+                $sql .= ' AND ie.fecha_ingreso = :fecha';
+            }
+            
+            $sql .= ' ORDER BY ie.fecha_ingreso DESC, ie.hora_ingreso DESC
+                     LIMIT :limit OFFSET :offset';
 
+            $stmt = Connection::prepare($sql);
+
+            if ($fecha) {
+                $stmt->bindValue(':fecha', $fecha, \PDO::PARAM_STR);
+            }
             $stmt->bindValue(':limit', $limit, \PDO::PARAM_INT);
             $stmt->bindValue(':offset', $offset, \PDO::PARAM_INT);
             $stmt->execute();
 
-            return $stmt->fetchAll();
+            return $stmt->fetchAll(\PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             error_log("Error finding active ingresos: " . $e->getMessage());
             return [];
         }
     }
 
+
     /**
-     * Cuenta ingresos activos
+     * Cuenta ingresos activos filtrados por fecha
      */
-    public function countIngresosActivos(): int
+    public function countIngresosActivos(?string $fecha = null): int
     {
         try {
-            $stmt = Connection::query(
-                'SELECT COUNT(*) as total 
-                 FROM ingresos_equipos 
-                 WHERE fecha_salida IS NULL AND hora_salida IS NULL'
+            $fechaFiltro = $fecha ?: date('Y-m-d');
+
+             $stmt = Connection::prepare(
+                'SELECT COUNT(*) as total
+                 FROM ingresos_equipos
+                 WHERE procesado = FALSE
+                   AND fecha_ingreso = :fecha_ingreso'
             );
+
+            $stmt->execute(['fecha_ingreso' => $fechaFiltro]);
             $result = $stmt->fetch();
             return (int) ($result['total'] ?? 0);
         } catch (PDOException $e) {
