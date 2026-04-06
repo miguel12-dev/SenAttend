@@ -355,3 +355,161 @@
     color: #666;
     font-size: 0.8rem;
 }
+
+/* ==========================================================================
+   Responsive: card layout on small screens
+   ========================================================================== */
+
+@media (max-width: 768px) {
+
+    /* Result bar stacks vertically */
+    .result-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Table becomes card-based layout */
+    .reporte-table-wrapper--seguimiento {
+        border: none;
+        box-shadow: none;
+        overflow-x: visible;
+    }
+
+    .reporte-table thead {
+        display: none;
+    }
+
+    .reporte-table,
+    .reporte-table tbody,
+    .reporte-table tr,
+    .reporte-table td {
+        display: block;
+    }
+
+    .reporte-table tbody tr {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        padding: 0.85rem 1rem;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+        position: relative;
+    }
+
+    .reporte-table tbody tr:hover {
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .reporte-table tbody td {
+        padding: 0.45rem 0;
+        text-align: right;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .reporte-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Inject labels via data attributes */
+    .reporte-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #39A900;
+        text-align: left;
+        flex-shrink: 0;
+        margin-right: 1rem;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .reporte-table tbody td:last-child {
+        border-bottom: none;
+    }
+
+    /* Severity badge cell — keep badge visible */
+    .severity-badge {
+        font-size: 0.75rem;
+        padding: 3px 10px;
+    }
+
+    /* Infracciones count cell */
+    .td-infracciones-count {
+        justify-content: flex-end;
+    }
+
+    /* ── Modal detail table: card layout ── */
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .modal-header {
+        padding: 12px 16px;
+    }
+
+    .modal-body {
+        padding: 16px;
+    }
+
+    .detail-table thead {
+        display: none;
+    }
+
+    .detail-table,
+    .detail-table tbody,
+    .detail-table tr,
+    .detail-table td {
+        display: block;
+    }
+
+    .detail-table tbody tr {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        padding: 0.65rem 0.85rem;
+    }
+
+    .detail-table tbody tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .detail-table td {
+        padding: 0.35rem 0;
+        text-align: right;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        font-size: 0.85rem;
+    }
+
+    .detail-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .detail-table td:last-child {
+        border-bottom: none;
+    }
+
+    .detail-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #39A900;
+        text-align: left;
+        flex-shrink: 0;
+        margin-right: 0.75rem;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .modal-summary {
+        font-size: 0.85rem;
+    }
+}

@@ -238,14 +238,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             html +=
                     '<tr>' +
-                        '<td>' + (index + 1) + '</td>' +
-                        '<td>' + escapeHtml(inf.fecha_ingreso) + '</td>' +
-                        '<td>' + escapeHtml(inf.hora_ingreso) + '</td>' +
-                        '<td>' + fechaSalida + '</td>' +
-                        '<td>' + horaSalida + '</td>' +
-                        '<td>' + escapeHtml(inf.marca_equipo) + serial + '</td>' +
-                        '<td><span class="badge-infraccion ' + badgeClass + '">' + escapeHtml(inf.tipo_infraccion) + '</span></td>' +
-                        '<td>' + observaciones + '</td>' +
+                        '<td data-label="#">' + (index + 1) + '</td>' +
+                        '<td data-label="Fecha Ingreso">' + escapeHtml(inf.fecha_ingreso) + '</td>' +
+                        '<td data-label="Hora Ingreso">' + escapeHtml(inf.hora_ingreso) + '</td>' +
+                        '<td data-label="Fecha Salida">' + fechaSalida + '</td>' +
+                        '<td data-label="Hora Salida">' + horaSalida + '</td>' +
+                        '<td data-label="Equipo">' + escapeHtml(inf.marca_equipo) + serial + '</td>' +
+                        '<td data-label="Tipo"><span class="badge-infraccion ' + badgeClass + '">' + escapeHtml(inf.tipo_infraccion) + '</span></td>' +
+                        '<td data-label="Observaciones">' + observaciones + '</td>' +
                     '</tr>';
         });
 

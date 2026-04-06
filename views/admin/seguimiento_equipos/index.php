@@ -151,13 +151,13 @@
                             }
                         ?>
                         <tr>
-                            <td><?= htmlspecialchars($fila['documento']) ?></td>
-                            <td><strong><?= htmlspecialchars($fila['nombre_completo']) ?></strong></td>
-                            <td><?= htmlspecialchars($fila['numero_ficha'] ?? 'N/A') ?></td>
-                            <td>
+                            <td data-label="Documento"><?= htmlspecialchars($fila['documento']) ?></td>
+                            <td data-label="Aprendiz"><strong><?= htmlspecialchars($fila['nombre_completo']) ?></strong></td>
+                            <td data-label="Ficha"><?= htmlspecialchars($fila['numero_ficha'] ?? 'N/A') ?></td>
+                            <td data-label="Severidad">
                                 <span class="severity-badge <?= $sevClass ?>"><?= $sevLabel ?></span>
                             </td>
-                            <td class="td-infracciones-count">
+                            <td class="td-infracciones-count" data-label="Infracciones">
                                 <span class="infraccion-count"
                                       data-aprendiz-id="<?= htmlspecialchars($fila['id_aprendiz']) ?>"
                                       data-aprendiz-nombre="<?= htmlspecialchars($fila['nombre_completo']) ?>"
