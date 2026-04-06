@@ -243,6 +243,21 @@ ob_start();
                             </div>
                         </div>
 
+                        <!-- Seguimiento Infracciones Equipos (Admin y Administrativo) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <h4>Infracciones de Equipos</h4>
+                            <p>Seguimiento de aprendices con salidas no registradas y cierres automáticos.</p>
+                            <div class="action-buttons">
+                                <a href="/admin/seguimiento-equipos" class="btn-sena">
+                                    <i class="fas fa-search"></i>
+                                    Monitorear
+                                </a>
+                            </div>
+                        </div>
+
                         <!-- Boletas de Salida (Admin) -->
                         <div class="action-card-sena">
                             <div class="action-icon-sena">

@@ -367,6 +367,17 @@ $routes = [
             'action' => 'export',
             'middleware' => ['auth']
         ],
+        // Seguimiento Infracciones Equipos
+        '/admin/seguimiento-equipos' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/admin/seguimiento-equipos/exportar' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'export',
+            'middleware' => ['auth']
+        ],
         // Test de rutas (solo en desarrollo)
         '/test-routes' => [
             'controller' => function() {
@@ -818,6 +829,12 @@ $routes = [
         '/portero/procesar-qr' => [
             'controller' => PorteroController::class,
             'action' => 'procesarQR',
+            'middleware' => ['auth']
+        ],
+        // Seguimiento Infracciones Equipos - Procesar
+        '/api/seguimiento-equipos/procesar' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'procesarCierres',
             'middleware' => ['auth']
         ],
         // ============================================
@@ -1441,6 +1458,16 @@ try {
         $controller = new $controllerClass(
             $authService,
             $reporteEquiposService,
+            $session
+        );
+    } elseif ($controllerClass === \App\Controllers\SeguimientoEquiposController::class) {
+        $seguimientoEquiposRepository = new \App\GestionEquipos\Repositories\SeguimientoEquiposRepository();
+        $seguimientoEquiposService = new \App\GestionEquipos\Services\SeguimientoEquiposService(
+            $seguimientoEquiposRepository
+        );
+        $controller = new $controllerClass(
+            $authService,
+            $seguimientoEquiposService,
             $session
         );
     // ============================================
