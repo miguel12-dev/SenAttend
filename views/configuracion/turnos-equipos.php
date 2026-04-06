@@ -9,8 +9,11 @@ if (!isset($user) || $user['rol'] !== 'admin') {
     exit;
 }
 
-$title      = 'Horarios de Equipos - SENAttend';
+$title       = 'Horarios de Equipos - SENAttend';
 $currentPage = 'configuracion';
+$showHeader  = true;
+$additionalStyles = '';
+$additionalScripts = '';
 
 ob_start();
 ?>
