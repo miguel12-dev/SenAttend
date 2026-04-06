@@ -1,9 +1,12 @@
 /**
  * Gestión del panel de validación de boletas de salida para porteros
+ * Actualizado con AutoRefresh para datos en tiempo real
  */
 
 document.addEventListener('DOMContentLoaded', function() {
     let boletaIdActual = null;
+    let autoRefreshSalidas = null;
+    let autoRefreshReingresos = null;
 
     const modalValidarSalida = document.getElementById('modalValidarSalida');
     const modalReingreso = document.getElementById('modalReingreso');
@@ -18,6 +21,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const tabLinks = document.querySelectorAll('.tab-link');
     const tabSalidasList = document.querySelector('#tab-salidas .boletas-list');
     const tabReingresosList = document.querySelector('#tab-reingresos .boletas-list');
+
+    // Inicializar AutoRefresh para salidas aprobadas
+    autoRefreshSalidas = new AutoRefresh({
+        url: '/api/portero/boletas-salida/aprobadas',
+        renderCallback: (data) => {
+            renderTabSalidas(data);
+            actualizarContadores(data, null);
+        },
+        interval: 15000, // 15 segundos
+        onError: (error) => {
+            console.error('Error en auto-refresh de salidas:', error);
+        }
+    });
+
+    // Inicializar AutoRefresh para reingresos pendientes
+    autoRefreshReingresos = new AutoRefresh({
+        url: '/api/portero/boletas-salida/reingresos-pendientes',
+        renderCallback: (data) => {
+            renderTabReingresos(data);
+            actualizarContadores(null, data);
+        },
+        interval: 15000, // 15 segundos
+        onError: (error) => {
+            console.error('Error en auto-refresh de reingresos:', error);
+        }
+    });
 
     // Navegación entre tabs
     tabLinks.forEach(link => {
@@ -245,6 +274,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (completadosElement && incrementarCompletados) {
             const actual = parseInt(completadosElement.textContent, 10) || 0;
             completadosElement.textContent = String(actual + 1);
+        }
+    }
+
+    // Función para actualizar contadores desde callbacks de AutoRefresh
+    function actualizarContadores(salidas, reingresos) {
+        const salidasElement = document.querySelector('.stat-card:nth-child(1) .stat-info h3');
+        const reingresosElement = document.querySelector('.stat-card:nth-child(2) .stat-info h3');
+
+        if (salidasElement && Array.isArray(salidas)) {
+            salidasElement.textContent = String(salidas.length);
+        }
+        if (reingresosElement && Array.isArray(reingresos)) {
+            reingresosElement.textContent = String(reingresos.length);
         }
     }
 
@@ -478,6 +520,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }) + ' ' + horas12 + ':' + date.getMinutes().toString().padStart(2, '0') + ' ' + periodo;
     }
 
-    // Sincronizar datos al cargar pantalla
-    recargarDatosPortero();
+    // Eliminar recargarDatosPortero() inicial ya que AutoRefresh lo maneja
+    // recargarDatosPortero() se mantiene para recargar después de validaciones
 });

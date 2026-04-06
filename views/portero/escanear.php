@@ -95,6 +95,8 @@
     <!-- Librería html5-qrcode -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script src="<?= asset('js/common/components.js') ?>"></script>
+    <script src="<?= asset('js/components/back-button.js') ?>"></script>
     <script src="<?= asset('js/portero/escanear.js') ?>"></script>
 </body>
 </html>

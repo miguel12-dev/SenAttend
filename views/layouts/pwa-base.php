@@ -203,6 +203,7 @@
     <script src="<?= asset('js/app.js') ?>" defer></script>
     <script src="<?= asset('js/common/app.js') ?>" defer></script>
     <script src="<?= asset('js/common/components.js') ?>" defer></script>
+    <script src="<?= asset('js/components/back-button.js') ?>" defer></script>
     <script src="<?= asset('js/common/notification-modal.js') ?>"></script>
     
     <?php if (isset($scripts) && is_array($scripts)): ?>

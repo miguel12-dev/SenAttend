@@ -172,6 +172,8 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script src="<?= asset('js/common/components.js') ?>"></script>
+    <script src="<?= asset('js/components/back-button.js') ?>"></script>
     <script src="<?= asset('js/portero/panel.js') ?>"></script>
 </body>
 

@@ -447,6 +447,140 @@ class CSVUploader {
 }
 
 // ==============================================
+// COMPONENTE DE AUTO-REFRESH PARA TABLAS DINÁMICAS
+// ==============================================
+
+class AutoRefresh {
+    /**
+     * @param {Object} options - Opciones de configuración
+     * @param {string} options.url - URL para obtener los datos
+     * @param {Function} options.renderCallback - Función para renderizar los datos
+     * @param {number} options.interval - Intervalo de refresco en milisegundos (default: 15000 = 15s)
+     * @param {Function} options.onError - Callback en caso de error
+     * @param {Function} options.onRefresh - Callback llamado cada vez que se actualiza
+     * @param {boolean} options.enabled - Habilitar/desabilitar auto-refresh (default: true)
+     */
+    constructor(options) {
+        this.url = options.url;
+        this.renderCallback = options.renderCallback;
+        this.interval = options.interval || 15000; // 15 segundos por defecto
+        this.onError = options.onError || null;
+        this.onRefresh = options.onRefresh || null;
+        this.enabled = options.enabled !== false;
+        
+        this.intervalId = null;
+        this.isRefreshing = false;
+        
+        if (this.enabled && this.url) {
+            this.start();
+        }
+    }
+
+    /**
+     * Iniciar el auto-refresh
+     */
+    start() {
+        if (this.intervalId) {
+            this.stop();
+        }
+        
+        // Realizar primer refresh inmediatamente
+        this.refresh();
+        
+        // Configurar intervalo
+        this.intervalId = setInterval(() => {
+            this.refresh();
+        }, this.interval);
+        
+        console.log(`AutoRefresh iniciado: cada ${this.interval / 1000} segundos`);
+    }
+
+    /**
+     * Detener el auto-refresh
+     */
+    stop() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+            console.log('AutoRefresh detenido');
+        }
+    }
+
+    /**
+     * Pausar temporalmente el auto-refresh
+     */
+    pause() {
+        this.stop();
+    }
+
+    /**
+     * Reanudar el auto-refresh
+     */
+    resume() {
+        this.start();
+    }
+
+    /**
+     * Realizar un refresh manual
+     */
+    async refresh() {
+        if (this.isRefreshing) return;
+        
+        this.isRefreshing = true;
+        
+        try {
+            const response = await fetch(this.url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (result.success && this.renderCallback) {
+                this.renderCallback(result.data || result);
+                
+                if (this.onRefresh) {
+                    this.onRefresh(result.data || result);
+                }
+            } else if (result.error && this.onError) {
+                this.onError(result.error);
+            }
+        } catch (error) {
+            console.error('AutoRefresh error:', error);
+            if (this.onError) {
+                this.onError(error.message);
+            }
+        } finally {
+            this.isRefreshing = false;
+        }
+    }
+
+    /**
+     * Actualizar la URL de consulta
+     * @param {string} newUrl 
+     */
+    setUrl(newUrl) {
+        this.url = newUrl;
+    }
+
+    /**
+     * Actualizar el intervalo de refresco
+     * @param {number} newInterval 
+     */
+    setInterval(newInterval) {
+        this.interval = newInterval;
+        if (this.intervalId) {
+            this.start(); // Reiniciar con el nuevo intervalo
+        }
+    }
+}
+
+// ==============================================
 // EXPORTAR PARA USO GLOBAL
 // ==============================================
 
@@ -458,4 +592,5 @@ window.Loading = Loading;
 window.SearchBox = SearchBox;
 window.Validator = Validator;
 window.CSVUploader = CSVUploader;
+window.AutoRefresh = AutoRefresh;
 

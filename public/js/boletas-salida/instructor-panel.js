@@ -1,9 +1,11 @@
 /**
  * Gestión del panel de boletas de salida para instructores
+ * Actualizado con AutoRefresh para datos en tiempo real
  */
 
 document.addEventListener('DOMContentLoaded', function() {
     let boletaIdActual = null;
+    let autoRefreshPendientes = null;
 
     const modalAprobar = document.getElementById('modalAprobar');
     const modalRechazar = document.getElementById('modalRechazar');
@@ -16,6 +18,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const boletasList = document.querySelector('.boletas-list');
     const modalCloses = document.querySelectorAll('.modal-close');
+
+    // Inicializar AutoRefresh para boletas pendientes de instructor
+    autoRefreshPendientes = new AutoRefresh({
+        url: '/api/instructor/boletas-salida/pendientes',
+        renderCallback: (data) => {
+            const boletas = data?.boletas ?? [];
+            if (boletas.length === 0) {
+                mostrarEstadoVacio();
+            } else if (boletasList) {
+                boletasList.innerHTML = boletas.map((boleta) => renderBoletaCard(boleta)).join('');
+            }
+            actualizarContador(boletas.length);
+        },
+        interval: 15000, // 15 segundos
+        onError: (error) => {
+            console.error('Error en auto-refresh de pendientes:', error);
+        }
+    });
+
+    // Función para actualizar el contador de pendientes
+    function actualizarContador(total) {
+        const pendientesElement = document.querySelector('.stat-card:first-child .stat-info h3');
+        if (pendientesElement) {
+            pendientesElement.textContent = String(total);
+        }
+    }
 
     // Confirmar aprobación
     btnConfirmarAprobacion.addEventListener('click', function() {

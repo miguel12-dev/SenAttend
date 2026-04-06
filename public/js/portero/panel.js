@@ -1,40 +1,62 @@
 /**
  * JavaScript para el panel del portero
+ * Actualizado con AutoRefresh para datos en tiempo real
  */
 
 class PorteroPanel {
     constructor() {
+        this.autoRefresh = null;
         this.init();
     }
 
     init() {
-        // Auto-refresh cada 30 segundos para actualizar lista de ingresos activos
-        setInterval(() => {
-            this.actualizarIngresos();
-        }, 30000);
+        // Verificar que AutoRefresh esté disponible
+        if (typeof AutoRefresh === 'undefined') {
+            console.error('[PorteroPanel] AutoRefresh no está disponible. Verificar carga de components.js');
+            return;
+        }
+        
+        // Verificar que el elementotbody exista
+        const tbody = document.getElementById('ingresosTableBody');
+        if (!tbody) {
+            console.error('[PorteroPanel] No se encontró el elemento #ingresosTableBody');
+            return;
+        }
+        
+        // Auto-refresh cada 15 segundos para actualizar lista de ingresos activos
+        this.autoRefresh = new AutoRefresh({
+            url: '/api/portero/ingresos-activos?limit=50&page=1',
+            renderCallback: (data) => {
+                // Normalizar los datos: puede ser un array directo o un objeto con propiedad data
+                let ingresos = [];
+                if (Array.isArray(data)) {
+                    ingresos = data;
+                } else if (data && Array.isArray(data.data)) {
+                    ingresos = data.data;
+                } else if (data && typeof data === 'object') {
+                    // Support for {success: true, data: [...], pagination: {...}}
+                    ingresos = data.ingresos || data.records || [];
+                }
+                
+                this.actualizarTablaIngresos(ingresos, ingresos.length);
+            },
+            interval: 15000, // 15 segundos
+            onError: (error) => {
+                console.error('[PorteroPanel] Error en auto-refresh:', error);
+            },
+            onRefresh: (data) => {
+                // Silent - no console log in production
+            }
+        });
 
-        // Configurar botón de actualizar para usar AJAX
+        // Configurar botón de actualizar para usar AJAX (sin recargar página)
         const btnActualizar = document.querySelector('.portero-ingresos-header button');
         if (btnActualizar) {
             btnActualizar.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.actualizarIngresos();
+                this.autoRefresh.refresh();
                 this.mostrarMensajeTemporal('Tabla actualizada', 'success');
             });
-        }
-    }
-
-    async actualizarIngresos() {
-        try {
-            const response = await fetch('/api/portero/ingresos-activos?limit=50&page=1');
-            const result = await response.json();
-
-            if (result.success) {
-                this.actualizarTablaIngresos(result.data, result.pagination?.total || 0);
-                console.log('Ingresos actualizados:', result.data.length);
-            }
-        } catch (error) {
-            console.error('Error al actualizar ingresos:', error);
         }
     }
 

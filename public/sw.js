@@ -2,10 +2,10 @@
  * Service Worker para SENAttend PWA
  * Implementa estrategias de cache y funcionalidad offline
  * 
- * @version 1.0.0
+ * @version 1.0.1
  */
 
-const CACHE_VERSION = 'senattend-v1.0.0';
+const CACHE_VERSION = 'senattend-v1.0.1';
 const CACHE_STATIC = `${CACHE_VERSION}-static`;
 const CACHE_DYNAMIC = `${CACHE_VERSION}-dynamic`;
 const CACHE_IMAGES = `${CACHE_VERSION}-images`;
@@ -22,6 +22,7 @@ const STATIC_ASSETS = [
   '/js/app.js',
   '/js/common/app.js',
   '/js/common/components.js',
+  '/js/components/back-button.js',
   '/assets/vendor/fontawesome/css/all.min.css',
 ];
 
@@ -160,6 +161,22 @@ async function cacheFirst(request, cacheName) {
  * Intenta red primero, si falla usa cache
  */
 async function networkFirst(request, cacheName) {
+  // Skip caching for non-GET requests (POST, PUT, DELETE, etc.)
+  const method = request.method || 'GET';
+  if (method !== 'GET') {
+    try {
+      return await fetch(request);
+    } catch (error) {
+      return new Response(JSON.stringify({ 
+        error: 'Sin conexión',
+        offline: true 
+      }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+  }
+  
   try {
     const response = await fetch(request);
     

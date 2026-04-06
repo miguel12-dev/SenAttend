@@ -1,6 +1,7 @@
 /**
  * JavaScript para escaneo continuo de QR del portero
  * Similar al escáner de asistencia, escanea continuamente sin interrupciones
+ * Actualizado con AutoRefresh para datos en tiempo real
  */
 
 let html5QrCode = null;
@@ -8,6 +9,7 @@ let isScanning = false;
 let historialIngresos = [];
 let ultimoQRProcesado = null;
 let tiempoUltimoProcesamiento = 0;
+let autoRefreshHistorial = null;
 
 // Elementos del DOM
 const btnIniciarScanner = document.getElementById('btnIniciarScanner');
@@ -34,6 +36,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cargar historial inicial si existe
     cargarHistorialIngresos();
+
+    // Auto-refresh cada 15 segundos para mantener el historial actualizado
+    if (historialContainer) {
+        // Verificar que AutoRefresh esté disponible
+        if (typeof AutoRefresh === 'undefined') {
+            console.error('AutoRefresh no está disponible. Verificar carga de components.js');
+            return;
+        }
+        
+        autoRefreshHistorial = new AutoRefresh({
+            url: '/api/portero/ingresos-activos?limit=50',
+            renderCallback: (data) => {
+                // Normalizar datos: puede ser array directo o objeto con propiedad data
+                let ingresos = [];
+                if (Array.isArray(data)) {
+                    ingresos = data;
+                } else if (data && Array.isArray(data.data)) {
+                    ingresos = data.data;
+                }
+                
+                if (ingresos.length > 0) {
+                    historialIngresos = ingresos.map(ingreso => ({
+                        id: ingreso.id,
+                        marca: ingreso.marca,
+                        numero_serial: ingreso.numero_serial,
+                        aprendiz_nombre: ingreso.aprendiz_nombre,
+                        aprendiz_apellido: ingreso.aprendiz_apellido,
+                        tipo: ingreso.fecha_salida ? 'salida' : 'ingreso',
+                        fecha: ingreso.fecha_ingreso || '',
+                        hora: ingreso.hora_ingreso || '',
+                        mensaje: 'Ingreso activo'
+                    }));
+                    actualizarHistorial();
+                    actualizarEstadisticas();
+                }
+            },
+            interval: 15000, // 15 segundos
+            onError: (error) => {
+                console.error('Error en auto-refresh del historial:', error);
+            }
+        });
+    }
 });
 
 // Iniciar escáner
