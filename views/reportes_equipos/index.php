@@ -132,22 +132,22 @@
                     <tbody>
                         <?php foreach ($datos as $fila): ?>
                         <tr>
-                            <td><?= htmlspecialchars($fila['fecha_ingreso'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($fila['hora_ingreso']  ?? '') ?></td>
-                            <td>
+                            <td data-label="Fecha Ingreso"><?= htmlspecialchars($fila['fecha_ingreso'] ?? '') ?></td>
+                            <td data-label="Hora Ingreso"><?= htmlspecialchars($fila['hora_ingreso']  ?? '') ?></td>
+                            <td data-label="Fecha Salida">
                                 <?php if (!empty($fila['fecha_salida'])): ?>
                                     <?= htmlspecialchars($fila['fecha_salida']) ?>
                                 <?php else: ?>
                                     <span class="badge-sin-salida">Sin salida</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?= htmlspecialchars($fila['hora_salida'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($fila['nombre_aprendiz'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($fila['documento_aprendiz'] ?? '') ?></td>
-                            <td><?= htmlspecialchars($fila['marca_equipo'] ?? '') ?></td>
-                            <td><code><?= htmlspecialchars($fila['numero_serial'] ?? '') ?></code></td>
-                            <td><?= htmlspecialchars($fila['nombre_portero'] ?? '') ?></td>
-                            <td>
+                            <td data-label="Hora Salida"><?= htmlspecialchars($fila['hora_salida'] ?? '') ?></td>
+                            <td data-label="Aprendiz"><?= htmlspecialchars($fila['nombre_aprendiz'] ?? '') ?></td>
+                            <td data-label="Documento"><?= htmlspecialchars($fila['documento_aprendiz'] ?? '') ?></td>
+                            <td data-label="Marca Equipo"><?= htmlspecialchars($fila['marca_equipo'] ?? '') ?></td>
+                            <td data-label="N° Serial"><code><?= htmlspecialchars($fila['numero_serial'] ?? '') ?></code></td>
+                            <td data-label="Portero"><?= htmlspecialchars($fila['nombre_portero'] ?? '') ?></td>
+                            <td data-label="Observaciones">
                                 <?php if (!empty($fila['observaciones'])): ?>
                                     <?= htmlspecialchars($fila['observaciones']) ?>
                                 <?php else: ?>
