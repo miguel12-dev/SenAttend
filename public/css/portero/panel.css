@@ -214,12 +214,47 @@
         grid-template-columns: 1fr;
     }
 
-    .portero-ingresos-list {
-        overflow-x: auto;
+    .portero-ingresos-list table, 
+    .portero-ingresos-list thead, 
+    .portero-ingresos-list tbody, 
+    .portero-ingresos-list th, 
+    .portero-ingresos-list td, 
+    .portero-ingresos-list tr {
+        display: block;
     }
 
-    .portero-ingresos-list table {
-        min-width: 800px;
+    .portero-ingresos-list thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .portero-ingresos-list tr {
+        margin-bottom: 1.5rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .portero-ingresos-list td {
+        border: none;
+        border-bottom: 1px solid #eee;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+    }
+
+    .portero-ingresos-list td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        top: 15px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: bold;
+        color: #6c757d;
     }
 }
 

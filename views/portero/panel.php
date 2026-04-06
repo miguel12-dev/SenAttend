@@ -5,6 +5,7 @@
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,11 +15,12 @@
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/portero/panel.css') ?>">
 </head>
+
 <body>
     <div class="wrapper">
-        <?php 
+        <?php
         $currentPage = 'portero-panel';
-        require __DIR__ . '/../components/header.php'; 
+        require __DIR__ . '/../components/header.php';
         ?>
 
         <main class="main-content">
@@ -101,7 +103,7 @@
                     </section>
 
                     <!-- Sección destacada de Reportes -->
-                    <section class="portero-reports-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                    <!-- <section class="portero-reports-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
                         <div style="background-color: var(--sena-green, #39A900); color: white; padding: 1.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 1rem;">
                             <div style="flex: 1; min-width: 250px;">
                                 <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem;"><i class="fas fa-chart-line"></i> Módulo de Reportes de Equipos</h3>
@@ -113,7 +115,7 @@
                                 </a>
                             </div>
                         </div>
-                    </section>
+                    </section> -->
 
                     <section class="portero-ingresos-card">
                         <div class="portero-ingresos-header">
@@ -139,20 +141,20 @@
                                     <tbody>
                                         <?php foreach ($ingresosActivos as $ingreso): ?>
                                             <tr>
-                                                <td>
+                                                <td data-label="Hora ingreso">
                                                     <strong><?= htmlspecialchars($ingreso['fecha_ingreso']) ?></strong><br>
                                                     <small><?= htmlspecialchars($ingreso['hora_ingreso']) ?></small>
                                                 </td>
-                                                <td><?= htmlspecialchars($ingreso['marca']) ?></td>
-                                                <td><code><?= htmlspecialchars($ingreso['numero_serial']) ?></code></td>
-                                                <td>
+                                                <td data-label="Equipo"><?= htmlspecialchars($ingreso['marca']) ?></td>
+                                                <td data-label="Serial"><code><?= htmlspecialchars($ingreso['numero_serial']) ?></code></td>
+                                                <td data-label="Aprendiz">
                                                     <?= htmlspecialchars($ingreso['aprendiz_nombre'] . ' ' . $ingreso['aprendiz_apellido']) ?>
                                                 </td>
-                                                <td><?= htmlspecialchars($ingreso['aprendiz_documento']) ?></td>
-                                                <td><?= htmlspecialchars($ingreso['portero_nombre']) ?></td>
-                                                <td>
-                                                    <?= !empty($ingreso['observaciones']) 
-                                                        ? htmlspecialchars($ingreso['observaciones']) 
+                                                <td data-label="Documento"><?= htmlspecialchars($ingreso['aprendiz_documento']) ?></td>
+                                                <td data-label="Portero"><?= htmlspecialchars($ingreso['portero_nombre']) ?></td>
+                                                <td data-label="Observaciones">
+                                                    <?= !empty($ingreso['observaciones'])
+                                                        ? htmlspecialchars($ingreso['observaciones'])
                                                         : '<span style="color:#999;">Sin observaciones</span>' ?>
                                                 </td>
                                             </tr>
@@ -172,5 +174,5 @@
     <script src="<?= asset('js/app.js') ?>"></script>
     <script src="<?= asset('js/portero/panel.js') ?>"></script>
 </body>
-</html>
 
+</html>
