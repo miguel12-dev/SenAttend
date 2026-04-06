@@ -36,11 +36,11 @@ class SeguimientoEquiposController
         $user = $this->verificarAcceso();
 
         $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $fechaFin    = $_GET['fecha_fin']    ?? date('Y-m-t');
+        $fechaFin    = $_GET['fecha_fin']    ?? date('Y-m-d'); // TODAY, not end of month
 
         if (!$this->esRangoValido($fechaInicio, $fechaFin)) {
             $fechaInicio = date('Y-m-01');
-            $fechaFin    = date('Y-m-t');
+            $fechaFin    = date('Y-m-d'); // TODAY, not end of month
         }
 
         $infractores = $this->seguimientoService->obtenerAprendicesInfractores($fechaInicio, $fechaFin);
@@ -95,7 +95,7 @@ class SeguimientoEquiposController
         }
 
         $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
-        $fechaFin    = $_GET['fecha_fin']    ?? date('Y-m-t');
+        $fechaFin    = $_GET['fecha_fin']    ?? date('Y-m-d'); // TODAY, not end of month
 
         if (!$this->esRangoValido($fechaInicio, $fechaFin)) {
             http_response_code(400);
@@ -121,6 +121,42 @@ class SeguimientoEquiposController
             error_log('SeguimientoEquiposController::export - ' . $e->getMessage());
             http_response_code(500);
             echo 'Error generando el reporte Excel. Intente nuevamente.';
+        }
+    }
+
+    /**
+     * Endpoint API para obtener las infracciones de un aprendiz específico (modal detalle).
+     */
+    public function obtenerDetalleAprendiz(): void
+    {
+        $this->verificarAccesoJson();
+
+        $this->session->start();
+        $token = $_GET['_token'] ?? $_REQUEST['_token'] ?? '';
+        if (!$this->validarCsrfToken($token)) {
+            Response::json(['success' => false, 'error' => 'Token CSRF inválido'], 403);
+            return;
+        }
+
+        $aprendizId = (int) ($_GET['aprendiz_id'] ?? $_REQUEST['aprendiz_id'] ?? 0);
+        if ($aprendizId <= 0) {
+            Response::json(['success' => false, 'error' => 'ID de aprendiz inválido'], 400);
+            return;
+        }
+
+        $fechaInicio = $_GET['fecha_inicio'] ?? $_REQUEST['fecha_inicio'] ?? date('Y-m-01');
+        $fechaFin    = $_GET['fecha_fin']    ?? $_REQUEST['fecha_fin']    ?? date('Y-m-d');
+
+        try {
+            $infracciones = $this->seguimientoService->obtenerInfraccionesPorAprendiz($aprendizId, $fechaInicio, $fechaFin);
+            Response::json([
+                'success' => true,
+                'infracciones' => $infracciones,
+                'total' => count($infracciones)
+            ]);
+        } catch (\Exception $e) {
+            error_log('SeguimientoEquiposController::obtenerDetalleAprendiz - ' . $e->getMessage());
+            Response::json(['success' => false, 'error' => 'Error al obtener detalle: ' . $e->getMessage()], 500);
         }
     }
 

@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/reportes-equipos.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/admin/seguimiento-equipos.css') ?>">
 </head>
 <body>
 <div class="wrapper">
@@ -34,19 +35,20 @@
         <div class="reporte-equipos-container">
 
             <!-- Encabezado -->
-            <div class="reporte-header">
+            <div class="reporte-header seguimiento-header">
                 <h2>
                     <i class="fas fa-user-times"></i>
-                    Infracciones de Equipos (Sin salida)
+                    Infracciones de Equipos
                 </h2>
                 <p class="subtitle-page">
-                    Aprendices que han salido 3 o más veces sin hacer el registro de retiro de su equipo.
+                    Aprendices que han registrado <strong>1 o más infracciones</strong> en el período seleccionado.
+                    <br><small>Una infracción se cuenta cuando: <em>(a)</em> no se registró la salida del equipo, <em>(b)</em> existe una observación/anomalía, o <em>(c)</em> fue cerrada automáticamente.</small>
                 </p>
-                <div style="margin-top: 15px;">
+                <div>
                     <button class="btn-sena-primary" id="btn-procesar-cierres">
                         <i class="fas fa-cogs"></i> Procesar Cierres Automáticos (Días Anteriores)
                     </button>
-                    <small style="display:block; margin-top:5px; color:#555;">
+                    <small class="subtitle-hint">
                         Busca ingresos de días pasados que nunca salieron y los cierra con una nota de infracción. Todo esto también ocurre automáticamente a media noche.
                     </small>
                 </div>
@@ -93,10 +95,14 @@
             <!-- Barra resumen + botón exportar -->
             <div class="result-bar">
                 <span class="result-count">
-                    Infractores encontrados: <strong><?= count($infractores) ?></strong>
+                    Aprendices con infracciones: <strong><?= count($infractores) ?></strong>
                     &nbsp;|&nbsp;
                     Período: <strong><?= htmlspecialchars($fechaInicio) ?></strong>
                     al <strong><?= htmlspecialchars($fechaFin) ?></strong>
+                </span>
+
+                <span id="auto-reload-indicator" class="auto-reload-indicator" title="La página se recarga automáticamente cada 30 segundos">
+                    <i class="fas fa-sync-alt"></i> Auto-refresh: <strong id="reload-countdown">30</strong>s
                 </span>
 
                 <button id="btn-exportar-excel-seguimiento" class="btn-sena-secondary" type="button">
@@ -105,40 +111,66 @@
             </div>
 
             <?php if (empty($infractores)): ?>
-                <div class="empty-reporte" style="margin-top: 2rem;">
-                    <i class="fas fa-check-circle" style="color: #39A900; font-size: 3rem;"></i>
-                    <p style="margin-top: 1rem;">No se encontraron aprendices con 3 o más infracciones en el rango seleccionado.</p>
+                <div class="empty-reporte empty-reporte--seguimiento">
+                    <i class="fas fa-check-circle empty-icon"></i>
+                    <p class="empty-text">No se encontraron aprendices con infracciones en el rango seleccionado.</p>
                 </div>
             <?php else: ?>
 
-            <div class="reporte-table-wrapper" style="margin-top: 2rem;">
+            <div class="reporte-table-wrapper reporte-table-wrapper--seguimiento">
                 <table class="reporte-table">
                     <thead>
                         <tr>
                             <th>Documento</th>
                             <th>Aprendiz</th>
                             <th>Ficha</th>
-                            <th><i class="fas fa-exclamation-circle" style="color: red;"></i> Total Infracciones</th>
+                            <th>Severidad</th>
+                            <th class="th-infracciones">
+                                <i class="fas fa-exclamation-circle"></i>
+                                Infracciones
+                                <small>(click para detalle)</small>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($infractores as $fila): ?>
+                        <?php
+                            $count = (int) $fila['total_infracciones'];
+                            if ($count >= 10) {
+                                $sevClass = 'severity-badge--critical';
+                                $sevLabel = 'Crítico';
+                            } elseif ($count >= 6) {
+                                $sevClass = 'severity-badge--high';
+                                $sevLabel = 'Alto';
+                            } elseif ($count >= 3) {
+                                $sevClass = 'severity-badge--medium';
+                                $sevLabel = 'Medio';
+                            } else {
+                                $sevClass = 'severity-badge--low';
+                                $sevLabel = 'Bajo';
+                            }
+                        ?>
                         <tr>
                             <td><?= htmlspecialchars($fila['documento']) ?></td>
                             <td><strong><?= htmlspecialchars($fila['nombre_completo']) ?></strong></td>
                             <td><?= htmlspecialchars($fila['numero_ficha'] ?? 'N/A') ?></td>
-                            <td style="text-align: center; font-size: 1.1rem; color: #D32F2F; font-weight: bold;">
-                                <?= htmlspecialchars($fila['total_infracciones']) ?>
+                            <td>
+                                <span class="severity-badge <?= $sevClass ?>"><?= $sevLabel ?></span>
+                            </td>
+                            <td class="td-infracciones-count">
+                                <span class="infraccion-count"
+                                      data-aprendiz-id="<?= htmlspecialchars($fila['id_aprendiz']) ?>"
+                                      data-aprendiz-nombre="<?= htmlspecialchars($fila['nombre_completo']) ?>"
+                                      data-aprendiz-doc="<?= htmlspecialchars($fila['documento']) ?>"
+                                      title="Click para ver detalle de infracciones">
+                                    <i class="fas fa-eye"></i> <?= htmlspecialchars($fila['total_infracciones']) ?>
+                                </span>
                             </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
-            
-            <p style="margin-top:1rem; font-size:0.9rem; color:#666;">
-                * Para ver el detalle (marcas de equipo, fechas específicas de cada infracción y observaciones), utiliza el botón <strong>Exportar Detalle a Excel</strong>.
-            </p>
 
             <?php endif; ?>
 
@@ -150,6 +182,24 @@
             <p>&copy; <?= date('Y') ?> SENA - Servicio Nacional de Aprendizaje | <strong>SENAttend</strong></p>
         </div>
     </footer>
+</div>
+
+<!-- Modal de Detalle de Infracciones -->
+<div class="modal-backdrop" id="modal-detalle-infracciones">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-titulo">
+                <i class="fas fa-clipboard-list"></i> Detalle de Infracciones
+            </h3>
+            <button class="modal-close" id="modal-cerrar" title="Cerrar">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-cuerpo">
+            <div class="modal-loading">
+                <i class="fas fa-spinner fa-spin modal-loading__icon"></i>
+                <p class="modal-loading__text">Cargando infracciones...</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="<?= asset('js/app.js') ?>"></script>

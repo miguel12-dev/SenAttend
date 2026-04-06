@@ -378,6 +378,11 @@ $routes = [
             'action' => 'export',
             'middleware' => ['auth']
         ],
+        '/api/seguimiento-equipos/detalle-aprendiz' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'obtenerDetalleAprendiz',
+            'middleware' => ['auth']
+        ],
         // Test de rutas (solo en desarrollo)
         '/test-routes' => [
             'controller' => function() {

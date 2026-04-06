@@ -26,11 +26,19 @@ class SeguimientoEquiposService
     }
 
     /**
-     * Obtiene los infractores frecuentes.
+     * Obtiene los aprendices infractores (ahora >= 1 infracción).
      */
     public function obtenerAprendicesInfractores(string $fechaInicio, string $fechaFin): array
     {
         return $this->repository->getRepeatOffenders($fechaInicio, $fechaFin);
+    }
+
+    /**
+     * Obtiene las infracciones de un aprendiz específico para el modal de detalle.
+     */
+    public function obtenerInfraccionesPorAprendiz(int $aprendizId, string $fechaInicio, string $fechaFin): array
+    {
+        return $this->repository->getViolationsByAprendiz($aprendizId, $fechaInicio, $fechaFin);
     }
 
     /**
@@ -54,13 +62,13 @@ class SeguimientoEquiposService
             'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
         ];
 
-        // Encabezados
-        $headers = ['Fecha Ingreso', 'Hora Ingreso', 'Documento Aprendiz', 'Nombre Completo', 'Ficha', 'Marca Equipo', 'Serial Equipo', 'Observaciones'];
-        foreach (range('A', 'H') as $index => $column) {
+        // Encabezados (agregada columna Tipo de Infracción)
+        $headers = ['Fecha Ingreso', 'Hora Ingreso', 'Documento Aprendiz', 'Nombre Completo', 'Ficha', 'Marca Equipo', 'Serial Equipo', 'Tipo Infracción', 'Observaciones'];
+        foreach (range('A', 'I') as $index => $column) {
             $sheet->setCellValue($column . '1', $headers[$index]);
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
-        $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:I1')->applyFromArray($headerStyle);
 
         // Llenado de datos
         $row = 2;
@@ -72,7 +80,8 @@ class SeguimientoEquiposService
             $sheet->setCellValue('E' . $row, $detalle['numero_ficha'] ?? 'N/A');
             $sheet->setCellValue('F' . $row, $detalle['marca_equipo']);
             $sheet->setCellValue('G' . $row, $detalle['numero_serial']);
-            $sheet->setCellValue('H' . $row, $detalle['observaciones']);
+            $sheet->setCellValue('H' . $row, $detalle['tipo_infraccion']);
+            $sheet->setCellValue('I' . $row, $detalle['observaciones'] ?? '');
             $row++;
         }
 

@@ -1,0 +1,357 @@
+/**
+ * Estilos: Seguimiento de Equipos (Infracciones)
+ * Módulo: admin/seguimiento-equipos
+ */
+
+/* ==========================================================================
+   Header / Encabezado
+   ========================================================================== */
+
+.seguimiento-header {
+    margin-bottom: 1.5rem;
+}
+
+.seguimiento-header .subtitle-hint {
+    display: block;
+    margin-top: 15px;
+    color: #555;
+    font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   Auto-refresh indicator
+   ========================================================================== */
+
+.auto-reload-indicator {
+    font-size: 0.8rem;
+    color: #888;
+    margin-left: 10px;
+    cursor: help;
+}
+
+.auto-reload-indicator--paused {
+    color: #ff9800 !important;
+}
+
+/* ==========================================================================
+   Empty state
+   ========================================================================== */
+
+.empty-reporte--seguimiento {
+    margin-top: 2rem;
+}
+
+.empty-reporte--seguimiento .empty-icon {
+    color: #39A900;
+    font-size: 3rem;
+}
+
+.empty-reporte--seguimiento .empty-text {
+    margin-top: 1rem;
+}
+
+/* ==========================================================================
+   Table wrapper
+   ========================================================================== */
+
+.reporte-table-wrapper--seguimiento {
+    margin-top: 2rem;
+}
+
+.th-infracciones {
+    text-align: center;
+}
+
+.th-infracciones .fa-exclamation-circle {
+    color: red;
+}
+
+.th-infracciones small {
+    font-weight: normal;
+}
+
+.td-infracciones-count {
+    text-align: center;
+}
+
+/* ==========================================================================
+   Severity badges
+   ========================================================================== */
+
+.severity-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.severity-badge--low {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.severity-badge--medium {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.severity-badge--high {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.severity-badge--critical {
+    background: #4a0000;
+    color: #ff5252;
+}
+
+/* ==========================================================================
+   Infraccion count (clickable pill)
+   ========================================================================== */
+
+.infraccion-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 14px;
+    background: #D32F2F;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    user-select: none;
+}
+
+.infraccion-count:hover {
+    background: #b71c1c;
+    border-color: #ff5252;
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(211, 47, 47, 0.4);
+}
+
+.infraccion-count:active {
+    transform: scale(0.95);
+}
+
+.infraccion-count i {
+    margin-right: 4px;
+    font-size: 0.7rem;
+}
+
+/* ==========================================================================
+   Modal backdrop
+   ========================================================================== */
+
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-backdrop.active {
+    display: flex;
+}
+
+/* ==========================================================================
+   Modal content
+   ========================================================================== */
+
+.modal-content {
+    background: #fff;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    position: relative;
+}
+
+/* ==========================================================================
+   Modal header
+   ========================================================================== */
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 2;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+/* ==========================================================================
+   Modal body
+   ========================================================================== */
+
+.modal-body {
+    padding: 20px 24px;
+}
+
+/* ==========================================================================
+   Modal detail table
+   ========================================================================== */
+
+.detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.detail-table th {
+    background: #f8f9fa;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.detail-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+}
+
+.detail-table tr:hover {
+    background: #f1f8e9;
+}
+
+/* ==========================================================================
+   Modal summary bar
+   ========================================================================== */
+
+.modal-summary {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.modal-summary__total {
+    color: #D32F2F;
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   Infraccion type badges (inside modal)
+   ========================================================================== */
+
+.badge-infraccion {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-infraccion--sin-salida {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.badge-infraccion--con-observacion {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+/* ==========================================================================
+   Modal loading / error states
+   ========================================================================== */
+
+.modal-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+.modal-loading__icon {
+    font-size: 2rem;
+    color: #39A900;
+}
+
+.modal-loading__text {
+    margin-top: 10px;
+    color: #666;
+}
+
+.modal-error {
+    text-align: center;
+    padding: 40px;
+    color: #D32F2F;
+}
+
+.modal-error__icon {
+    font-size: 2rem;
+}
+
+.modal-error__text {
+    margin-top: 10px;
+}
+
+.modal-info {
+    text-align: center;
+    padding: 40px;
+}
+
+.modal-info__icon {
+    font-size: 2rem;
+    color: #999;
+}
+
+.modal-info__text {
+    margin-top: 10px;
+    color: #666;
+}
+
+/* ==========================================================================
+   Modal detail: N/A values
+   ========================================================================== */
+
+.detail-table__na {
+    color: #D32F2F;
+    font-weight: bold;
+}
+
+.detail-table__empty {
+    color: #999;
+}
+
+.detail-table__serial {
+    color: #666;
+    font-size: 0.8rem;
+}
