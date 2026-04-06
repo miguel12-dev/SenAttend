@@ -263,7 +263,7 @@ ob_start();
                         <!-- Acciones solo para Admin -->
                         <?php if ($user['rol'] === 'admin'): ?>
 
-                        <!-- Configurar Horarios -->
+                        <!-- Configurar Horarios de Asistencia -->
                         <div class="action-card-sena">
                             <div class="action-icon-sena">
                                 <i class="fas fa-clock"></i>
@@ -274,6 +274,21 @@ ob_start();
                                 <a href="/configuracion/horarios" class="btn-sena">
                                     <i class="fas fa-cog"></i>
                                     Configurar Turnos
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Configurar Horarios de Equipos (Solo Admin) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-laptop-code"></i>
+                            </div>
+                            <h4>Horarios de Equipos</h4>
+                            <p>Configurar turnos Mañana / Tarde / Noche usados en el reporte de equipos.</p>
+                            <div class="action-buttons">
+                                <a href="/configuracion/turnos-equipos" class="btn-sena">
+                                    <i class="fas fa-sliders-h"></i>
+                                    Gestionar Horarios
                                 </a>
                             </div>
                         </div>

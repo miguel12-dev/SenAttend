@@ -100,6 +100,21 @@
                         </div>
                     </section>
 
+                    <!-- Sección destacada de Reportes -->
+                    <section class="portero-reports-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="background-color: var(--sena-green, #39A900); color: white; padding: 1.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 1rem;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem;"><i class="fas fa-chart-line"></i> Módulo de Reportes de Equipos</h3>
+                                <p style="margin: 0; opacity: 0.9;">Genera y exporta reportes en Excel de ingresos y salidas de equipos filtrados por fecha y turno.</p>
+                            </div>
+                            <div>
+                                <a href="/reportes-equipos" class="btn btn-outline" style="background-color: white; color: var(--sena-green, #39A900); border: none; font-weight: bold; padding: 0.5rem 1rem; border-radius: 0.375rem; text-decoration: none; display: inline-block;">
+                                    Generar Reportes
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
                     <section class="portero-ingresos-card">
                         <div class="portero-ingresos-header">
                             <h2>Ingresos activos (sin salida)</h2>

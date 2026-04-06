@@ -106,8 +106,10 @@ return [
                 '/api/qr/historial-diario' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR],
                 '/api/qr/buscar' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR],
 
-                // Configuración de turnos (solo admin en UI)
+                // Configuración de turnos de asistencia (solo admin en UI)
                 '/configuracion/horarios' => [ROLE_ADMIN],
+                // Configuración de turnos de equipos (solo admin)
+                '/configuracion/turnos-equipos' => [ROLE_ADMIN],
 
                 // APIs de configuración de turnos: lectura para staff (no estudiantes)
                 '/api/configuracion/turnos' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR, ROLE_ADMINISTRATIVO],
@@ -190,8 +192,12 @@ return [
                 // QR
                 '/api/qr/procesar' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR],
 
-                // Configuración de turnos (solo admin)
+                // Configuración de turnos de asistencia (solo admin)
                 '/configuracion/horarios/actualizar' => [ROLE_ADMIN],
+                // Configuración de turnos de equipos (solo admin)
+                '/configuracion/turnos-equipos/actualizar-globales' => [ROLE_ADMIN],
+                '/configuracion/turnos-equipos/agregar-fecha'       => [ROLE_ADMIN],
+                '/configuracion/turnos-equipos/eliminar-fecha'      => [ROLE_ADMIN],
                 // Gestión de Reportes - generación de exportes vía AJAX (solo instructores)
                 '/gestion-reportes/generar' => [ROLE_INSTRUCTOR],
                 // Analítica - Generación de reportes (admin y administrativo)

@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\ReporteEquiposRepository;
-use App\Repositories\TurnoConfigRepository;
+use App\Repositories\ConfiguracionTurnosEquiposRepository;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -27,11 +27,11 @@ class ReporteEquiposService
     private const FONT_COLOR    = 'FFFFFFFF'; // Blanco
 
     private ReporteEquiposRepository $repo;
-    private TurnoConfigRepository    $turnoRepo;
+    private ConfiguracionTurnosEquiposRepository $turnoRepo;
 
     public function __construct(
         ReporteEquiposRepository $repo,
-        TurnoConfigRepository $turnoRepo
+        ConfiguracionTurnosEquiposRepository $turnoRepo
     ) {
         $this->repo      = $repo;
         $this->turnoRepo = $turnoRepo;
@@ -67,14 +67,16 @@ class ReporteEquiposService
     public function generarExcel(string $fechaInicio, string $fechaFin): string
     {
         $registros = $this->repo->getAllParaExportar($fechaInicio, $fechaFin);
-        $turnos    = $this->turnoRepo->findAllActive();
+        
+        $globales    = $this->turnoRepo->obtenerHorariosGlobales();
+        $excepciones = $this->turnoRepo->obtenerExcepcionesFechas();
 
         $spreadsheet = new Spreadsheet();
         $spreadsheet->removeSheetByIndex(0);
         $idx = 0;
 
-        // Agrupar por turno según hora_ingreso
-        $grupos = $this->agruparPorTurno($registros, $turnos);
+        // Agrupar por turno según hora_ingreso y fecha_ingreso
+        $grupos = $this->agruparPorTurno($registros, $globales, $excepciones);
 
         foreach ($grupos as $nombreTurno => $filas) {
             $sheet = new Worksheet($spreadsheet, $this->sanitizarNombreHoja($nombreTurno));
@@ -110,19 +112,33 @@ class ReporteEquiposService
     // ─── Privados ────────────────────────────────────────────────────────────
 
     /** Agrupa registros en un mapa [nombre_turno => [...filas]] */
-    private function agruparPorTurno(array $registros, array $turnos): array
+    private function agruparPorTurno(array $registros, array $globales, array $excepciones): array
     {
-        $grupos = [];
-
-        // Inicializar con orden de turnos activos
-        foreach ($turnos as $turno) {
-            $grupos[$turno['nombre_turno']] = [];
+        $grupos = [
+            'Mañana' => [],
+            'Tarde'  => [],
+            'Noche'  => [],
+            'Sin Turno Definido' => []
+        ];
+        
+        // Organizar excepciones por fecha
+        $excepcionesPorFecha = [];
+        foreach ($excepciones as $exc) {
+            $excepcionesPorFecha[$exc['fecha_especifica']][] = $exc;
         }
-        $grupos['Sin Turno Definido'] = [];
 
         foreach ($registros as $fila) {
+            $fecha = $fila['fecha_ingreso'] ?? null;
             $hora  = $fila['hora_ingreso'] ?? '00:00:00';
-            $asign = $this->detectarTurno($hora, $turnos);
+            
+            // Usar excepciones para el día si existen, sino usar globales
+            $turnosAplicables = isset($excepcionesPorFecha[$fecha]) ? $excepcionesPorFecha[$fecha] : $globales;
+            
+            $asign = $this->detectarTurno($hora, $turnosAplicables);
+            
+            if (!isset($grupos[$asign])) {
+                $grupos[$asign] = [];
+            }
             $grupos[$asign][] = $fila;
         }
 
@@ -131,11 +147,11 @@ class ReporteEquiposService
     }
 
     /** Determina a qué turno pertenece una hora dada */
-    private function detectarTurno(string $hora, array $turnos): string
+    private function detectarTurno(string $hora, array $turnosAplicables): string
     {
-        foreach ($turnos as $turno) {
+        foreach ($turnosAplicables as $turno) {
             if ($hora >= $turno['hora_inicio'] && $hora < $turno['hora_fin']) {
-                return $turno['nombre_turno'];
+                return $turno['turno'];
             }
         }
         return 'Sin Turno Definido';

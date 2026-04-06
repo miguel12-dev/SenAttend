@@ -49,6 +49,9 @@ use App\Services\EmailService;
 use App\Services\QRService;
 use App\Session\SessionManager;
 use App\Support\Response;
+use App\Controllers\ConfiguracionTurnosEquiposController;
+use App\Repositories\ConfiguracionTurnosEquiposRepository;
+use App\Services\ConfiguracionTurnosEquiposService;
 
 // Módulo de Eventos
 use App\Eventos\Controllers\EventoAuthController;
@@ -169,6 +172,10 @@ $porteroIngresoService = new PorteroIngresoService($qrEquipoRepository, $ingreso
 $qrService = new QRService($codigoQRRepository, $aprendizRepository, $emailService);
 $turnoConfigService = new \App\Services\TurnoConfigService($turnoConfigRepository);
 $asistenciaService = new \App\Services\AsistenciaService($asistenciaRepository, $aprendizRepository, $fichaRepository, $turnoConfigService);
+// Módulo de Configuración de Horarios de Equipos
+$configTurnosEquiposRepository = new ConfiguracionTurnosEquiposRepository();
+$configTurnosEquiposService    = new ConfiguracionTurnosEquiposService($configTurnosEquiposRepository);
+$configTurnosEquiposController = new ConfiguracionTurnosEquiposController($configTurnosEquiposService, $authService);
 
 // Servicios y repositorios de Boletas de Salida
 $boletaSalidaRepository = new BoletaSalidaRepository();
@@ -439,9 +446,15 @@ $routes = [
             'action' => 'apiGetTiposAnomalias',
             'middleware' => ['auth']
         ],
-        // Configuración de Turnos (Solo Admin)
+        // Configuración de Turnos de Asistencia (Solo Admin)
         '/configuracion/horarios' => [
             'controller' => \App\Controllers\TurnoConfigController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        // Configuración de Turnos de Equipos (Solo Admin)
+        '/configuracion/turnos-equipos' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
             'action' => 'index',
             'middleware' => ['auth']
         ],
@@ -738,10 +751,26 @@ $routes = [
             'action' => 'apiRegistrarAnomaliaFicha',
             'middleware' => ['auth']
         ],
-        // Configuración de Turnos POST (Solo Admin)
+        // Configuración de Turnos de Asistencia POST (Solo Admin)
         '/configuracion/horarios/actualizar' => [
             'controller' => \App\Controllers\TurnoConfigController::class,
             'action' => 'actualizar',
+            'middleware' => ['auth']
+        ],
+        // Configuración de Turnos de Equipos POST (Solo Admin)
+        '/configuracion/turnos-equipos/actualizar-globales' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
+            'action' => 'actualizarGlobales',
+            'middleware' => ['auth']
+        ],
+        '/configuracion/turnos-equipos/agregar-fecha' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
+            'action' => 'agregarFecha',
+            'middleware' => ['auth']
+        ],
+        '/configuracion/turnos-equipos/eliminar-fecha' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
+            'action' => 'eliminarFecha',
             'middleware' => ['auth']
         ],
         // Gestión de Reportes - generación (AJAX)
@@ -1346,6 +1375,8 @@ try {
             $turnoConfigService,
             $authService
         );
+    } elseif ($controllerClass === ConfiguracionTurnosEquiposController::class) {
+        $controller = $configTurnosEquiposController;
     } elseif ($controllerClass === \App\Controllers\GestionInstructoresController::class) {
         $instructorRepository = new \App\Repositories\InstructorRepository();
         $instructorService = new \App\Services\InstructorService($instructorRepository);
@@ -1405,7 +1436,7 @@ try {
         $reporteEquiposRepository = new \App\Repositories\ReporteEquiposRepository();
         $reporteEquiposService = new \App\Services\ReporteEquiposService(
             $reporteEquiposRepository,
-            $turnoConfigRepository
+            $configTurnosEquiposRepository
         );
         $controller = new $controllerClass(
             $authService,
