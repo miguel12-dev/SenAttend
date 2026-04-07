@@ -49,6 +49,7 @@ class AprendizEquipoController
         $success = $this->session->getFlash('success');
 
         $equipos = $this->aprendizEquipoService->getEquiposDeAprendiz((int)$user['id']);
+        $equiposEliminados = $this->aprendizEquipoService->getEquiposEliminados((int)$user['id']);
 
         require __DIR__ . '/../../../views/aprendiz/equipos/index.php';
     }
@@ -159,6 +160,60 @@ class AprendizEquipoController
         $qrInfo = $result['data'];
 
         require __DIR__ . '/../../../views/aprendiz/equipos/qr.php';
+    }
+
+    /**
+     * Elimina lógicamente un equipo (soft-delete)
+     * POST /aprendiz/equipos/{id}/eliminar
+     */
+    public function eliminar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::redirect('/aprendiz/equipos');
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::redirect('/login');
+        }
+
+        $result = $this->aprendizEquipoService->eliminarEquipo($relacionId, (int)$user['id']);
+
+        $this->session->start();
+        if ($result['success']) {
+            $this->session->flash('success', $result['message']);
+        } else {
+            $this->session->flash('error', $result['message']);
+        }
+
+        Response::redirect('/aprendiz/equipos');
+    }
+
+    /**
+     * Restaura un equipo previamente eliminado
+     * POST /aprendiz/equipos/{id}/restaurar
+     */
+    public function restaurar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::redirect('/aprendiz/equipos');
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::redirect('/login');
+        }
+
+        $result = $this->aprendizEquipoService->restaurarEquipo($relacionId, (int)$user['id']);
+
+        $this->session->start();
+        if ($result['success']) {
+            $this->session->flash('success', $result['message']);
+        } else {
+            $this->session->flash('error', $result['message']);
+        }
+
+        Response::redirect('/aprendiz/equipos');
     }
 }
 

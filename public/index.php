@@ -1018,6 +1018,19 @@ $dynamicRoutes = [
             'middleware' => [],
             'params' => ['equipoId']
         ],
+        // Soft-delete y restaurar equipos
+        '/aprendiz/equipos/(\d+)/eliminar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'eliminar',
+            'middleware' => [],
+            'params' => ['relacionId']
+        ],
+        '/aprendiz/equipos/(\d+)/restaurar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'restaurar',
+            'middleware' => [],
+            'params' => ['relacionId']
+        ],
         // ============================================
         // MÓDULO DE EVENTOS - Rutas Dinámicas GET
         // ============================================

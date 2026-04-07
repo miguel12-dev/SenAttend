@@ -40,7 +40,7 @@
                     <section class="aprendiz-equipos-card" style="text-align:center;">
                         <h2>QR del equipo</h2>
                         <div style="display:flex;justify-content:center;margin-bottom:1.5rem;">
-                            <img src="<?= $qrInfo['image_base64'] ?>" alt="QR del equipo" style="max-width:300px;">
+                            <img src="<?= $qrInfo['image_base64'] ?>" alt="QR del equipo" style="max-width:300px;" id="qrImage">
                         </div>
                         <p style="font-size:0.9rem;color:#666;">
                             Generado: <?= htmlspecialchars($qrInfo['fecha_generacion']) ?><br>
@@ -48,6 +48,11 @@
                                 Expira: <?= htmlspecialchars($qrInfo['fecha_expiracion']) ?>
                             <?php endif; ?>
                         </p>
+                        <div style="margin-top: 1.5rem;">
+                            <button type="button" class="btn btn-primary" onclick="downloadQR()" style="display:inline-flex;align-items:center;gap:0.5rem;">
+                                <i class="fas fa-download"></i> Descargar QR
+                            </button>
+                        </div>
                     </section>
                 </div>
             </div>
@@ -55,6 +60,17 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script>
+        function downloadQR() {
+            const img = document.getElementById('qrImage');
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = 'qr-equipo.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
 </html>
 
