@@ -11,6 +11,12 @@ let ultimoQRProcesado = null;
 let tiempoUltimoProcesamiento = 0;
 let autoRefreshHistorial = null;
 
+// Paginación del historial
+const HISTORIAL_POR_PAGINA = 20;
+let historialPaginaActual = 1;
+let historialTotalRegistros = 0;
+let historialCargando = false;
+
 // Elementos del DOM
 const btnIniciarScanner = document.getElementById('btnIniciarScanner');
 const btnDetenerScanner = document.getElementById('btnDetenerScanner');
@@ -46,14 +52,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         autoRefreshHistorial = new AutoRefresh({
-            url: '/api/portero/ingresos-activos?limit=50',
+            url: `/api/portero/ingresos-activos?limit=${HISTORIAL_POR_PAGINA}&page=1`,
             renderCallback: (data) => {
                 // Normalizar datos: puede ser array directo o objeto con propiedad data
                 let ingresos = [];
+                let pagination = null;
+                
                 if (Array.isArray(data)) {
                     ingresos = data;
                 } else if (data && Array.isArray(data.data)) {
                     ingresos = data.data;
+                    pagination = data.pagination || null;
+                }
+                
+                if (pagination) {
+                    historialTotalRegistros = pagination.total || 0;
+                    historialPaginaActual = pagination.page || 1;
                 }
                 
                 if (ingresos.length > 0) {
@@ -257,7 +271,7 @@ function mostrarMensaje(mensaje, tipo) {
     }, tipo === 'success' ? 3000 : 5000);
 }
 
-// Actualizar historial de ingresos
+// Actualizar historial de ingresos con paginación
 function actualizarHistorial() {
     if (!historialContainer) return;
     
@@ -268,33 +282,169 @@ function actualizarHistorial() {
                 <p>No hay registros aún. Escanea el código QR de un equipo para comenzar.</p>
             </div>
         `;
+        // Ocultar paginación si no hay datos
+        const pagNav = document.getElementById('historial-pagination');
+        if (pagNav) pagNav.innerHTML = '';
         return;
     }
     
-    const html = historialIngresos.map((registro, index) => {
+    // Calcular registros para la página actual
+    const inicio = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA;
+    const fin = inicio + HISTORIAL_POR_PAGINA;
+    const registrosPagina = historialIngresos.slice(inicio, fin);
+    const totalPaginas = Math.ceil(historialTotalRegistros / HISTORIAL_POR_PAGINA) || 1;
+    
+    const html = registrosPagina.map((registro, index) => {
         const tipoClass = registro.tipo === 'ingreso' ? 'success' : 'info';
         const tipoIcon = registro.tipo === 'ingreso' ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
+        const numeroGlobal = historialTotalRegistros - inicio - index;
         
         return `
             <div class="historial-item ${tipoClass}">
                 <div class="historial-info">
-                    <span class="historial-numero">#${historialIngresos.length - index}</span>
+                    <span class="historial-numero">#${numeroGlobal}</span>
                     <div class="historial-datos">
                         <strong>${escapeHtml(registro.marca || registro.equipo?.marca || 'Equipo')} - ${escapeHtml(registro.numero_serial || registro.equipo?.numero_serial || 'N/A')}</strong>
                         <span class="historial-doc">${escapeHtml(registro.aprendiz_nombre || registro.aprendiz?.nombre || '')} ${escapeHtml(registro.aprendiz_apellido || registro.aprendiz?.apellido || '')}</span>
+                        ${registro.fecha ? `<span class="historial-fecha"><i class="fas fa-calendar"></i> ${registro.fecha}</span>` : ''}
                     </div>
                 </div>
                 <div class="historial-estado">
                     <span class="badge badge-${tipoClass}">
                         <i class="fas ${tipoIcon}"></i> ${registro.tipo?.toUpperCase() || 'OPERACIÓN'}
                     </span>
-                    <span class="historial-hora">${registro.hora || '--'}</span>
+                    <span class="historial-hora"><i class="fas fa-clock"></i> ${registro.hora || '--'}</span>
                 </div>
             </div>
         `;
     }).join('');
     
     historialContainer.innerHTML = html;
+    
+    // Renderizar controles de paginación
+    renderizarPaginacion(totalPaginas);
+}
+
+// Renderizar controles de paginación del historial
+function renderizarPaginacion(totalPaginas) {
+    let pagNav = document.getElementById('historial-pagination');
+    
+    if (!pagNav) {
+        pagNav = document.createElement('nav');
+        pagNav.id = 'historial-pagination';
+        pagNav.className = 'historial-pagination';
+        pagNav.setAttribute('aria-label', 'Paginación del historial');
+        historialContainer.parentNode.insertBefore(pagNav, historialContainer.nextSibling);
+    }
+    
+    if (totalPaginas <= 1) {
+        pagNav.innerHTML = '';
+        return;
+    }
+    
+    const mostrarDesde = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA + 1;
+    const mostrarHasta = Math.min(historialPaginaActual * HISTORIAL_POR_PAGINA, historialTotalRegistros);
+    
+    let html = `<span class="pagination-info">Mostrando ${mostrarDesde}-${mostrarHasta} de ${historialTotalRegistros}</span>`;
+    
+    // Botón primera página
+    if (historialPaginaActual > 1) {
+        html += `<button type="button" class="pag-btn" data-page="1" aria-label="Primera página">&laquo;</button>`;
+        html += `<button type="button" class="pag-btn" data-page="${historialPaginaActual - 1}" aria-label="Página anterior">&lsaquo;</button>`;
+    } else {
+        html += `<span class="pag-btn disabled">&laquo;</span>`;
+        html += `<span class="pag-btn disabled">&lsaquo;</span>`;
+    }
+    
+    // Páginas cercanas
+    const rango = 1;
+    const inicio = Math.max(1, historialPaginaActual - rango);
+    const fin = Math.min(totalPaginas, historialPaginaActual + rango);
+    
+    for (let p = inicio; p <= fin; p++) {
+        if (p === historialPaginaActual) {
+            html += `<span class="pag-btn active">${p}</span>`;
+        } else {
+            html += `<button type="button" class="pag-btn" data-page="${p}">${p}</button>`;
+        }
+    }
+    
+    // Botón siguiente y última
+    if (historialPaginaActual < totalPaginas) {
+        html += `<button type="button" class="pag-btn" data-page="${historialPaginaActual + 1}" aria-label="Página siguiente">&rsaquo;</button>`;
+        html += `<button type="button" class="pag-btn" data-page="${totalPaginas}" aria-label="Última página">&raquo;</button>`;
+    } else {
+        html += `<span class="pag-btn disabled">&rsaquo;</span>`;
+        html += `<span class="pag-btn disabled">&raquo;</span>`;
+    }
+    
+    pagNav.innerHTML = html;
+    
+    // Agregar event listeners a los botones
+    pagNav.querySelectorAll('.pag-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pagina = parseInt(btn.dataset.page);
+            if (pagina !== historialPaginaActual) {
+                irAPagina(pagina);
+            }
+        });
+    });
+}
+
+// Navegar a una página específica del historial
+async function irAPagina(pagina) {
+    if (historialCargando) return;
+    historialCargando = true;
+    
+    historialPaginaActual = pagina;
+    mostrarCargandoHistorial(true);
+    
+    try {
+        const response = await fetch(`/api/portero/ingresos-activos?limit=${HISTORIAL_POR_PAGINA}&page=${pagina}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data && Array.isArray(result.data)) {
+            historialIngresos = result.data.map(ingreso => ({
+                id: ingreso.id,
+                marca: ingreso.marca,
+                numero_serial: ingreso.numero_serial,
+                aprendiz_nombre: ingreso.aprendiz_nombre,
+                aprendiz_apellido: ingreso.aprendiz_apellido,
+                tipo: ingreso.fecha_salida ? 'salida' : 'ingreso',
+                fecha: ingreso.fecha_ingreso || '',
+                hora: ingreso.hora_ingreso || '',
+                mensaje: 'Ingreso activo'
+            }));
+            
+            if (result.pagination) {
+                historialTotalRegistros = result.pagination.total || 0;
+            }
+            
+            actualizarHistorial();
+        }
+    } catch (error) {
+        console.error('Error cargando página del historial:', error);
+    } finally {
+        historialCargando = false;
+        mostrarCargandoHistorial(false);
+    }
+}
+
+// Mostrar/ocultar indicador de carga del historial
+function mostrarCargandoHistorial(mostrar) {
+    if (!historialContainer) return;
+    
+    if (mostrar) {
+        historialContainer.innerHTML = `
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando historial...</p>
+            </div>
+        `;
+    }
 }
 
 // Actualizar estadísticas
@@ -326,7 +476,9 @@ function actualizarEstadisticas() {
 // Cargar historial de ingresos desde el servidor
 async function cargarHistorialIngresos() {
     try {
-        const response = await fetch('/api/portero/ingresos-activos?limit=50', {
+        mostrarCargandoHistorial(true);
+        
+        const response = await fetch(`/api/portero/ingresos-activos?limit=${HISTORIAL_POR_PAGINA}&page=1`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
@@ -348,11 +500,18 @@ async function cargarHistorialIngresos() {
                 mensaje: 'Ingreso activo'
             }));
             
+            if (result.pagination) {
+                historialTotalRegistros = result.pagination.total || 0;
+                historialPaginaActual = result.pagination.page || 1;
+            }
+            
             actualizarHistorial();
             actualizarEstadisticas();
         }
     } catch (error) {
         console.error('Error cargando historial:', error);
+    } finally {
+        mostrarCargandoHistorial(false);
     }
 }
 
