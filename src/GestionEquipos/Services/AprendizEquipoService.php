@@ -56,7 +56,13 @@ class AprendizEquipoService
         if ($deleted) {
             return [
                 'success' => true,
-                'message' => 'Equipo eliminado correctamente. Podrás agregarlo nuevamente cuando lo desees.'
+                'message' => 'Equipo eliminado correctamente. Podrás agregarlo nuevamente cuando lo desees.',
+                'equipo' => [
+                    'relacion_id' => $relacionId,
+                    'equipo_id' => $relacion['equipo_id'],
+                    'marca' => $relacion['marca'],
+                    'numero_serial' => $relacion['numero_serial']
+                ]
             ];
         }
 
@@ -101,7 +107,13 @@ class AprendizEquipoService
         if ($restored) {
             return [
                 'success' => true,
-                'message' => 'Equipo restaurado correctamente. Puedes usarlo nuevamente.'
+                'message' => 'Equipo restaurado correctamente. Puedes usarlo nuevamente.',
+                'equipo' => [
+                    'relacion_id' => $relacionId,
+                    'equipo_id' => $relacion['equipo_id'],
+                    'marca' => $relacion['marca'],
+                    'numero_serial' => $relacion['numero_serial']
+                ]
             ];
         }
 

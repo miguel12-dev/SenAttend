@@ -43,6 +43,11 @@ class AprendizEquipoController
             Response::redirect('/login');
         }
 
+        // Prevent browser caching to ensure fresh data and flash messages work
+        header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
         $this->session->start();
         $error = $this->session->getFlash('error');
         $message = $this->session->getFlash('message');
@@ -186,7 +191,8 @@ class AprendizEquipoController
             $this->session->flash('error', $result['message']);
         }
 
-        Response::redirect('/aprendiz/equipos');
+        // Redirect with action param to force page reload on client side
+        Response::redirect('/aprendiz/equipos?action=done');
     }
 
     /**
@@ -213,7 +219,62 @@ class AprendizEquipoController
             $this->session->flash('error', $result['message']);
         }
 
-        Response::redirect('/aprendiz/equipos');
+        // Redirect with action param to force page reload on client side
+        Response::redirect('/aprendiz/equipos?action=done');
+    }
+
+    /**
+     * API: Elimina lógicamente un equipo (soft-delete) - AJAX
+     * POST /api/aprendiz/equipos/{id}/eliminar
+     */
+    public function apiEliminar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::error('Método no permitido', 405);
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::error('No autorizado', 401);
+        }
+
+        $result = $this->aprendizEquipoService->eliminarEquipo($relacionId, (int)$user['id']);
+
+        if ($result['success']) {
+            Response::success([
+                'relacion_id' => $relacionId,
+                'equipo' => $result['equipo'] ?? null
+            ], $result['message']);
+        } else {
+            Response::error($result['message'], 400);
+        }
+    }
+
+    /**
+     * API: Restaura un equipo previamente eliminado - AJAX
+     * POST /api/aprendiz/equipos/{id}/restaurar
+     */
+    public function apiRestaurar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::error('Método no permitido', 405);
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::error('No autorizado', 401);
+        }
+
+        $result = $this->aprendizEquipoService->restaurarEquipo($relacionId, (int)$user['id']);
+
+        if ($result['success']) {
+            Response::success([
+                'relacion_id' => $relacionId,
+                'equipo' => $result['equipo'] ?? null
+            ], $result['message']);
+        } else {
+            Response::error($result['message'], 400);
+        }
     }
 }
 

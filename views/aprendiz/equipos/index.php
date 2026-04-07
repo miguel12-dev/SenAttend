@@ -210,6 +210,9 @@
     <script src="<?= asset('js/app.js') ?>"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Utilizar una key única para la PWA que no conflte con otras funciones
+            const PWA_RELOAD_KEY = 'equipos_ajax_loaded';
+
             // Toggle equipos eliminados
             const eliminadosHeader = document.getElementById('eliminadosHeader');
             const eliminadosList = document.getElementById('eliminadosList');
@@ -255,17 +258,301 @@
                 btnCancelDelete.addEventListener('click', closeDeleteModal);
             }
 
-            // Confirmar eliminación
+            // Confirmar eliminación con AJAX
             if (btnConfirmDelete) {
                 btnConfirmDelete.addEventListener('click', function() {
                     if (currentDeleteId) {
-                        const form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = '/aprendiz/equipos/' + currentDeleteId + '/eliminar';
-                        document.body.appendChild(form);
-                        form.submit();
+                        eliminarEquipo(currentDeleteId);
                     }
                 });
+            }
+
+            // Función para eliminar equipo vía AJAX
+            async function eliminarEquipo(relacionId) {
+                try {
+                    btnConfirmDelete.disabled = true;
+                    btnConfirmDelete.textContent = 'Eliminando...';
+
+                    const response = await fetch('/api/aprendiz/equipos/' + relacionId + '/eliminar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Encontrar y ocultar la tarjeta del equipo
+                        const card = document.querySelector('.btn-delete-icon[data-id="' + relacionId + '"]');
+                        if (card) {
+                            const equipoCard = card.closest('.equipo-card');
+                            if (equipoCard) {
+                                equipoCard.classList.add('eliminando');
+                                setTimeout(function() {
+                                    equipoCard.remove();
+                                    actualizarContadores();
+                                    agregarEquipoAEliminados(data.data.equipo);
+                                }, 300);
+                            }
+                        }
+                        closeDeleteModal();
+                        mostrarFlash('success', data.message);
+                    } else {
+                        closeDeleteModal();
+                        mostrarFlash('error', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar equipo:', error);
+                    closeDeleteModal();
+                    mostrarFlash('error', 'Error de conexión. Intenta nuevamente.');
+                } finally {
+                    btnConfirmDelete.disabled = false;
+                    btnConfirmDelete.textContent = 'Sí, eliminar';
+                }
+            }
+
+            // Función para restaurar equipo vía AJAX
+            async function restaurarEquipo(relacionId, boton) {
+                try {
+                    boton.disabled = true;
+                    boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Restaurando...';
+
+                    const response = await fetch('/api/aprendiz/equipos/' + relacionId + '/restaurar', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Encontrar y mover la tarjeta del equipo
+                        const card = boton.closest('.equipo-card');
+                        if (card) {
+                            card.classList.add('restaurando');
+                            setTimeout(function() {
+                                card.remove();
+                                actualizarContadores();
+                                agregarEquipoAActivos(data.data.equipo);
+                            }, 300);
+                        }
+                        mostrarFlash('success', data.message);
+                    } else {
+                        boton.disabled = false;
+                        boton.innerHTML = '<i class="fas fa-undo"></i> Volver a agregar';
+                        mostrarFlash('error', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error al restaurar equipo:', error);
+                    boton.disabled = false;
+                    boton.innerHTML = '<i class="fas fa-undo"></i> Volver a agregar';
+                    mostrarFlash('error', 'Error de conexión. Intenta nuevamente.');
+                }
+            }
+
+            // Configurar botones de restaurar existentes
+            document.querySelectorAll('.btn-restore').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const form = this.closest('form');
+                    if (form) {
+                        const match = form.action.match(/\/aprendiz\/equipos\/(\d+)\/restaurar/);
+                        if (match) {
+                            restaurarEquipo(match[1], this);
+                        }
+                    }
+                });
+            });
+
+            // Función para agregar equipo a la lista de eliminados
+            function agregarEquipoAEliminados(equipo) {
+                const equiposEliminadosSection = document.querySelector('.equipos-eliminados-section');
+                const equiposGridEliminados = document.querySelector('.equipos-eliminados-list .equipos-grid');
+
+                if (!equiposGridEliminados || !equipo) return;
+
+                const tarjetaHtml = crearTarjetaEquipo(equipo, true);
+                equiposGridEliminados.insertAdjacentHTML('beforeend', tarjetaHtml);
+
+                // Agregar event listener al nuevo botón
+                const nuevoBoton = equiposGridEliminados.lastElementChild.querySelector('.btn-restore');
+                if (nuevoBoton) {
+                    nuevoBoton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const match = this.closest('form').action.match(/\/aprendiz\/equipos\/(\d+)\/restaurar/);
+                        if (match) {
+                            restaurarEquipo(match[1], this);
+                        }
+                    });
+                }
+
+                // Mostrar la sección si estaba oculta
+                if (equiposEliminadosSection) {
+                    equiposEliminadosSection.style.display = 'block';
+                    const eliminadosList = document.getElementById('eliminadosList');
+                    if (eliminadosList) {
+                        eliminadosList.classList.add('show');
+                    }
+                }
+            }
+
+            // Función para agregar equipo a la lista de activos
+            function agregarEquipoAActivos(equipo) {
+                const equiposGrid = document.querySelector('.aprendiz-equipos-list .equipos-grid');
+
+                if (!equiposGrid || !equipo) return;
+
+                const tarjetaHtml = crearTarjetaEquipo(equipo, false);
+                equiposGrid.insertAdjacentHTML('beforeend', tarjetaHtml);
+
+                // Agregar event listener al nuevo botón de eliminar
+                const nuevoBoton = equiposGrid.lastElementChild.querySelector('.btn-delete-icon');
+                if (nuevoBoton) {
+                    nuevoBoton.addEventListener('click', function() {
+                        currentDeleteId = this.getAttribute('data-id');
+                        const marca = this.getAttribute('data-marca');
+                        const serial = this.getAttribute('data-serial');
+                        
+                        modalMarca.textContent = marca;
+                        modalSerial.textContent = serial;
+                        deleteModal.classList.add('show');
+                    });
+                }
+
+                // Ocultar sección de eliminados si está vacía
+                const eliminadosGrid = document.querySelector('.equipos-eliminados-list .equipos-grid');
+                if (eliminadosGrid && eliminadosGrid.children.length === 0) {
+                    const eliminadosSection = document.querySelector('.equipos-eliminados-section');
+                    if (eliminadosSection) {
+                        eliminadosSection.style.display = 'none';
+                    }
+                }
+            }
+
+            // Función para crear HTML de tarjeta de equipo
+            function crearTarjetaEquipo(equipo, eliminado) {
+                const imagenHtml = equipo.imagen && equipo.imagen !== 'uploads/equipos/'
+                    ? '<img src="<?= asset("") ?>' + equipo.imagen + '" alt="' + equipo.marca + '">'
+                    : '<div class="equipo-imagen-placeholder"><i class="fas fa-laptop"></i></div>';
+
+                if (eliminado) {
+                    return '<div class="equipo-card eliminado">' +
+                        '<div class="equipo-imagen">' + imagenHtml + '</div>' +
+                        '<div class="equipo-info">' +
+                        '<h3>' + equipo.marca + '</h3>' +
+                        '<div class="equipo-details">' +
+                        '<p><strong>Serial:</strong> <code>' + equipo.numero_serial + '</code></p>' +
+                        '<p><strong>Eliminado:</strong> <span class="badge-eliminado">Ahora</span></p>' +
+                        '</div>' +
+                        '<div class="equipo-actions">' +
+                        '<form action="/aprendiz/equipos/' + equipo.relacion_id + '/restaurar" method="POST">' +
+                        '<button type="submit" class="btn-restore">' +
+                        '<i class="fas fa-undo"></i> Volver a agregar' +
+                        '</button>' +
+                        '</form>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+                } else {
+                    return '<div class="equipo-card" data-animate-delay="0">' +
+                        '<div class="equipo-imagen">' + imagenHtml + '</div>' +
+                        '<div class="equipo-info">' +
+                        '<h3>' + equipo.marca + '</h3>' +
+                        '<div class="equipo-details">' +
+                        '<p><strong>Serial:</strong> <code>' + equipo.numero_serial + '</code></p>' +
+                        '<p><strong>Estado:</strong> <span class="badge-activo">Activo</span></p>' +
+                        '</div>' +
+                        '<div class="equipo-actions">' +
+                        '<a href="/aprendiz/equipos/' + equipo.equipo_id + '/qr" class="btn btn-primary btn-qr">' +
+                        '<i class="fas fa-qrcode"></i> Ver QR' +
+                        '</a>' +
+                        '<button type="button" class="btn-delete-icon" ' +
+                        'data-id="' + equipo.relacion_id + '" ' +
+                        'data-marca="' + equipo.marca + '" ' +
+                        'data-serial="' + equipo.numero_serial + '" ' +
+                        'title="Eliminar equipo">' +
+                        '<i class="fas fa-trash-alt"></i>' +
+                        '</button>' +
+                        '</div>' +
+                        '</div>' +
+                        '</div>';
+                }
+            }
+
+            // Función para actualizar contadores
+            function actualizarContadores() {
+                const activosGrid = document.querySelector('.aprendiz-equipos-list .equipos-grid');
+                const eliminadosGrid = document.querySelector('.equipos-eliminados-list .equipos-grid');
+
+                const activosCount = activosGrid ? activosGrid.children.length : 0;
+                const eliminadosCount = eliminadosGrid ? eliminadosGrid.children.length : 0;
+
+                // Actualizar título de activos
+                const activosTitulo = document.querySelector('.aprendiz-equipos-header h2');
+                if (activosTitulo) {
+                    activosTitulo.innerHTML = '<i class="fas fa-list"></i> Equipos Registrados (' + activosCount + ')';
+                }
+
+                // Actualizar título de eliminados
+                const eliminadosTitulo = document.querySelector('.equipos-eliminados-header h3');
+                if (eliminadosTitulo) {
+                    eliminadosTitulo.innerHTML = '<i class="fas fa-history"></i> Equipos eliminados (' + eliminadosCount + ')';
+                }
+
+                // Mostrar estado vacío si no hay equipos
+                const container = document.querySelector('.container');
+                if (activosCount === 0 && eliminadosCount === 0) {
+                    const card = document.querySelector('.aprendiz-equipos-card');
+                    const emptyState = document.querySelector('.empty-state');
+                    
+                    if (card && !emptyState) {
+                        card.innerHTML = '<div class="aprendiz-equipos-header">' +
+                            '<h2><i class="fas fa-laptop"></i> Mis Equipos</h2>' +
+                            '</div>' +
+                            '<div class="empty-state">' +
+                            '<i class="fas fa-laptop empty-state-icon"></i>' +
+                            '<p class="empty-state-text">No tienes equipos registrados aún.</p>' +
+                            '<a href="/aprendiz/equipos/crear" class="btn btn-primary">' +
+                            '<i class="fas fa-plus"></i> Registrar mi primer equipo' +
+                            '</a>' +
+                            '</div>';
+                    }
+                }
+            }
+
+            // Función para mostrar mensajes flash
+            function mostrarFlash(tipo, mensaje) {
+                const container = document.querySelector('.container');
+                if (!container) return;
+
+                // Crear elemento de alerta
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-' + tipo;
+                
+                const icon = tipo === 'success' ? 'check-circle' : 'exclamation-circle';
+                alert.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + mensaje;
+
+                // Insertar después del header
+                const header = document.querySelector('.dashboard-header');
+                if (header) {
+                    header.parentNode.insertBefore(alert, header.nextSibling);
+                } else {
+                    container.insertBefore(alert, container.firstChild);
+                }
+
+                // Auto-remover después de 5 segundos
+                setTimeout(function() {
+                    alert.classList.add('fade-out');
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 5000);
             }
 
             // Cerrar modal al hacer clic fuera
