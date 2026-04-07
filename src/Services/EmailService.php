@@ -39,6 +39,69 @@ class EmailService
     }
 
     /**
+     * Adjunta el logo del SENA como imagen embebida
+     */
+    private function attachSenaLogo(): ?string
+    {
+        try {
+            $logoPath = __DIR__ . '/../../public/images/logo_sena_blanco.png';
+            
+            if (!file_exists($logoPath)) {
+                error_log("Logo SENA no encontrado en: {$logoPath}");
+                return null;
+            }
+
+            $cid = 'logo_sena_' . uniqid();
+            $this->mailer->addEmbeddedImage($logoPath, $cid, 'logo_sena_blanco.png', 'base64', 'image/png');
+            
+            return $cid;
+        } catch (Exception $e) {
+            error_log("Error adjuntando logo SENA: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Genera el mensaje legal del SENA
+     */
+    private function getLegalDisclaimer(): string
+    {
+        return '<div style="background-color: #f8f9fa; border-top: 2px solid #dee2e6; padding: 20px; margin-top: 20px; font-size: 11px; color: #6c757d; line-height: 1.5;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #495057;">Aviso Legal:</p>
+            <p style="margin: 0 0 10px 0; text-align: justify;">
+                Este mensaje y cualquier archivo adjunto pueden contener información pública clasificada y/o reservada bajo custodia o propiedad del SENA, 
+                destinada exclusivamente a su(s) destinatario(s). Dicha información debe ser utilizada únicamente para la finalidad con la que fue enviada 
+                y en cumplimiento de la normativa aplicable.
+            </p>
+            <p style="margin: 0 0 10px 0; text-align: justify;">
+                Si usted no es el destinatario autorizado o ha recibido este mensaje por error, le solicitamos que omita su contenido, informe de inmediato 
+                al remitente por correo electrónico con copia a <a href="mailto:servicioalciudadano@sena.edu.co" style="color: #39A900;">servicioalciudadano@sena.edu.co</a> 
+                y elimine el mensaje. La retención, difusión, distribución o copia de este mensaje está prohibida y puede acarrear sanciones legales.
+            </p>
+            <p style="margin: 0; text-align: justify;">
+                Para más información, consulte nuestras Políticas de Seguridad y Privacidad de la Información y las Políticas de Tratamiento para la 
+                Protección de Datos Personales, disponibles en el sitio web del SENA.
+            </p>
+        </div>';
+    }
+
+    /**
+     * Genera el texto plano del mensaje legal
+     */
+    private function getLegalDisclaimerPlainText(): string
+    {
+        return "\n\nAVISO LEGAL:\n\n" .
+               "Este mensaje y cualquier archivo adjunto pueden contener información pública clasificada y/o reservada bajo custodia o propiedad del SENA, " .
+               "destinada exclusivamente a su(s) destinatario(s). Dicha información debe ser utilizada únicamente para la finalidad con la que fue enviada " .
+               "y en cumplimiento de la normativa aplicable.\n\n" .
+               "Si usted no es el destinatario autorizado o ha recibido este mensaje por error, le solicitamos que omita su contenido, informe de inmediato " .
+               "al remitente por correo electrónico con copia a servicioalciudadano@sena.edu.co y elimine el mensaje. La retención, difusión, distribución " .
+               "o copia de este mensaje está prohibida y puede acarrear sanciones legales.\n\n" .
+               "Para más información, consulte nuestras Políticas de Seguridad y Privacidad de la Información y las Políticas de Tratamiento para la " .
+               "Protección de Datos Personales, disponibles en el sitio web del SENA.";
+    }
+
+    /**
      * Configura el objeto PHPMailer
      */
     private function configureMailer(): void
@@ -70,7 +133,6 @@ class EmailService
     public function enviarCodigoQR(string $email, string $nombreAprendiz, string $qrData, string $qrImageBase64 = null): array
     {
         try {
-            // Validar email
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 return [
                     'success' => false,
@@ -78,55 +140,40 @@ class EmailService
                 ];
             }
 
-            // Limpiar destinatarios anteriores
             $this->mailer->clearAddresses();
             $this->mailer->clearAttachments();
-
-            // Configurar destinatario
             $this->mailer->addAddress($email, $nombreAprendiz);
 
-            // Asunto
             $this->mailer->Subject = 'Tu código QR de asistencia - SENAttend';
 
-            // Si hay imagen, agregarla como adjunto embebido (más compatible con clientes de correo)
+            $logoCid = $this->attachSenaLogo();
+
             $cid = null;
             if ($qrImageBase64 && !empty(trim($qrImageBase64))) {
                 try {
-                    // Decodificar la imagen
                     $imageData = base64_decode($qrImageBase64, true);
                     if ($imageData !== false && !empty($imageData)) {
-                        // Crear un CID único para la imagen
                         $cid = 'qr_code_' . uniqid();
                         
-                        // Crear archivo temporal para la imagen
                         $tempFile = sys_get_temp_dir() . '/' . $cid . '.png';
                         file_put_contents($tempFile, $imageData);
                         
-                        // Agregar como imagen embebida
                         $this->mailer->addEmbeddedImage($tempFile, $cid, 'qr_code.png', 'base64', 'image/png');
                         
-                        error_log("QR image attached as embedded image with CID: " . $cid . ", file size: " . strlen($imageData));
-                        
-                        // Limpiar archivo temporal después de enviar (se hará en el finally)
                         register_shutdown_function(function() use ($tempFile) {
                             if (file_exists($tempFile)) {
                                 @unlink($tempFile);
                             }
                         });
-                    } else {
-                        error_log("Failed to decode QR image base64");
                     }
                 } catch (Exception $e) {
                     error_log("Error attaching QR image: " . $e->getMessage());
                 }
             }
 
-            // Cuerpo del mensaje
-            $htmlBody = $this->generateQREmailBody($nombreAprendiz, $qrData, $qrImageBase64, $cid);
-            $this->mailer->Body = $htmlBody;
+            $this->mailer->Body = $this->generateQREmailBody($nombreAprendiz, $qrData, $qrImageBase64, $cid, $logoCid);
             $this->mailer->AltBody = $this->generateQREmailPlainText($nombreAprendiz, $qrData);
 
-            // Enviar
             $this->mailer->send();
 
             return [
@@ -145,11 +192,17 @@ class EmailService
     /**
      * Genera el cuerpo HTML del correo con el código QR
      */
-    private function generateQREmailBody(string $nombreAprendiz, string $qrData, ?string $qrImageBase64, ?string $cid = null): string
+    private function generateQREmailBody(string $nombreAprendiz, string $qrData, ?string $qrImageBase64, ?string $cid = null, ?string $logoCid = null): string
     {
+        $logoHtml = '';
+        if ($logoCid) {
+            $logoHtml = '<div style="text-align: center; margin-bottom: 15px;">
+                <img src="cid:' . htmlspecialchars($logoCid) . '" alt="Logo SENA" style="max-width: 150px; height: auto;">
+            </div>';
+        }
+
         $qrImageTag = '';
         if ($cid) {
-            // Usar imagen embebida (más compatible con clientes de correo)
             $qrImageTag = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0 auto;">
                 <tr>
                     <td align="center" style="padding: 0;">
@@ -158,13 +211,9 @@ class EmailService
                 </tr>
             </table>';
         } elseif ($qrImageBase64 && !empty(trim($qrImageBase64))) {
-            // Fallback: usar data URI si no hay CID
             $qrImageBase64 = trim($qrImageBase64);
-            
-            // Decodificar para verificar si es SVG
             $decoded = @base64_decode($qrImageBase64, true);
             if ($decoded !== false && strpos($decoded, '<svg') !== false) {
-                // Es SVG
                 $svgEncoded = base64_encode($decoded);
                 $qrImageTag = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0 auto;">
                     <tr>
@@ -174,7 +223,6 @@ class EmailService
                     </tr>
                 </table>';
             } else {
-                // Es PNG
                 if (strlen($qrImageBase64) > 100) {
                     $qrImageTag = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0 auto;">
                         <tr>
@@ -184,7 +232,6 @@ class EmailService
                         </tr>
                     </table>';
                 } else {
-                    error_log("QR base64 too short, might be invalid");
                     $qrImageTag = '<div style="background: #f0f0f0; padding: 20px; text-align: center; margin: 20px 0; border: 2px dashed #ccc;">
                         <p style="margin: 0; font-family: monospace; font-size: 14px; word-break: break-all;">' . htmlspecialchars($qrData) . '</p>
                         <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">Escanea este código con una app de QR</p>
@@ -192,7 +239,6 @@ class EmailService
                 }
             }
         } else {
-            // Si no hay imagen, mostrar el código QR como texto
             $qrImageTag = '<div style="background: #f0f0f0; padding: 20px; text-align: center; margin: 20px 0; border: 2px dashed #ccc;">
                 <p style="margin: 0; font-family: monospace; font-size: 14px; word-break: break-all;">' . htmlspecialchars($qrData) . '</p>
                 <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">Escanea este código con una app de QR o genera el QR desde el sistema</p>
@@ -205,185 +251,49 @@ class EmailService
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                /* Reset para clientes de correo */
-                body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-                table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-                img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
-                
-                body { 
-                    margin: 0 !important; 
-                    padding: 0 !important; 
-                    font-family: Arial, sans-serif; 
-                    line-height: 1.6; 
-                    color: #333; 
-                    background-color: #f4f4f4;
-                    width: 100% !important;
-                }
-                
-                .wrapper {
-                    width: 100% !important;
-                    table-layout: fixed;
-                    background-color: #f4f4f4;
-                    padding: 0;
-                    margin: 0;
-                }
-                
-                .container { 
-                    max-width: 600px; 
-                    width: 100% !important;
-                    margin: 0 auto; 
-                    padding: 0;
-                    background-color: #ffffff;
-                }
-                
-                .header { 
-                    background-color: #39A900; 
-                    color: white; 
-                    padding: 20px; 
-                    text-align: center; 
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                
-                .header h1 {
-                    margin: 0;
-                    padding: 0;
-                    font-size: 24px;
-                }
-                
-                .header p {
-                    margin: 10px 0 0 0;
-                    padding: 0;
-                    font-size: 14px;
-                }
-                
-                .content { 
-                    padding: 20px; 
-                    background-color: #f9f9f9; 
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                
-                .content h2 {
-                    margin: 0 0 15px 0;
-                    padding: 0;
-                    font-size: 20px;
-                }
-                
-                .content p {
-                    margin: 0 0 15px 0;
-                    padding: 0;
-                    font-size: 14px;
-                }
-                
-                .qr-container { 
-                    text-align: center; 
-                    margin: 15px auto; 
-                    width: 100%;
-                    max-width: 300px;
-                    box-sizing: border-box;
-                }
-                
-                .footer { 
-                    text-align: center; 
-                    padding: 20px; 
-                    font-size: 12px; 
-                    color: #666;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                
-                .footer p {
-                    margin: 5px 0;
-                    padding: 0;
-                }
-                
-                .warning { 
-                    background-color: #fff3cd; 
-                    border-left: 4px solid #ffc107; 
-                    padding: 15px; 
-                    margin: 20px 0;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                
-                .warning ul {
-                    margin: 10px 0 0 20px;
-                    padding: 0;
-                }
-                
-                .warning li {
-                    margin: 5px 0;
-                    padding: 0;
-                }
-                
-                /* Media queries para móviles */
-                @media only screen and (max-width: 600px) {
-                    .container {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                    }
-                    
-                    .content {
-                        padding: 15px !important;
-                    }
-                    
-                    .header {
-                        padding: 15px !important;
-                    }
-                    
-                    .header h1 {
-                        font-size: 20px !important;
-                    }
-                    
-                    .qr-container {
-                        max-width: 100% !important;
-                        margin: 15px 0 !important;
-                    }
-                    
-                    .footer {
-                        padding: 15px !important;
-                    }
-                }
-            </style>
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; width: 100%;">
-            <table role="presentation" class="wrapper" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; margin: 0; padding: 0; background-color: #f4f4f4;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width: 100%; background-color: #f4f4f4;">
                 <tr>
-                    <td align="center" style="padding: 0;">
-                        <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; margin: 0 auto; background-color: #ffffff;">
+                    <td align="center" style="padding: 20px 0;">
+                        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff;">
                             <tr>
-                                <td class="header" style="background-color: #39A900; color: white; padding: 20px; text-align: center; width: 100%; box-sizing: border-box;">
+                                <td style="background-color: #39A900; color: white; padding: 20px; text-align: center;">
+                                    ' . $logoHtml . '
                                     <h1 style="margin: 0; padding: 0; font-size: 24px;">SENAttend</h1>
                                     <p style="margin: 10px 0 0 0; padding: 0; font-size: 14px;">Sistema de Asistencia SENA</p>
                                 </td>
                             </tr>
                             <tr>
-                                <td class="content" style="padding: 20px; background-color: #f9f9f9; width: 100%; box-sizing: border-box;">
-                                    <h2 style="margin: 0 0 15px 0; padding: 0; font-size: 20px;">Hola ' . htmlspecialchars($nombreAprendiz) . ',</h2>
-                                    <p style="margin: 0 0 15px 0; padding: 0; font-size: 14px;">Se ha generado tu código QR de asistencia. Este código tiene una validez de <strong>3 minutos</strong> desde su generación.</p>
+                                <td style="padding: 20px; background-color: #f9f9f9;">
+                                    <h2 style="margin: 0 0 15px 0; font-size: 20px;">Hola ' . htmlspecialchars($nombreAprendiz) . ',</h2>
+                                    <p style="margin: 0 0 15px 0; font-size: 14px;">Se ha generado tu código QR de asistencia. Este código tiene una validez de <strong>3 minutos</strong> desde su generación.</p>
                                     
-                                    <div class="qr-container" style="text-align: center; margin: 15px auto; width: 100%; max-width: 300px; box-sizing: border-box;">
+                                    <div style="text-align: center; margin: 15px auto; max-width: 300px;">
                                         ' . $qrImageTag . '
                                     </div>
 
-                                    <div class="warning" style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; width: 100%; box-sizing: border-box;">
+                                    <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
                                         <strong>⚠️ Importante:</strong>
                                         <ul style="margin: 10px 0 0 20px; padding: 0;">
-                                            <li style="margin: 5px 0; padding: 0;">Este código QR expira en <strong>3 minutos</strong></li>
-                                            <li style="margin: 5px 0; padding: 0;">Una vez escaneado, el código se invalidará</li>
-                                            <li style="margin: 5px 0; padding: 0;">No compartas este código con otras personas</li>
+                                            <li style="margin: 5px 0;">Este código QR expira en <strong>3 minutos</strong></li>
+                                            <li style="margin: 5px 0;">Una vez escaneado, el código se invalidará</li>
+                                            <li style="margin: 5px 0;">No compartas este código con otras personas</li>
                                         </ul>
                                     </div>
 
-                                    <p style="margin: 0 0 15px 0; padding: 0; font-size: 14px;">Presenta este código QR a tu instructor para registrar tu asistencia.</p>
+                                    <p style="margin: 0 0 15px 0; font-size: 14px;">Presenta este código QR a tu instructor para registrar tu asistencia.</p>
                                 </td>
                             </tr>
                             <tr>
-                                <td class="footer" style="text-align: center; padding: 20px; font-size: 12px; color: #666; width: 100%; box-sizing: border-box;">
-                                    <p style="margin: 5px 0; padding: 0;">Este es un correo automático, por favor no respondas.</p>
-                                    <p style="margin: 5px 0; padding: 0;">&copy; ' . date('Y') . ' SENA - Servicio Nacional de Aprendizaje</p>
+                                <td style="text-align: center; padding: 20px; font-size: 12px; color: #666;">
+                                    <p style="margin: 5px 0;">Este es un correo automático, por favor no respondas.</p>
+                                    <p style="margin: 5px 0;">&copy; ' . date('Y') . ' SENA - Servicio Nacional de Aprendizaje</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    ' . $this->getLegalDisclaimer() . '
                                 </td>
                             </tr>
                         </table>
@@ -405,7 +315,134 @@ class EmailService
                "IMPORTANTE: Este código expira en 3 minutos.\n\n" .
                "Presenta este código QR a tu instructor para registrar tu asistencia.\n\n" .
                "Este es un correo automático, por favor no respondas.\n\n" .
-               "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje";
+               "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje" .
+               $this->getLegalDisclaimerPlainText();
+    }
+
+    /**
+     * Envía un correo con token de recuperación de contraseña
+     */
+    public function enviarTokenRecuperacion(string $email, string $nombre, string $token): array
+    {
+        try {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return [
+                    'success' => false,
+                    'message' => 'El correo electrónico no es válido'
+                ];
+            }
+
+            $this->mailer->clearAddresses();
+            $this->mailer->clearAttachments();
+            $this->mailer->addAddress($email, $nombre);
+
+            $this->mailer->Subject = 'Recuperación de contraseña - SENAttend';
+
+            $logoCid = $this->attachSenaLogo();
+
+            $resetUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") 
+                . "://" . $_SERVER['HTTP_HOST'] . "/password/reset?token=" . urlencode($token);
+
+            $this->mailer->Body = $this->generatePasswordResetEmailBody($nombre, $resetUrl, $token, $logoCid);
+            $this->mailer->AltBody = $this->generatePasswordResetEmailPlainText($nombre, $resetUrl);
+
+            $this->mailer->send();
+
+            return [
+                'success' => true,
+                'message' => 'Correo de recuperación enviado exitosamente'
+            ];
+        } catch (Exception $e) {
+            error_log("Error sending password reset email: " . $this->mailer->ErrorInfo);
+            return [
+                'success' => false,
+                'message' => 'Error al enviar el correo: ' . $this->mailer->ErrorInfo
+            ];
+        }
+    }
+
+    private function generatePasswordResetEmailBody(string $nombre, string $resetUrl, string $token, ?string $logoCid = null): string
+    {
+        $logoHtml = '';
+        if ($logoCid) {
+            $logoHtml = '<div style="text-align: center; margin-bottom: 15px;">
+                <img src="cid:' . htmlspecialchars($logoCid) . '" alt="Logo SENA" style="max-width: 150px; height: auto;">
+            </div>';
+        }
+
+        return '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; width: 100%;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4;">
+                <tr>
+                    <td align="center" style="padding: 20px 0;">
+                        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; background-color: #ffffff;">
+                            <tr>
+                                <td style="background-color: #39A900; color: white; padding: 20px; text-align: center;">
+                                    ' . $logoHtml . '
+                                    <h1 style="margin: 0;">SENAttend</h1>
+                                    <p style="margin: 10px 0 0 0;">Sistema de Asistencia SENA</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 30px 20px;">
+                                    <h2 style="margin: 0 0 20px 0; color: #333;">Recuperación de Contraseña</h2>
+                                    <p>Hola <strong>' . htmlspecialchars($nombre) . '</strong>,</p>
+                                    <p>Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.</p>
+                                    <p>Para continuar, haz clic en el siguiente botón:</p>
+                                    <div style="text-align: center;">
+                                        <a href="' . htmlspecialchars($resetUrl) . '" style="display: inline-block; padding: 12px 30px; margin: 20px 0; background-color: #39A900; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">Restablecer Contraseña</a>
+                                    </div>
+                                    <p>O copia y pega el siguiente enlace en tu navegador:</p>
+                                    <div style="background-color: #f5f5f5; padding: 15px; margin: 20px 0; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; word-break: break-all;">
+                                        <a href="' . htmlspecialchars($resetUrl) . '" style="color: #39A900; word-break: break-all;">' . htmlspecialchars($resetUrl) . '</a>
+                                    </div>
+                                    <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+                                        <strong>⚠️ Importante:</strong>
+                                        <ul style="margin: 10px 0 0 20px; padding: 0;">
+                                            <li>Este enlace es válido por <strong>1 hora</strong></li>
+                                            <li>Si no solicitaste este cambio, ignora este correo</li>
+                                            <li>Tu contraseña no cambiará hasta que accedas al enlace y completes el proceso</li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align: center; padding: 20px; font-size: 12px; color: #666;">
+                                    <p>Este es un correo automático, por favor no respondas.</p>
+                                    <p>&copy; ' . date('Y') . ' SENA - Servicio Nacional de Aprendizaje</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    ' . $this->getLegalDisclaimer() . '
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>';
+    }
+
+    private function generatePasswordResetEmailPlainText(string $nombre, string $resetUrl): string
+    {
+        return "Hola {$nombre},\n\n" .
+               "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta.\n\n" .
+               "Para continuar, accede al siguiente enlace:\n{$resetUrl}\n\n" .
+               "IMPORTANTE:\n" .
+               "- Este enlace es válido por 1 hora\n" .
+               "- Si no solicitaste este cambio, ignora este correo\n" .
+               "- Tu contraseña no cambiará hasta que accedas al enlace y completes el proceso\n\n" .
+               "Este es un correo automático, por favor no respondas.\n\n" .
+               "© " . date('Y') . " SENA - Servicio Nacional de Aprendizaje" .
+               $this->getLegalDisclaimerPlainText();
     }
 
     /**

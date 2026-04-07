@@ -120,6 +120,21 @@
                                 </a>
                             </div>
                         </div>
+
+                        <!-- Boletas de Salida -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-file-export"></i>
+                            </div>
+                            <h4>Boletas de Salida</h4>
+                            <p>Solicita permisos de salida temporal o definitiva del CTA.</p>
+                            <div class="action-buttons">
+                                <a href="/aprendiz/boletas-salida" class="btn-sena">
+                                    <i class="fas fa-plus"></i>
+                                    Solicitar Boleta
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -143,21 +158,21 @@
                             <tbody>
                                 <?php foreach ($equipos as $equipo): ?>
                                     <tr>
-                                        <td>
+                                        <td data-label="Equipo">
                                             <?php if (!empty($equipo['imagen'])): ?>
                                                 <img src="<?= asset($equipo['imagen']) ?>" alt="Equipo" class="equipo-thumb">
                                             <?php else: ?>
                                                 <i class="fas fa-laptop" style="font-size: 2rem; color: #39A900;"></i>
                                             <?php endif; ?>
                                         </td>
-                                        <td><code><?= htmlspecialchars($equipo['numero_serial']) ?></code></td>
-                                        <td><?= htmlspecialchars($equipo['marca']) ?></td>
-                                        <td>
+                                        <td data-label="Serial"><code><?= htmlspecialchars($equipo['numero_serial']) ?></code></td>
+                                        <td data-label="Marca"><?= htmlspecialchars($equipo['marca']) ?></td>
+                                        <td data-label="Estado">
                                             <span class="badge-<?= $equipo['estado'] === 'activo' ? 'activo' : 'inactivo' ?>">
                                                 <?= htmlspecialchars(ucfirst($equipo['estado'])) ?>
                                             </span>
                                         </td>
-                                        <td>
+                                        <td data-label="Acciones">
                                             <a href="/aprendiz/equipos/<?= (int)$equipo['equipo_id'] ?>/qr" class="btn btn-primary btn-sm">
                                                 <i class="fas fa-qrcode"></i> Ver QR
                                             </a>

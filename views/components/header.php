@@ -47,6 +47,9 @@ $currentPage = $currentPage ?? '';
                         <li><a href="/instructor-fichas" class="<?= $currentPage === 'instructor-fichas' ? 'active' : '' ?>">
                             <i class="fas fa-link"></i> Asignaciones
                         </a></li>
+                        <li><a href="/admin/boletas-salida" class="<?= $currentPage === 'boletas-salida' ? 'active' : '' ?>">
+                            <i class="fas fa-file-export"></i> Boletas de Salida
+                        </a></li>
                     <?php elseif (in_array($user['rol'], ['instructor', 'coordinador'])): ?>
                         <li><a href="/dashboard" class="<?= $currentPage === 'dashboard' ? 'active' : '' ?>">
                             <i class="fas fa-home"></i> Dashboard
@@ -54,12 +57,18 @@ $currentPage = $currentPage ?? '';
                         <li><a href="/qr/escanear" class="<?= $currentPage === 'qr-escanear' ? 'active' : '' ?>">
                             <i class="fas fa-camera"></i> Escanear QR
                         </a></li>
+                        <li><a href="/instructor/boletas-salida" class="<?= $currentPage === 'boletas-salida' ? 'active' : '' ?>">
+                            <i class="fas fa-file-export"></i> Boletas de Salida
+                        </a></li>
                     <?php elseif ($user['rol'] === 'portero'): ?>
                         <li><a href="/portero/panel" class="<?= $currentPage === 'portero-panel' ? 'active' : '' ?>">
                             <i class="fas fa-home"></i> Panel
                         </a></li>
                         <li><a href="/portero/escanear" class="<?= $currentPage === 'portero-escanear' ? 'active' : '' ?>">
                             <i class="fas fa-qrcode"></i> Escanear QR
+                        </a></li>
+                        <li><a href="/portero/boletas-salida" class="<?= $currentPage === 'boletas-salida' ? 'active' : '' ?>">
+                            <i class="fas fa-door-open"></i> Boletas de Salida
                         </a></li>
                     <?php elseif ($user['rol'] === 'aprendiz'): ?>
                         <li><a href="/aprendiz/panel" class="<?= $currentPage === 'aprendiz-panel' ? 'active' : '' ?>">
@@ -70,6 +79,9 @@ $currentPage = $currentPage ?? '';
                         </a></li>
                         <li><a href="/aprendiz/asistencias" class="<?= $currentPage === 'aprendiz-asistencias' ? 'active' : '' ?>">
                             <i class="fas fa-calendar-check"></i> Mis Asistencias
+                        </a></li>
+                        <li><a href="/aprendiz/boletas-salida" class="<?= in_array($currentPage, ['aprendiz-boletas', 'boletas-salida']) ? 'active' : '' ?>">
+                            <i class="fas fa-file-export"></i> Boletas de Salida
                         </a></li>
                     <?php endif; ?>
                 </ul>

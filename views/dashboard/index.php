@@ -104,6 +104,21 @@ ob_start();
                         </div>
                         <?php endif; ?>
 
+                        <!-- Boletas de Salida (Instructor) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                            <h4>Boletas de Salida</h4>
+                            <p>Revisar y aprobar solicitudes de boletas de salida de aprendices.</p>
+                            <div class="action-buttons">
+                                <a href="/instructor/boletas-salida" class="btn-sena">
+                                    <i class="fas fa-tasks"></i>
+                                    Revisar Solicitudes
+                                </a>
+                            </div>
+                        </div>
+
                         <?php endif; ?>
 
 
@@ -213,12 +228,57 @@ ob_start();
                             </div>
                         </div>
 
+                        <!-- Reporte de Equipos (Admin y Administrativo) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <h4>Reporte de Equipos</h4>
+                            <p>Consultar y exportar registros de ingresos y salidas de equipos por rango de fechas.</p>
+                            <div class="action-buttons">
+                                <a href="/reportes-equipos" class="btn-sena">
+                                    <i class="fas fa-file-export"></i>
+                                    Ver Reporte
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Seguimiento Infracciones Equipos (Admin y Administrativo) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <h4>Infracciones de Equipos</h4>
+                            <p>Seguimiento de aprendices con salidas no registradas y cierres automáticos.</p>
+                            <div class="action-buttons">
+                                <a href="/admin/seguimiento-equipos" class="btn-sena">
+                                    <i class="fas fa-search"></i>
+                                    Monitorear
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Boletas de Salida (Admin) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <h4>Boletas de Salida</h4>
+                            <p>Aprobar solicitudes de boletas de salida ya revisadas por instructores.</p>
+                            <div class="action-buttons">
+                                <a href="/admin/boletas-salida" class="btn-sena">
+                                    <i class="fas fa-check-double"></i>
+                                    Gestionar Boletas
+                                </a>
+                            </div>
+                        </div>
+
                         <?php endif; ?>
 
                         <!-- Acciones solo para Admin -->
                         <?php if ($user['rol'] === 'admin'): ?>
 
-                        <!-- Configurar Horarios -->
+                        <!-- Configurar Horarios de Asistencia -->
                         <div class="action-card-sena">
                             <div class="action-icon-sena">
                                 <i class="fas fa-clock"></i>
@@ -229,6 +289,21 @@ ob_start();
                                 <a href="/configuracion/horarios" class="btn-sena">
                                     <i class="fas fa-cog"></i>
                                     Configurar Turnos
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Configurar Horarios de Equipos (Solo Admin) -->
+                        <div class="action-card-sena">
+                            <div class="action-icon-sena">
+                                <i class="fas fa-laptop-code"></i>
+                            </div>
+                            <h4>Horarios de Equipos</h4>
+                            <p>Configurar turnos Mañana / Tarde / Noche usados en el reporte de equipos.</p>
+                            <div class="action-buttons">
+                                <a href="/configuracion/turnos-equipos" class="btn-sena">
+                                    <i class="fas fa-sliders-h"></i>
+                                    Gestionar Horarios
                                 </a>
                             </div>
                         </div>

@@ -106,8 +106,10 @@ return [
                 '/api/qr/historial-diario' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR],
                 '/api/qr/buscar' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR],
 
-                // Configuración de turnos (solo admin en UI)
+                // Configuración de turnos de asistencia (solo admin en UI)
                 '/configuracion/horarios' => [ROLE_ADMIN],
+                // Configuración de turnos de equipos (solo admin)
+                '/configuracion/turnos-equipos' => [ROLE_ADMIN],
 
                 // APIs de configuración de turnos: lectura para staff (no estudiantes)
                 '/api/configuracion/turnos' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR, ROLE_ADMINISTRATIVO],
@@ -123,6 +125,28 @@ return [
                 '/aprendiz/equipos/crear' => [ROLE_APRENDIZ],
                 '/aprendiz/asistencias' => [ROLE_APRENDIZ],
                 '/aprendiz/generar-qr' => [ROLE_APRENDIZ],
+
+                // Módulo Boletas de Salida - Aprendiz
+                '/aprendiz/boletas-salida' => [ROLE_APRENDIZ],
+                '/api/aprendiz/boletas-salida' => [ROLE_APRENDIZ],
+                '/api/aprendiz/boletas-salida/crear' => [ROLE_APRENDIZ],
+
+                // Módulo Boletas de Salida - Instructor
+                '/instructor/boletas-salida' => [ROLE_INSTRUCTOR],
+                '/instructor/boletas-salida/historial' => [ROLE_INSTRUCTOR],
+                '/api/instructor/boletas-salida/pendientes' => [ROLE_INSTRUCTOR],
+
+                // Módulo Boletas de Salida - Admin
+                '/admin/boletas-salida' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO],
+                '/admin/boletas-salida/historial' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO],
+
+                // Módulo Boletas de Salida - Portero
+                '/portero/boletas-salida' => [ROLE_PORTERO],
+                '/api/portero/boletas-salida/aprobadas' => [ROLE_PORTERO],
+                '/api/portero/boletas-salida/reingresos-pendientes' => [ROLE_PORTERO],
+
+                // API búsqueda de instructores
+                '/api/instructores/buscar' => [ROLE_APRENDIZ, ROLE_ADMIN, ROLE_ADMINISTRATIVO],
             ],
             'POST' => [
                 // Auth
@@ -168,8 +192,12 @@ return [
                 // QR
                 '/api/qr/procesar' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_INSTRUCTOR],
 
-                // Configuración de turnos (solo admin)
+                // Configuración de turnos de asistencia (solo admin)
                 '/configuracion/horarios/actualizar' => [ROLE_ADMIN],
+                // Configuración de turnos de equipos (solo admin)
+                '/configuracion/turnos-equipos/actualizar-globales' => [ROLE_ADMIN],
+                '/configuracion/turnos-equipos/agregar-fecha'       => [ROLE_ADMIN],
+                '/configuracion/turnos-equipos/eliminar-fecha'      => [ROLE_ADMIN],
                 // Gestión de Reportes - generación de exportes vía AJAX (solo instructores)
                 '/gestion-reportes/generar' => [ROLE_INSTRUCTOR],
                 // Analítica - Generación de reportes (admin y administrativo)
@@ -182,6 +210,10 @@ return [
 
                 // Aprendiz - Gestión de equipos
                 '/aprendiz/equipos' => [ROLE_APRENDIZ],
+
+                // Módulo Boletas de Salida - POST
+                '/aprendiz/boletas-salida' => [ROLE_APRENDIZ],
+                '/api/aprendiz/boletas-salida/crear' => [ROLE_APRENDIZ],
             ],
             // PUT y DELETE se manejan en 'patterns' porque tienen parámetros dinámicos
         ],
@@ -249,6 +281,22 @@ return [
                     'pattern' => '#^/api/instructor-fichas/ficha/(\d+)/instructores$#',
                     'roles' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO, ROLE_ADMINISTRATIVO],
                 ],
+                [
+                    'pattern' => '#^/api/instructor/boletas-salida/(\d+)$#',
+                    'roles' => [ROLE_INSTRUCTOR],
+                ],
+                [
+                    'pattern' => '#^/api/admin/boletas-salida/(\d+)$#',
+                    'roles' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO],
+                ],
+                [
+                    'pattern' => '#^/api/portero/boletas-salida/(\d+)$#',
+                    'roles' => [ROLE_PORTERO],
+                ],
+                [
+                    'pattern' => '#^/api/aprendiz/boletas-salida/(\d+)$#',
+                    'roles' => [ROLE_APRENDIZ],
+                ],
             ],
             'POST' => [
                 [
@@ -298,6 +346,30 @@ return [
                 [
                     'pattern' => '#^/api/aprendices/(\d+)/desvincular$#',
                     'roles' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO],
+                ],
+                [
+                    'pattern' => '#^/api/instructor/boletas-salida/(\d+)/aprobar$#',
+                    'roles' => [ROLE_INSTRUCTOR],
+                ],
+                [
+                    'pattern' => '#^/api/instructor/boletas-salida/(\d+)/rechazar$#',
+                    'roles' => [ROLE_INSTRUCTOR],
+                ],
+                [
+                    'pattern' => '#^/api/admin/boletas-salida/(\d+)/aprobar$#',
+                    'roles' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO],
+                ],
+                [
+                    'pattern' => '#^/api/admin/boletas-salida/(\d+)/rechazar$#',
+                    'roles' => [ROLE_ADMIN, ROLE_ADMINISTRATIVO],
+                ],
+                [
+                    'pattern' => '#^/api/portero/boletas-salida/(\d+)/validar-salida$#',
+                    'roles' => [ROLE_PORTERO],
+                ],
+                [
+                    'pattern' => '#^/api/portero/boletas-salida/(\d+)/validar-reingreso$#',
+                    'roles' => [ROLE_PORTERO],
                 ],
             ],
             'PUT' => [

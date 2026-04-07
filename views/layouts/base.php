@@ -27,6 +27,8 @@
     </div>
 
     <script src="<?= asset('js/common/app.js') ?>"></script>
+    <script src="<?= asset('js/common/components.js') ?>"></script>
+    <script src="<?= asset('js/components/back-button.js') ?>"></script>
     <?= $additionalScripts ?? '' ?>
 </body>
 </html>

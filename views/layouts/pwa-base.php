@@ -55,6 +55,7 @@
     <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/common/components.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/common/notification-modal.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/pwa/pwa-styles.css') ?>">
     
     <?php if (isset($styles) && is_array($styles)): ?>
@@ -202,6 +203,8 @@
     <script src="<?= asset('js/app.js') ?>" defer></script>
     <script src="<?= asset('js/common/app.js') ?>" defer></script>
     <script src="<?= asset('js/common/components.js') ?>" defer></script>
+    <script src="<?= asset('js/components/back-button.js') ?>" defer></script>
+    <script src="<?= asset('js/common/notification-modal.js') ?>"></script>
     
     <?php if (isset($scripts) && is_array($scripts)): ?>
         <?php foreach ($scripts as $script): ?>

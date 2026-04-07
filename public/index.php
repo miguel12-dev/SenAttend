@@ -14,6 +14,7 @@ require_once __DIR__ . '/../config/config.php';
 // Importar clases necesarias
 use App\Controllers\AuthController;
 use App\Controllers\AprendizAuthController;
+use App\Controllers\PasswordResetController;
 use App\GestionEquipos\Controllers\AprendizEquipoController;
 use App\Controllers\DashboardController;
 use App\Controllers\HomeController;
@@ -21,6 +22,7 @@ use App\Controllers\ProfileController;
 use App\Controllers\QRController;
 use App\Controllers\WelcomeController;
 use App\Gestion_reportes\Controllers\ReportesController;
+use App\Controllers\ReporteEquiposController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\PermissionMiddleware;
 use App\Repositories\UserRepository;
@@ -28,8 +30,10 @@ use App\Repositories\FichaRepository;
 use App\Repositories\AprendizRepository;
 use App\Repositories\CodigoQRRepository;
 use App\Repositories\InstructorFichaRepository;
+use App\Repositories\PasswordResetTokenRepository;
 use App\Services\AuthService;
 use App\Services\AprendizAuthService;
+use App\Services\PasswordResetService;
 use App\GestionEquipos\Repositories\AprendizEquipoRepository;
 use App\GestionEquipos\Repositories\EquipoRepository;
 use App\GestionEquipos\Repositories\QrEquipoRepository;
@@ -45,6 +49,9 @@ use App\Services\EmailService;
 use App\Services\QRService;
 use App\Session\SessionManager;
 use App\Support\Response;
+use App\Controllers\ConfiguracionTurnosEquiposController;
+use App\Repositories\ConfiguracionTurnosEquiposRepository;
+use App\Services\ConfiguracionTurnosEquiposService;
 
 // Módulo de Eventos
 use App\Eventos\Controllers\EventoAuthController;
@@ -63,6 +70,16 @@ use App\Eventos\Repositories\EventoUsuarioRepository;
 use App\Eventos\Repositories\EventoParticipanteRepository;
 use App\Eventos\Repositories\EventoQRRepository;
 use App\Eventos\Middleware\EventoAuthMiddleware;
+
+// Módulo de Boletas de Salida
+use App\BoletasSalida\Controllers\AprendizBoletaController;
+use App\BoletasSalida\Controllers\InstructorBoletaController;
+use App\BoletasSalida\Controllers\AdminBoletaController;
+use App\BoletasSalida\Controllers\PorteroBoletaController;
+use App\BoletasSalida\Services\BoletaSalidaService;
+use App\BoletasSalida\Services\BoletaNotificationService;
+use App\BoletasSalida\Repositories\BoletaSalidaRepository;
+
 
 // Manejo de errores global
 set_exception_handler(function ($exception) {
@@ -136,8 +153,11 @@ $codigoQRRepository = new CodigoQRRepository();
 $instructorFichaRepository = new InstructorFichaRepository();
 $asistenciaRepository = new \App\Repositories\AsistenciaRepository();
 $turnoConfigRepository = new \App\Repositories\TurnoConfigRepository();
+$passwordResetTokenRepository = new PasswordResetTokenRepository();
 $authService = new AuthService($userRepository, $aprendizRepository, $session);
 $aprendizAuthService = new AprendizAuthService($aprendizRepository, $session);
+$emailService = new EmailService();
+$passwordResetService = new PasswordResetService($passwordResetTokenRepository, $userRepository, $aprendizRepository, $emailService);
 $aprendizEquipoRepository = new AprendizEquipoRepository();
 $equipoRepository = new EquipoRepository();
 $qrEquipoRepository = new QrEquipoRepository();
@@ -149,10 +169,19 @@ $qrEncryptionService = new QREncryptionService();
 $equipoRegistroService = new EquipoRegistroService($equipoRepository, $aprendizEquipoRepository, $qrEquipoRepository, $qrEncryptionService);
 $equipoQRService = new EquipoQRService($qrEquipoRepository);
 $porteroIngresoService = new PorteroIngresoService($qrEquipoRepository, $ingresoEquipoRepository, $anomaliaEquipoRepository, $equipoRepository, $aprendizRepository, $qrEncryptionService);
-$emailService = new EmailService();
 $qrService = new QRService($codigoQRRepository, $aprendizRepository, $emailService);
 $turnoConfigService = new \App\Services\TurnoConfigService($turnoConfigRepository);
 $asistenciaService = new \App\Services\AsistenciaService($asistenciaRepository, $aprendizRepository, $fichaRepository, $turnoConfigService);
+// Módulo de Configuración de Horarios de Equipos
+$configTurnosEquiposRepository = new ConfiguracionTurnosEquiposRepository();
+$configTurnosEquiposService    = new ConfiguracionTurnosEquiposService($configTurnosEquiposRepository);
+$configTurnosEquiposController = new ConfiguracionTurnosEquiposController($configTurnosEquiposService, $authService);
+
+// Servicios y repositorios de Boletas de Salida
+$boletaSalidaRepository = new BoletaSalidaRepository();
+$boletaNotificationService = new BoletaNotificationService($emailService);
+$boletaSalidaService = new BoletaSalidaService($boletaSalidaRepository, $aprendizRepository, $fichaRepository, $userRepository, $boletaNotificationService);
+
 $authMiddleware = new AuthMiddleware($session);
 // Cargar configuración de permisos (RBAC)
 $permissionsConfig = require __DIR__ . '/../config/permissions_config.php';
@@ -179,6 +208,16 @@ $routes = [
         '/login' => [
             'controller' => AuthController::class,
             'action' => 'viewLogin',
+            'middleware' => []
+        ],
+        '/password/forgot' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'showForgotPasswordForm',
+            'middleware' => []
+        ],
+        '/password/reset' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'showResetPasswordForm',
             'middleware' => []
         ],
         '/aprendiz/panel' => [
@@ -315,6 +354,35 @@ $routes = [
             'action' => 'index',
             'middleware' => ['auth']
         ],
+        // ============================================
+        // MÓDULO DE REPORTE DE EQUIPOS - Rutas GET
+        // ============================================
+        '/reportes-equipos' => [
+            'controller' => ReporteEquiposController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/reportes-equipos/exportar' => [
+            'controller' => ReporteEquiposController::class,
+            'action' => 'export',
+            'middleware' => ['auth']
+        ],
+        // Seguimiento Infracciones Equipos
+        '/admin/seguimiento-equipos' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/admin/seguimiento-equipos/exportar' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'export',
+            'middleware' => ['auth']
+        ],
+        '/api/seguimiento-equipos/detalle-aprendiz' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'obtenerDetalleAprendiz',
+            'middleware' => ['auth']
+        ],
         // Test de rutas (solo en desarrollo)
         '/test-routes' => [
             'controller' => function() {
@@ -394,9 +462,15 @@ $routes = [
             'action' => 'apiGetTiposAnomalias',
             'middleware' => ['auth']
         ],
-        // Configuración de Turnos (Solo Admin)
+        // Configuración de Turnos de Asistencia (Solo Admin)
         '/configuracion/horarios' => [
             'controller' => \App\Controllers\TurnoConfigController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        // Configuración de Turnos de Equipos (Solo Admin)
+        '/configuracion/turnos-equipos' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
             'action' => 'index',
             'middleware' => ['auth']
         ],
@@ -427,6 +501,74 @@ $routes = [
             'controller' => PorteroController::class,
             'action' => 'apiIngresosActivos',
             'middleware' => ['auth']
+        ],
+        // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas GET
+        // ============================================
+        // Aprendiz
+        '/aprendiz/boletas-salida' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'index',
+            'middleware' => []
+        ],
+        '/api/aprendiz/boletas-salida' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'apiHistorial',
+            'middleware' => []
+        ],
+        // Instructor
+        '/instructor/boletas-salida' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/instructor/boletas-salida/historial' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'historial',
+            'middleware' => ['auth']
+        ],
+        // Admin
+        '/admin/boletas-salida' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/admin/boletas-salida/historial' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'historial',
+            'middleware' => ['auth']
+        ],
+        '/api/admin/boletas-salida/estadisticas' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiEstadisticas',
+            'middleware' => ['auth']
+        ],
+        // Portero
+        '/portero/boletas-salida' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'index',
+            'middleware' => ['auth']
+        ],
+        '/api/portero/boletas-salida/aprobadas' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiAprobadas',
+            'middleware' => ['auth']
+        ],
+        '/api/portero/boletas-salida/reingresos-pendientes' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiReingresosPendientes',
+            'middleware' => ['auth']
+        ],
+        '/api/instructor/boletas-salida/pendientes' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiPendientes',
+            'middleware' => ['auth']
+        ],
+        // API búsqueda instructores
+        '/api/instructores/buscar' => [
+            'controller' => \App\Controllers\GestionInstructoresController::class,
+            'action' => 'apiBuscar',
+            'middleware' => []
         ],
         // ============================================
         // MÓDULO DE EVENTOS - Rutas GET
@@ -476,6 +618,16 @@ $routes = [
         '/auth/login' => [
             'controller' => AuthController::class,
             'action' => 'login',
+            'middleware' => []
+        ],
+        '/password/forgot' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'processForgotPassword',
+            'middleware' => []
+        ],
+        '/password/reset' => [
+            'controller' => PasswordResetController::class,
+            'action' => 'processResetPassword',
             'middleware' => []
         ],
         '/aprendiz/equipos' => [
@@ -615,10 +767,26 @@ $routes = [
             'action' => 'apiRegistrarAnomaliaFicha',
             'middleware' => ['auth']
         ],
-        // Configuración de Turnos POST (Solo Admin)
+        // Configuración de Turnos de Asistencia POST (Solo Admin)
         '/configuracion/horarios/actualizar' => [
             'controller' => \App\Controllers\TurnoConfigController::class,
             'action' => 'actualizar',
+            'middleware' => ['auth']
+        ],
+        // Configuración de Turnos de Equipos POST (Solo Admin)
+        '/configuracion/turnos-equipos/actualizar-globales' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
+            'action' => 'actualizarGlobales',
+            'middleware' => ['auth']
+        ],
+        '/configuracion/turnos-equipos/agregar-fecha' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
+            'action' => 'agregarFecha',
+            'middleware' => ['auth']
+        ],
+        '/configuracion/turnos-equipos/eliminar-fecha' => [
+            'controller' => ConfiguracionTurnosEquiposController::class,
+            'action' => 'eliminarFecha',
             'middleware' => ['auth']
         ],
         // Gestión de Reportes - generación (AJAX)
@@ -667,6 +835,25 @@ $routes = [
             'controller' => PorteroController::class,
             'action' => 'procesarQR',
             'middleware' => ['auth']
+        ],
+        // Seguimiento Infracciones Equipos - Procesar
+        '/api/seguimiento-equipos/procesar' => [
+            'controller' => \App\Controllers\SeguimientoEquiposController::class,
+            'action' => 'procesarCierres',
+            'middleware' => ['auth']
+        ],
+        // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas POST
+        // ============================================
+        '/aprendiz/boletas-salida' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'store',
+            'middleware' => []
+        ],
+        '/api/aprendiz/boletas-salida/crear' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'apiCrear',
+            'middleware' => []
         ],
         // ============================================
         // MÓDULO DE EVENTOS - Rutas POST
@@ -876,6 +1063,33 @@ $dynamicRoutes = [
             'middleware' => [],
             'params' => ['id']
         ],
+        // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas Dinámicas GET
+        // ============================================
+        '/api/aprendiz/boletas-salida/(\d+)' => [
+            'controller' => AprendizBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => [],
+            'params' => ['id']
+        ],
+        '/api/instructor/boletas-salida/(\d+)' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/admin/boletas-salida/(\d+)' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/portero/boletas-salida/(\d+)' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiDetalle',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
     ],
     'POST' => [
         '/fichas/(\d+)' => [
@@ -947,6 +1161,45 @@ $dynamicRoutes = [
         '/api/aprendices/(\d+)/desvincular' => [
             'controller' => \App\Controllers\AprendizController::class,
             'action' => 'apiDesvincularFicha',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        // ============================================
+        // MÓDULO DE BOLETAS DE SALIDA - Rutas Dinámicas POST
+        // ============================================
+        '/api/instructor/boletas-salida/(\d+)/aprobar' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiAprobar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/instructor/boletas-salida/(\d+)/rechazar' => [
+            'controller' => InstructorBoletaController::class,
+            'action' => 'apiRechazar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/admin/boletas-salida/(\d+)/aprobar' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiAprobar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/admin/boletas-salida/(\d+)/rechazar' => [
+            'controller' => AdminBoletaController::class,
+            'action' => 'apiRechazar',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/portero/boletas-salida/(\d+)/validar-salida' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiValidarSalida',
+            'middleware' => ['auth'],
+            'params' => ['id']
+        ],
+        '/api/portero/boletas-salida/(\d+)/validar-reingreso' => [
+            'controller' => PorteroBoletaController::class,
+            'action' => 'apiValidarReingreso',
             'middleware' => ['auth'],
             'params' => ['id']
         ],
@@ -1058,6 +1311,8 @@ try {
     // Inyectar dependencias según el controlador
     if ($controllerClass === AuthController::class) {
         $controller = new $controllerClass($authService, $session);
+    } elseif ($controllerClass === PasswordResetController::class) {
+        $controller = new $controllerClass($passwordResetService, $session);
     } elseif ($controllerClass === AprendizAuthController::class) {
         $asistenciaRepositoryForAprendiz = new \App\Repositories\AsistenciaRepository();
         $controller = new $controllerClass($authService, $session, $aprendizEquipoService, $asistenciaRepositoryForAprendiz);
@@ -1142,6 +1397,8 @@ try {
             $turnoConfigService,
             $authService
         );
+    } elseif ($controllerClass === ConfiguracionTurnosEquiposController::class) {
+        $controller = $configTurnosEquiposController;
     } elseif ($controllerClass === \App\Controllers\GestionInstructoresController::class) {
         $instructorRepository = new \App\Repositories\InstructorRepository();
         $instructorService = new \App\Services\InstructorService($instructorRepository);
@@ -1193,6 +1450,59 @@ try {
             $session,
             $analyticsService,
             $excelExportService
+        );
+    // ============================================
+    // MÓDULO DE REPORTE DE EQUIPOS - Controlador
+    // ============================================
+    } elseif ($controllerClass === ReporteEquiposController::class) {
+        $reporteEquiposRepository = new \App\Repositories\ReporteEquiposRepository();
+        $reporteEquiposService = new \App\Services\ReporteEquiposService(
+            $reporteEquiposRepository,
+            $configTurnosEquiposRepository
+        );
+        $controller = new $controllerClass(
+            $authService,
+            $reporteEquiposService,
+            $session
+        );
+    } elseif ($controllerClass === \App\Controllers\SeguimientoEquiposController::class) {
+        $seguimientoEquiposRepository = new \App\GestionEquipos\Repositories\SeguimientoEquiposRepository();
+        $seguimientoEquiposService = new \App\GestionEquipos\Services\SeguimientoEquiposService(
+            $seguimientoEquiposRepository
+        );
+        $controller = new $controllerClass(
+            $authService,
+            $seguimientoEquiposService,
+            $session
+        );
+    // ============================================
+    // MÓDULO DE BOLETAS DE SALIDA - Controladores
+    // ============================================
+    } elseif ($controllerClass === AprendizBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $aprendizAuthService,
+            $instructorFichaRepository,
+            $session
+        );
+    } elseif ($controllerClass === InstructorBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $authService
+        );
+    } elseif ($controllerClass === AdminBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $authService
+        );
+    } elseif ($controllerClass === PorteroBoletaController::class) {
+        $controller = new $controllerClass(
+            $boletaSalidaService,
+            $boletaSalidaRepository,
+            $authService
         );
     // ============================================
     // MÓDULO DE EVENTOS - Controladores

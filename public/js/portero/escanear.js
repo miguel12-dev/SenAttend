@@ -1,6 +1,7 @@
 /**
  * JavaScript para escaneo continuo de QR del portero
  * Similar al escáner de asistencia, escanea continuamente sin interrupciones
+ * Actualizado con AutoRefresh para datos en tiempo real
  */
 
 let html5QrCode = null;
@@ -8,6 +9,138 @@ let isScanning = false;
 let historialIngresos = [];
 let ultimoQRProcesado = null;
 let tiempoUltimoProcesamiento = 0;
+let autoRefreshHistorial = null;
+
+// Paginación del historial
+const HISTORIAL_POR_PAGINA = 20;
+let historialPaginaActual = 1;
+let historialTotalRegistros = 0;
+let historialCargando = false;
+
+// Función para mostrar el modal de operación en espera
+function mostrarModalEspera(mensaje, ultimaOp, esperaHasta) {
+    // Crear elementos del modal
+    const modal = document.createElement('div');
+    modal.id = 'modal-espera';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    const contenido = document.createElement('div');
+    contenido.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        max-width: 450px;
+        width: 100%;
+        padding: 24px;
+        text-align: center;
+        animation: slideDown 0.3s ease;
+    `;
+    
+    const icono = document.createElement('i');
+    icono.className = 'fas fa-hourglass-half';
+    icono.style.cssText = `
+        font-size: 48px;
+        color: #ffc107;
+        margin-bottom: 16px;
+    `;
+    
+    const titulo = document.createElement('h3');
+    titulo.textContent = '⏳ Operación en Espera';
+    titulo.style.cssText = `
+        margin: 0 0 16px 0;
+        font-size: 20px;
+        color: #333;
+    `;
+    
+    const mensajeP = document.createElement('p');
+    mensajeP.textContent = mensaje;
+    mensajeP.style.cssText = `
+        margin: 0 0 12px 0;
+        color: #666;
+        font-size: 15px;
+    `;
+    
+    const lista = document.createElement('ul');
+    lista.style.cssText = `
+        text-align: left;
+        margin: 0 0 20px 0;
+        padding-left: 20px;
+        color: #555;
+        font-size: 14px;
+    `;
+    
+    const item1 = document.createElement('li');
+    item1.textContent = `Última operación: ${ultimaOp}`;
+    
+    const item2 = document.createElement('li');
+    item2.textContent = esperaHasta 
+        ? `Puede intentar después de: ${esperaHasta}` 
+        : 'Por favor espere 5 minutos antes de intentar nuevamente';
+    
+    lista.appendChild(item1);
+    lista.appendChild(item2);
+    
+    const boton = document.createElement('button');
+    boton.textContent = 'Entendido';
+    boton.style.cssText = `
+        background: #ffc107;
+        color: #333;
+        border: none;
+        padding: 12px 32px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    `;
+    boton.onmouseover = () => {
+        boton.style.background = '#e0a800';
+        boton.style.transform = 'translateY(-1px)';
+    };
+    boton.onmouseout = () => {
+        boton.style.background = '#ffc107';
+        boton.style.transform = 'translateY(0)';
+    };
+    boton.onclick = () => modal.remove();
+    
+    contenido.appendChild(icono);
+    contenido.appendChild(titulo);
+    contenido.appendChild(mensajeP);
+    contenido.appendChild(lista);
+    contenido.appendChild(boton);
+    modal.appendChild(contenido);
+    document.body.appendChild(modal);
+    
+    // Agregar animación
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Cerrar al hacer click en el overlay
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
 
 // Elementos del DOM
 const btnIniciarScanner = document.getElementById('btnIniciarScanner');
@@ -23,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Html5Qrcode no está cargado. Asegúrate de incluir la librería.');
         return;
     }
-
+    
     // Configurar botones
     if (btnIniciarScanner) {
         btnIniciarScanner.addEventListener('click', iniciarScanner);
@@ -34,6 +167,56 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Cargar historial inicial si existe
     cargarHistorialIngresos();
+
+    // Auto-refresh cada 15 segundos para mantener el historial actualizado
+    if (historialContainer) {
+        // Verificar que AutoRefresh esté disponible
+        if (typeof AutoRefresh === 'undefined') {
+            console.error('AutoRefresh no está disponible. Verificar carga de components.js');
+            return;
+        }
+        
+        autoRefreshHistorial = new AutoRefresh({
+            url: `/api/portero/ingresos-activos?limit=${HISTORIAL_POR_PAGINA}&page=1`,
+            renderCallback: (data) => {
+                // Normalizar datos: puede ser array directo o objeto con propiedad data
+                let ingresos = [];
+                let pagination = null;
+                
+                if (Array.isArray(data)) {
+                    ingresos = data;
+                } else if (data && Array.isArray(data.data)) {
+                    ingresos = data.data;
+                    pagination = data.pagination || null;
+                }
+                
+                if (pagination) {
+                    historialTotalRegistros = pagination.total || 0;
+                    historialPaginaActual = pagination.page || 1;
+                }
+                
+                if (ingresos.length > 0) {
+                    historialIngresos = ingresos.map(ingreso => ({
+                        id: ingreso.id,
+                        marca: ingreso.marca,
+                        numero_serial: ingreso.numero_serial,
+                        aprendiz_nombre: ingreso.aprendiz_nombre,
+                        aprendiz_apellido: ingreso.aprendiz_apellido,
+                        tipo: ingreso.fecha_salida ? 'salida' : 'ingreso',
+                        fecha: ingreso.fecha_ingreso || '',
+                        hora: ingreso.hora_ingreso || '',
+                        mensaje: 'Ingreso activo'
+                    }));
+                    actualizarHistorial();
+                    actualizarEstadisticas();
+                }
+            },
+            interval: 15000, // 15 segundos
+            onError: (error) => {
+                console.error('Error en auto-refresh del historial:', error);
+            }
+        });
+    }
 });
 
 // Iniciar escáner
@@ -139,6 +322,19 @@ async function procesarQR(qrData) {
         
         const result = await response.json();
         
+        // Verificar primero si es una respuesta de "hold" (operación en espera)
+        // Esto funciona incluso cuando HTTP status es 400
+        if (result.type === 'hold') {
+            // Operación en espera por restricción de 5 minutos - mostrar como modal
+            const esperaHasta = result.data?.en_espera_hasta || '';
+            const ultimaOp = result.data?.ultima_operacion?.ultima_fecha_hora || 'desconocida';
+            const mensaje = result.message || 'Debe esperar 5 minutos entre operaciones';
+            
+            // Usar el modal personalizado
+            mostrarModalEspera(mensaje, ultimaOp, esperaHasta);
+            return;
+        }
+        
         // Si la respuesta no fue exitosa, mostrar el mensaje de error
         if (!response.ok) {
             const errorMessage = result.message || `Error ${response.status}: ${response.statusText}`;
@@ -162,10 +358,10 @@ async function procesarQR(qrData) {
             });
             
             const tipoTexto = registro.tipo === 'ingreso' ? 'INGRESO' : 'SALIDA';
-            const nombreEquipo = registro.equipo?.marca || 'Equipo';
-            const serialEquipo = registro.equipo?.numero_serial || '';
-            const nombreAprendiz = registro.aprendiz?.nombre || 'Aprendiz';
-            const apellidoAprendiz = registro.aprendiz?.apellido || '';
+            const nombreEquipo = registro.equipo?.marca || registro.marca || 'Equipo';
+            const serialEquipo = registro.equipo?.numero_serial || registro.numero_serial || '';
+            const nombreAprendiz = registro.aprendiz?.nombre || registro.aprendiz_nombre || 'Aprendiz';
+            const apellidoAprendiz = registro.aprendiz?.apellido || registro.aprendiz_apellido || '';
             
             mostrarMensaje(
                 `<i class="fas fa-check"></i> ${tipoTexto} registrado: ${nombreEquipo} (${serialEquipo}) - ${nombreAprendiz} ${apellidoAprendiz}`,
@@ -195,7 +391,8 @@ function mostrarMensaje(mensaje, tipo) {
     const iconos = {
         'success': 'fa-check-circle',
         'error': 'fa-exclamation-circle',
-        'info': 'fa-info-circle'
+        'info': 'fa-info-circle',
+        'warning': 'fa-hourglass-half'
     };
     
     scanResult.innerHTML = `
@@ -213,7 +410,7 @@ function mostrarMensaje(mensaje, tipo) {
     }, tipo === 'success' ? 3000 : 5000);
 }
 
-// Actualizar historial de ingresos
+// Actualizar historial de ingresos con paginación
 function actualizarHistorial() {
     if (!historialContainer) return;
     
@@ -224,33 +421,169 @@ function actualizarHistorial() {
                 <p>No hay registros aún. Escanea el código QR de un equipo para comenzar.</p>
             </div>
         `;
+        // Ocultar paginación si no hay datos
+        const pagNav = document.getElementById('historial-pagination');
+        if (pagNav) pagNav.innerHTML = '';
         return;
     }
     
-    const html = historialIngresos.map((registro, index) => {
+    // Calcular registros para la página actual
+    const inicio = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA;
+    const fin = inicio + HISTORIAL_POR_PAGINA;
+    const registrosPagina = historialIngresos.slice(inicio, fin);
+    const totalPaginas = Math.ceil(historialTotalRegistros / HISTORIAL_POR_PAGINA) || 1;
+    
+    const html = registrosPagina.map((registro, index) => {
         const tipoClass = registro.tipo === 'ingreso' ? 'success' : 'info';
         const tipoIcon = registro.tipo === 'ingreso' ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
+        const numeroGlobal = historialTotalRegistros - inicio - index;
         
         return `
             <div class="historial-item ${tipoClass}">
                 <div class="historial-info">
-                    <span class="historial-numero">#${historialIngresos.length - index}</span>
+                    <span class="historial-numero">#${numeroGlobal}</span>
                     <div class="historial-datos">
-                        <strong>${registro.equipo?.marca || 'Equipo'} - ${registro.equipo?.numero_serial || 'N/A'}</strong>
-                        <span class="historial-doc">${registro.aprendiz?.nombre || ''} ${registro.aprendiz?.apellido || ''}</span>
+                        <strong>${escapeHtml(registro.marca || registro.equipo?.marca || 'Equipo')} - ${escapeHtml(registro.numero_serial || registro.equipo?.numero_serial || 'N/A')}</strong>
+                        <span class="historial-doc">${escapeHtml(registro.aprendiz_nombre || registro.aprendiz?.nombre || '')} ${escapeHtml(registro.aprendiz_apellido || registro.aprendiz?.apellido || '')}</span>
+                        ${registro.fecha ? `<span class="historial-fecha"><i class="fas fa-calendar"></i> ${registro.fecha}</span>` : ''}
                     </div>
                 </div>
                 <div class="historial-estado">
                     <span class="badge badge-${tipoClass}">
                         <i class="fas ${tipoIcon}"></i> ${registro.tipo?.toUpperCase() || 'OPERACIÓN'}
                     </span>
-                    <span class="historial-hora">${registro.hora || '--'}</span>
+                    <span class="historial-hora"><i class="fas fa-clock"></i> ${registro.hora || '--'}</span>
                 </div>
             </div>
         `;
     }).join('');
     
     historialContainer.innerHTML = html;
+    
+    // Renderizar controles de paginación
+    renderizarPaginacion(totalPaginas);
+}
+
+// Renderizar controles de paginación del historial
+function renderizarPaginacion(totalPaginas) {
+    let pagNav = document.getElementById('historial-pagination');
+    
+    if (!pagNav) {
+        pagNav = document.createElement('nav');
+        pagNav.id = 'historial-pagination';
+        pagNav.className = 'historial-pagination';
+        pagNav.setAttribute('aria-label', 'Paginación del historial');
+        historialContainer.parentNode.insertBefore(pagNav, historialContainer.nextSibling);
+    }
+    
+    if (totalPaginas <= 1) {
+        pagNav.innerHTML = '';
+        return;
+    }
+    
+    const mostrarDesde = (historialPaginaActual - 1) * HISTORIAL_POR_PAGINA + 1;
+    const mostrarHasta = Math.min(historialPaginaActual * HISTORIAL_POR_PAGINA, historialTotalRegistros);
+    
+    let html = `<span class="pagination-info">Mostrando ${mostrarDesde}-${mostrarHasta} de ${historialTotalRegistros}</span>`;
+    
+    // Botón primera página
+    if (historialPaginaActual > 1) {
+        html += `<button type="button" class="pag-btn" data-page="1" aria-label="Primera página">&laquo;</button>`;
+        html += `<button type="button" class="pag-btn" data-page="${historialPaginaActual - 1}" aria-label="Página anterior">&lsaquo;</button>`;
+    } else {
+        html += `<span class="pag-btn disabled">&laquo;</span>`;
+        html += `<span class="pag-btn disabled">&lsaquo;</span>`;
+    }
+    
+    // Páginas cercanas
+    const rango = 1;
+    const inicio = Math.max(1, historialPaginaActual - rango);
+    const fin = Math.min(totalPaginas, historialPaginaActual + rango);
+    
+    for (let p = inicio; p <= fin; p++) {
+        if (p === historialPaginaActual) {
+            html += `<span class="pag-btn active">${p}</span>`;
+        } else {
+            html += `<button type="button" class="pag-btn" data-page="${p}">${p}</button>`;
+        }
+    }
+    
+    // Botón siguiente y última
+    if (historialPaginaActual < totalPaginas) {
+        html += `<button type="button" class="pag-btn" data-page="${historialPaginaActual + 1}" aria-label="Página siguiente">&rsaquo;</button>`;
+        html += `<button type="button" class="pag-btn" data-page="${totalPaginas}" aria-label="Última página">&raquo;</button>`;
+    } else {
+        html += `<span class="pag-btn disabled">&rsaquo;</span>`;
+        html += `<span class="pag-btn disabled">&raquo;</span>`;
+    }
+    
+    pagNav.innerHTML = html;
+    
+    // Agregar event listeners a los botones
+    pagNav.querySelectorAll('.pag-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pagina = parseInt(btn.dataset.page);
+            if (pagina !== historialPaginaActual) {
+                irAPagina(pagina);
+            }
+        });
+    });
+}
+
+// Navegar a una página específica del historial
+async function irAPagina(pagina) {
+    if (historialCargando) return;
+    historialCargando = true;
+    
+    historialPaginaActual = pagina;
+    mostrarCargandoHistorial(true);
+    
+    try {
+        const response = await fetch(`/api/portero/ingresos-activos?limit=${HISTORIAL_POR_PAGINA}&page=${pagina}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data && Array.isArray(result.data)) {
+            historialIngresos = result.data.map(ingreso => ({
+                id: ingreso.id,
+                marca: ingreso.marca,
+                numero_serial: ingreso.numero_serial,
+                aprendiz_nombre: ingreso.aprendiz_nombre,
+                aprendiz_apellido: ingreso.aprendiz_apellido,
+                tipo: ingreso.fecha_salida ? 'salida' : 'ingreso',
+                fecha: ingreso.fecha_ingreso || '',
+                hora: ingreso.hora_ingreso || '',
+                mensaje: 'Ingreso activo'
+            }));
+            
+            if (result.pagination) {
+                historialTotalRegistros = result.pagination.total || 0;
+            }
+            
+            actualizarHistorial();
+        }
+    } catch (error) {
+        console.error('Error cargando página del historial:', error);
+    } finally {
+        historialCargando = false;
+        mostrarCargandoHistorial(false);
+    }
+}
+
+// Mostrar/ocultar indicador de carga del historial
+function mostrarCargandoHistorial(mostrar) {
+    if (!historialContainer) return;
+    
+    if (mostrar) {
+        historialContainer.innerHTML = `
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando historial...</p>
+            </div>
+        `;
+    }
 }
 
 // Actualizar estadísticas
@@ -282,7 +615,9 @@ function actualizarEstadisticas() {
 // Cargar historial de ingresos desde el servidor
 async function cargarHistorialIngresos() {
     try {
-        const response = await fetch('/api/portero/ingresos-activos?limit=50', {
+        mostrarCargandoHistorial(true);
+        
+        const response = await fetch(`/api/portero/ingresos-activos?limit=${HISTORIAL_POR_PAGINA}&page=1`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
@@ -294,19 +629,28 @@ async function cargarHistorialIngresos() {
             // Convertir ingresos activos a formato de historial
             historialIngresos = result.data.map(ingreso => ({
                 id: ingreso.id,
-                equipo: ingreso.equipo || {},
-                aprendiz: ingreso.aprendiz || {},
+                marca: ingreso.marca,
+                numero_serial: ingreso.numero_serial,
+                aprendiz_nombre: ingreso.aprendiz_nombre,
+                aprendiz_apellido: ingreso.aprendiz_apellido,
                 tipo: ingreso.fecha_salida ? 'salida' : 'ingreso',
                 fecha: ingreso.fecha_ingreso || '',
                 hora: ingreso.hora_ingreso || '',
                 mensaje: 'Ingreso activo'
             }));
             
+            if (result.pagination) {
+                historialTotalRegistros = result.pagination.total || 0;
+                historialPaginaActual = result.pagination.page || 1;
+            }
+            
             actualizarHistorial();
             actualizarEstadisticas();
         }
     } catch (error) {
         console.error('Error cargando historial:', error);
+    } finally {
+        mostrarCargandoHistorial(false);
     }
 }
 
@@ -339,3 +683,15 @@ window.addEventListener('beforeunload', () => {
         detenerScanner();
     }
 });
+
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ * @param {string} text 
+ * @returns {string}
+ */
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}

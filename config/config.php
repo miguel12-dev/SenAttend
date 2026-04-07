@@ -127,10 +127,12 @@ if (APP_ENV === 'local' || APP_ENV === 'development') {
 // Configuración de zona horaria
 date_default_timezone_set('America/Bogota');
 
-// Configuración de sesiones
-ini_set('session.cookie_httponly', '1');
-ini_set('session.use_strict_mode', '1');
-ini_set('session.cookie_samesite', 'Strict');
+// Configuración de sesiones (solo si no hay sesión activa)
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.cookie_samesite', 'Strict');
+}
 
 return [
     'app' => [

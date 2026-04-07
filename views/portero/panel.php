@@ -5,6 +5,7 @@
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,11 +15,12 @@
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/portero/panel.css') ?>">
 </head>
+
 <body>
     <div class="wrapper">
-        <?php 
+        <?php
         $currentPage = 'portero-panel';
-        require __DIR__ . '/../components/header.php'; 
+        require __DIR__ . '/../components/header.php';
         ?>
 
         <main class="main-content">
@@ -60,11 +62,60 @@
                                 <i class="fas fa-laptop"></i>
                             </div>
                             <div class="stat-info">
-                                <h3><?= $totalActivos ?></h3>
+                                <h3 id="totalEquipos"><?= $totalActivos ?></h3>
                                 <p>Equipos dentro del CTA</p>
                             </div>
                         </div>
                     </section>
+
+                    <!-- Acceso Rápido a Boletas de Salida -->
+                    <section class="portero-quick-access">
+                        <h3 style="margin-bottom: 1rem;"><i class="fas fa-th-large"></i> Accesos Rápidos</h3>
+                        <div class="quick-access-grid">
+                            <a href="/portero/boletas-salida" class="quick-access-card">
+                                <div class="quick-icon">
+                                    <i class="fas fa-file-export"></i>
+                                </div>
+                                <div class="quick-info">
+                                    <h4>Boletas de Salida</h4>
+                                    <p>Validar salidas y reingresos de aprendices</p>
+                                </div>
+                            </a>
+                            <a href="/portero/escanear" class="quick-access-card">
+                                <div class="quick-icon">
+                                    <i class="fas fa-qrcode"></i>
+                                </div>
+                                <div class="quick-info">
+                                    <h4>Escanear Equipos</h4>
+                                    <p>Registrar ingreso de equipos</p>
+                                </div>
+                            </a>
+                            <a href="/reportes-equipos" class="quick-access-card">
+                                <div class="quick-icon">
+                                    <i class="fas fa-clipboard-list"></i>
+                                </div>
+                                <div class="quick-info">
+                                    <h4>Reporte de Equipos</h4>
+                                    <p>Consultar y exportar ingresos/salidas</p>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- Sección destacada de Reportes -->
+                    <!-- <section class="portero-reports-section" style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="background-color: var(--sena-green, #39A900); color: white; padding: 1.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 1rem;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.25rem;"><i class="fas fa-chart-line"></i> Módulo de Reportes de Equipos</h3>
+                                <p style="margin: 0; opacity: 0.9;">Genera y exporta reportes en Excel de ingresos y salidas de equipos filtrados por fecha y turno.</p>
+                            </div>
+                            <div>
+                                <a href="/reportes-equipos" class="btn btn-outline" style="background-color: white; color: var(--sena-green, #39A900); border: none; font-weight: bold; padding: 0.5rem 1rem; border-radius: 0.375rem; text-decoration: none; display: inline-block;">
+                                    Generar Reportes
+                                </a>
+                            </div>
+                        </div>
+                    </section> -->
 
                     <section class="portero-ingresos-card">
                         <div class="portero-ingresos-header">
@@ -87,23 +138,23 @@
                                             <th>Observaciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="ingresosTableBody">
                                         <?php foreach ($ingresosActivos as $ingreso): ?>
                                             <tr>
-                                                <td>
+                                                <td data-label="Hora ingreso">
                                                     <strong><?= htmlspecialchars($ingreso['fecha_ingreso']) ?></strong><br>
                                                     <small><?= htmlspecialchars($ingreso['hora_ingreso']) ?></small>
                                                 </td>
-                                                <td><?= htmlspecialchars($ingreso['marca']) ?></td>
-                                                <td><code><?= htmlspecialchars($ingreso['numero_serial']) ?></code></td>
-                                                <td>
+                                                <td data-label="Equipo"><?= htmlspecialchars($ingreso['marca']) ?></td>
+                                                <td data-label="Serial"><code><?= htmlspecialchars($ingreso['numero_serial']) ?></code></td>
+                                                <td data-label="Aprendiz">
                                                     <?= htmlspecialchars($ingreso['aprendiz_nombre'] . ' ' . $ingreso['aprendiz_apellido']) ?>
                                                 </td>
-                                                <td><?= htmlspecialchars($ingreso['aprendiz_documento']) ?></td>
-                                                <td><?= htmlspecialchars($ingreso['portero_nombre']) ?></td>
-                                                <td>
-                                                    <?= !empty($ingreso['observaciones']) 
-                                                        ? htmlspecialchars($ingreso['observaciones']) 
+                                                <td data-label="Documento"><?= htmlspecialchars($ingreso['aprendiz_documento']) ?></td>
+                                                <td data-label="Portero"><?= htmlspecialchars($ingreso['portero_nombre']) ?></td>
+                                                <td data-label="Observaciones">
+                                                    <?= !empty($ingreso['observaciones'])
+                                                        ? htmlspecialchars($ingreso['observaciones'])
                                                         : '<span style="color:#999;">Sin observaciones</span>' ?>
                                                 </td>
                                             </tr>
@@ -121,7 +172,9 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script src="<?= asset('js/common/components.js') ?>"></script>
+    <script src="<?= asset('js/components/back-button.js') ?>"></script>
     <script src="<?= asset('js/portero/panel.js') ?>"></script>
 </body>
-</html>
 
+</html>
