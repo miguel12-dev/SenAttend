@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/aprendiz/panel.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/aprendiz/equipos/create.css') ?>">
 </head>
 <body>
     <div class="wrapper">
@@ -52,27 +53,46 @@
                     <section class="aprendiz-equipos-card">
                         <form action="/aprendiz/equipos" method="POST" class="form" enctype="multipart/form-data">
                             <div class="form-group">
-                                <label for="numero_serial">Número de serie del equipo</label>
+                                <label for="numero_serial">Número de serie del equipo <span class="required">*</span></label>
                                 <input
                                     type="text"
                                     id="numero_serial"
                                     name="numero_serial"
                                     class="form-control"
                                     required
+                                    placeholder="Ej: SN123456789"
                                     value="<?= htmlspecialchars($old['numero_serial'] ?? '') ?>"
                                 >
                             </div>
 
                             <div class="form-group">
-                                <label for="marca">Marca del equipo</label>
-                                <input
-                                    type="text"
-                                    id="marca"
-                                    name="marca"
-                                    class="form-control"
-                                    required
-                                    value="<?= htmlspecialchars($old['marca'] ?? '') ?>"
-                                >
+                                <label for="marca">Marca del equipo <span class="required">*</span></label>
+                                <div class="brand-select-wrapper">
+                                    <select id="marca" name="marca" class="form-control" required>
+                                        <option value="">Selecciona una marca</option>
+                                        <option value="HP">HP</option>
+                                        <option value="Dell">Dell</option>
+                                        <option value="Lenovo">Lenovo</option>
+                                        <option value="ASUS">ASUS</option>
+                                        <option value="Acer">Acer</option>
+                                        <option value="Apple">Apple (MacBook)</option>
+                                        <option value="Toshiba">Toshiba</option>
+                                        <option value="MSI">MSI</option>
+                                        <option value="Microsoft">Microsoft (Surface)</option>
+                                        <option value="Samsung">Samsung</option>
+                                        <option value="Otro">Otra marca (especificar)</option>
+                                    </select>
+                                </div>
+                                <div id="marca-otro-wrapper" class="marca-otro-wrapper" style="display: none;">
+                                    <input
+                                        type="text"
+                                        id="marca_otro"
+                                        name="marca_otro"
+                                        class="form-control"
+                                        placeholder="Especifica la marca"
+                                        value="<?= htmlspecialchars($old['marca_otro'] ?? '') ?>"
+                                    >
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -100,6 +120,45 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const marcaSelect = document.getElementById('marca');
+            const marcaOtroWrapper = document.getElementById('marca-otro-wrapper');
+            const marcaOtroInput = document.getElementById('marca_otro');
+            
+            // Check initial state
+            if (marcaSelect.value === 'Otro') {
+                marcaOtroWrapper.style.display = 'block';
+            }
+            
+            // Handle selection change
+            marcaSelect.addEventListener('change', function() {
+                if (this.value === 'Otro') {
+                    marcaOtroWrapper.style.display = 'block';
+                    marcaOtroInput.required = true;
+                    // Clear the select value since we're using custom input
+                    this.removeAttribute('name');
+                    marcaOtroInput.setAttribute('name', 'marca');
+                } else {
+                    marcaOtroWrapper.style.display = 'none';
+                    marcaOtroInput.required = false;
+                    marcaOtroInput.removeAttribute('name');
+                    marcaSelect.setAttribute('name', 'marca');
+                    marcaOtroInput.value = '';
+                }
+            });
+            
+            // Handle form submission
+            const form = marcaSelect.closest('form');
+            form.addEventListener('submit', function(e) {
+                if (marcaSelect.value === 'Otro' && marcaOtroInput.value.trim() === '') {
+                    e.preventDefault();
+                    marcaOtroInput.focus();
+                    marcaOtroWrapper.classList.add('input-error');
+                }
+            });
+        });
+    </script>
 </body>
 </html>
 
