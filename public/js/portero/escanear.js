@@ -17,6 +17,131 @@ let historialPaginaActual = 1;
 let historialTotalRegistros = 0;
 let historialCargando = false;
 
+// Función para mostrar el modal de operación en espera
+function mostrarModalEspera(mensaje, ultimaOp, esperaHasta) {
+    // Crear elementos del modal
+    const modal = document.createElement('div');
+    modal.id = 'modal-espera';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(2px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    const contenido = document.createElement('div');
+    contenido.style.cssText = `
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        max-width: 450px;
+        width: 100%;
+        padding: 24px;
+        text-align: center;
+        animation: slideDown 0.3s ease;
+    `;
+    
+    const icono = document.createElement('i');
+    icono.className = 'fas fa-hourglass-half';
+    icono.style.cssText = `
+        font-size: 48px;
+        color: #ffc107;
+        margin-bottom: 16px;
+    `;
+    
+    const titulo = document.createElement('h3');
+    titulo.textContent = '⏳ Operación en Espera';
+    titulo.style.cssText = `
+        margin: 0 0 16px 0;
+        font-size: 20px;
+        color: #333;
+    `;
+    
+    const mensajeP = document.createElement('p');
+    mensajeP.textContent = mensaje;
+    mensajeP.style.cssText = `
+        margin: 0 0 12px 0;
+        color: #666;
+        font-size: 15px;
+    `;
+    
+    const lista = document.createElement('ul');
+    lista.style.cssText = `
+        text-align: left;
+        margin: 0 0 20px 0;
+        padding-left: 20px;
+        color: #555;
+        font-size: 14px;
+    `;
+    
+    const item1 = document.createElement('li');
+    item1.textContent = `Última operación: ${ultimaOp}`;
+    
+    const item2 = document.createElement('li');
+    item2.textContent = esperaHasta 
+        ? `Puede intentar después de: ${esperaHasta}` 
+        : 'Por favor espere 5 minutos antes de intentar nuevamente';
+    
+    lista.appendChild(item1);
+    lista.appendChild(item2);
+    
+    const boton = document.createElement('button');
+    boton.textContent = 'Entendido';
+    boton.style.cssText = `
+        background: #ffc107;
+        color: #333;
+        border: none;
+        padding: 12px 32px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    `;
+    boton.onmouseover = () => {
+        boton.style.background = '#e0a800';
+        boton.style.transform = 'translateY(-1px)';
+    };
+    boton.onmouseout = () => {
+        boton.style.background = '#ffc107';
+        boton.style.transform = 'translateY(0)';
+    };
+    boton.onclick = () => modal.remove();
+    
+    contenido.appendChild(icono);
+    contenido.appendChild(titulo);
+    contenido.appendChild(mensajeP);
+    contenido.appendChild(lista);
+    contenido.appendChild(boton);
+    modal.appendChild(contenido);
+    document.body.appendChild(modal);
+    
+    // Agregar animación
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Cerrar al hacer click en el overlay
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
 // Elementos del DOM
 const btnIniciarScanner = document.getElementById('btnIniciarScanner');
 const btnDetenerScanner = document.getElementById('btnDetenerScanner');
@@ -31,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Html5Qrcode no está cargado. Asegúrate de incluir la librería.');
         return;
     }
-
+    
     // Configurar botones
     if (btnIniciarScanner) {
         btnIniciarScanner.addEventListener('click', iniciarScanner);
@@ -197,6 +322,19 @@ async function procesarQR(qrData) {
         
         const result = await response.json();
         
+        // Verificar primero si es una respuesta de "hold" (operación en espera)
+        // Esto funciona incluso cuando HTTP status es 400
+        if (result.type === 'hold') {
+            // Operación en espera por restricción de 5 minutos - mostrar como modal
+            const esperaHasta = result.data?.en_espera_hasta || '';
+            const ultimaOp = result.data?.ultima_operacion?.ultima_fecha_hora || 'desconocida';
+            const mensaje = result.message || 'Debe esperar 5 minutos entre operaciones';
+            
+            // Usar el modal personalizado
+            mostrarModalEspera(mensaje, ultimaOp, esperaHasta);
+            return;
+        }
+        
         // Si la respuesta no fue exitosa, mostrar el mensaje de error
         if (!response.ok) {
             const errorMessage = result.message || `Error ${response.status}: ${response.statusText}`;
@@ -236,27 +374,6 @@ async function procesarQR(qrData) {
             // Reproducir sonido de éxito
             reproducirSonidoExito();
             
-        } else if (result.type === 'hold') {
-            // Operación en espera por restricción de 5 minutos - mostrar como modal
-            const esperaHasta = result.data?.en_espera_hasta || '';
-            const ultimaOp = result.data?.ultima_operacion?.ultima_fecha_hora || 'desconocida';
-            
-            // Usar el sistema de modal de notificaciones
-            if (typeof notificationModal !== 'undefined') {
-                notificationModal.show({
-                    type: 'warning',
-                    title: '⏳ Operación en Espera',
-                    message: result.message || 'Debe esperar 5 minutos entre operaciones',
-                    messages: [
-                        `Última operación: ${ultimaOp}`,
-                        esperaHasta ? `Puede intentar después de: ${esperaHasta}` : 'Por favor espere 5 minutos antes de intentar nuevamente'
-                    ],
-                    autoClose: false
-                });
-            } else {
-                // Fallback si no hay modal disponible
-                mostrarMensaje(`<i class="fas fa-hourglass-half"></i> ${result.message}`, 'warning');
-            }
         } else {
             mostrarMensaje(`<i class="fas fa-xmark"></i> Error: ${result.message || 'Error al procesar el QR'}`, 'error');
         }
