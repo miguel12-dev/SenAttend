@@ -50,6 +50,8 @@ class EquipoQRService
                 'fecha_generacion' => $qr['fecha_generacion'],
                 'fecha_expiracion' => $qr['fecha_expiracion'],
                 'image_base64' => $base64,
+                'numero_serial' => $qr['numero_serial'] ?? '',
+                'marca' => $qr['marca'] ?? '',
             ],
         ];
     }
