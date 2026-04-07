@@ -156,6 +156,12 @@
     border: 1px solid #bee5eb;
 }
 
+.scan-result-message.warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
 .scan-result-message i {
     font-size: 1.2rem;
 }

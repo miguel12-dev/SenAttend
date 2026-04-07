@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/portero/escanear.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/common/notification-modal.css') ?>">
 </head>
 <body>
     <div class="wrapper">
@@ -96,6 +97,7 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="<?= asset('js/app.js') ?>"></script>
     <script src="<?= asset('js/common/components.js') ?>"></script>
+    <script src="<?= asset('js/common/notification-modal.js') ?>"></script>
     <script src="<?= asset('js/components/back-button.js') ?>"></script>
     <script src="<?= asset('js/portero/escanear.js') ?>"></script>
 </body>

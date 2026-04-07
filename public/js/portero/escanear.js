@@ -236,6 +236,27 @@ async function procesarQR(qrData) {
             // Reproducir sonido de éxito
             reproducirSonidoExito();
             
+        } else if (result.type === 'hold') {
+            // Operación en espera por restricción de 5 minutos - mostrar como modal
+            const esperaHasta = result.data?.en_espera_hasta || '';
+            const ultimaOp = result.data?.ultima_operacion?.ultima_fecha_hora || 'desconocida';
+            
+            // Usar el sistema de modal de notificaciones
+            if (typeof notificationModal !== 'undefined') {
+                notificationModal.show({
+                    type: 'warning',
+                    title: '⏳ Operación en Espera',
+                    message: result.message || 'Debe esperar 5 minutos entre operaciones',
+                    messages: [
+                        `Última operación: ${ultimaOp}`,
+                        esperaHasta ? `Puede intentar después de: ${esperaHasta}` : 'Por favor espere 5 minutos antes de intentar nuevamente'
+                    ],
+                    autoClose: false
+                });
+            } else {
+                // Fallback si no hay modal disponible
+                mostrarMensaje(`<i class="fas fa-hourglass-half"></i> ${result.message}`, 'warning');
+            }
         } else {
             mostrarMensaje(`<i class="fas fa-xmark"></i> Error: ${result.message || 'Error al procesar el QR'}`, 'error');
         }
@@ -253,7 +274,8 @@ function mostrarMensaje(mensaje, tipo) {
     const iconos = {
         'success': 'fa-check-circle',
         'error': 'fa-exclamation-circle',
-        'info': 'fa-info-circle'
+        'info': 'fa-info-circle',
+        'warning': 'fa-hourglass-half'
     };
     
     scanResult.innerHTML = `

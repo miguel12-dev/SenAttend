@@ -201,6 +201,22 @@ class PorteroIngresoService
                 ];
             }
 
+            // Verificar restricción de 5 minutos: no se permite ninguna operación
+            // si la misma equipo tuvo una operación (ingreso o salida) en los últimos 5 minutos.
+            $operacionReciente = $this->ingresoEquipoRepository->findUltimaOperacionReciente($equipoId, 5);
+            if ($operacionReciente) {
+                $ultimaHora = $operacionReciente['ultima_fecha_hora'] ?? 'desconocida';
+                return [
+                    'success' => false,
+                    'message' => "Operación en espera: este equipo ya tuvo una operación a las {$ultimaHora}. Debe esperar 5 minutos entre operaciones.",
+                    'type' => 'hold',
+                    'data' => [
+                        'ultima_operacion' => $operacionReciente,
+                        'en_espera_hasta' => date('Y-m-d H:i:s', strtotime($ultimaHora . ' +5 minutes')),
+                    ]
+                ];
+            }
+
             // Verificar si hay un ingreso activo (sin salida)
             $ingresoActivo = $this->ingresoEquipoRepository->findIngresoActivo($equipoId);
 

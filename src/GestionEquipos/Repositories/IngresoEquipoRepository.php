@@ -190,6 +190,64 @@ class IngresoEquipoRepository
     }
 
     /**
+     * Busca la última operación (ingreso o salida) de un equipo en los últimos N minutos.
+     *
+     * Usa una comparación unificada de DATETIME para evitar falsos negativos causados
+     * por separar fecha y hora en columnas distintas.
+     *
+     * @param int $equipoId ID del equipo
+     * @param int $minutos  Ventana de tiempo en minutos (default: 5)
+     * @return array|null  Registro encontrado o null si no hay operación reciente
+     */
+    public function findUltimaOperacionReciente(int $equipoId, int $minutos = 5): ?array
+    {
+        try {
+            $stmt = Connection::prepare(
+                'SELECT 
+                    id,
+                    id_equipo,
+                    id_aprendiz,
+                    fecha_ingreso,
+                    hora_ingreso,
+                    fecha_salida,
+                    hora_salida,
+                    procesado,
+                    CASE 
+                        WHEN procesado = FALSE AND fecha_salida IS NOT NULL AND hora_salida IS NOT NULL
+                            THEN CONCAT(fecha_salida, " ", hora_salida)
+                        WHEN procesado = FALSE
+                            THEN CONCAT(fecha_ingreso, " ", hora_ingreso)
+                        WHEN procesado = TRUE AND fecha_salida IS NOT NULL AND hora_salida IS NOT NULL
+                            THEN CONCAT(fecha_salida, " ", hora_salida)
+                        ELSE CONCAT(fecha_ingreso, " ", hora_ingreso)
+                    END AS ultima_fecha_hora
+                 FROM ingresos_equipos
+                 WHERE id_equipo = :equipo_id
+                   AND (
+                       (procesado = FALSE AND CONCAT(fecha_ingreso, " ", hora_ingreso) >= NOW() - INTERVAL :minutos MINUTE)
+                       OR
+                       (procesado = TRUE AND fecha_salida IS NOT NULL AND hora_salida IS NOT NULL 
+                        AND CONCAT(fecha_salida, " ", hora_salida) >= NOW() - INTERVAL :minutos2 MINUTE)
+                   )
+                 ORDER BY ultima_fecha_hora DESC
+                 LIMIT 1'
+            );
+
+            $stmt->execute([
+                'equipo_id' => $equipoId,
+                'minutos' => $minutos,
+                'minutos2' => $minutos,
+            ]);
+
+            $row = $stmt->fetch();
+            return $row ?: null;
+        } catch (PDOException $e) {
+            error_log("Error finding recent operation: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Obtiene historial de ingresos/salidas con filtros
      */
     public function findHistorial(array $filters = [], int $limit = 50, int $offset = 0): array
