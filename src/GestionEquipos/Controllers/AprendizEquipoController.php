@@ -244,6 +244,7 @@ class AprendizEquipoController
         $old = $this->session->get('equipo_old', []);
         $this->session->remove('equipo_old');
 
+        // Pass variables to view
         require __DIR__ . '/../../../views/aprendiz/equipos/edit.php';
     }
 
