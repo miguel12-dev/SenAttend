@@ -16,6 +16,7 @@ $currentPage = $currentPage ?? '';
                     <span></span>
                 </button>
                 <div class="logo">
+                    <img src="<?= asset('images/logo_sena_blanco.png') ?>" alt="Logo SENA" class="logo-sena">
                     <h1>SENAttend</h1>
                 </div>
                 

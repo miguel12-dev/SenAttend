@@ -16,6 +16,7 @@ $currentPage = $currentPage ?? '';
                     <span></span>
                 </button>
                 <div class="logo">
+                    <img src="<?= asset('images/logo_sena_blanco.png') ?>" alt="Logo SENA" class="logo-sena">
                     <a href="/eventos/admin" class="logo-link-eventos">
                         <i class="fas fa-calendar-alt"></i>
                         <span class="logo-text">Gestión de Eventos</span>
