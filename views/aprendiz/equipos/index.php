@@ -101,6 +101,10 @@
                                             <a href="/aprendiz/equipos/<?= (int)($equipo['equipo_id'] ?? 0) ?>/qr" class="btn btn-primary btn-qr">
                                                 <i class="fas fa-qrcode"></i> Ver QR
                                             </a>
+                                            <a href="/aprendiz/equipos/<?= (int)($equipo['equipo_id'] ?? 0) ?>/editar" class="btn-edit-icon" 
+                                                title="Editar equipo">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                             <button type="button" class="btn-delete-icon" 
                                                 data-id="<?= (int)($equipo['relacion_id'] ?? 0) ?>" 
                                                 data-marca="<?= htmlspecialchars($equipo['marca'] ?? '', ENT_QUOTES, 'UTF-8') ?>" 
@@ -221,6 +225,17 @@
                 // Show success notification
                 if (window.showSuccess) {
                     window.showSuccess('Equipo registrado correctamente');
+                }
+            }
+
+            // Check for updated param (from edit page)
+            if (urlParams.has('updated')) {
+                // Clear URL param without reload
+                window.history.replaceState({}, '', '/aprendiz/equipos');
+                
+                // Show success notification
+                if (window.showSuccess) {
+                    window.showSuccess('Equipo actualizado correctamente');
                 }
             }
 
@@ -468,6 +483,16 @@
                 }
             }
 
+            // Helper function to format dates
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return day + '/' + month + '/' + year;
+            }
+
             // Función para crear HTML de tarjeta de equipo
             function crearTarjetaEquipo(equipo, eliminado) {
                 const imagenHtml = equipo.imagen && equipo.imagen !== 'uploads/equipos/'
@@ -493,6 +518,10 @@
                         '</div>' +
                         '</div>';
                 } else {
+                    const fechaRegistro = equipo.fecha_asignacion 
+                        ? '<p><strong>Registrado:</strong> ' + formatDate(equipo.fecha_asignacion) + '</p>' 
+                        : '';
+                    
                     return '<div class="equipo-card" data-animate-delay="0">' +
                         '<div class="equipo-imagen">' + imagenHtml + '</div>' +
                         '<div class="equipo-info">' +
@@ -500,10 +529,15 @@
                         '<div class="equipo-details">' +
                         '<p><strong>Serial:</strong> <code>' + equipo.numero_serial + '</code></p>' +
                         '<p><strong>Estado:</strong> <span class="badge-activo">Activo</span></p>' +
+                        fechaRegistro +
                         '</div>' +
                         '<div class="equipo-actions">' +
                         '<a href="/aprendiz/equipos/' + equipo.equipo_id + '/qr" class="btn btn-primary btn-qr">' +
                         '<i class="fas fa-qrcode"></i> Ver QR' +
+                        '</a>' +
+                        '<a href="/aprendiz/equipos/' + equipo.equipo_id + '/editar" class="btn-edit-icon" ' +
+                        'title="Editar equipo">' +
+                        '<i class="fas fa-edit"></i>' +
                         '</a>' +
                         '<button type="button" class="btn-delete-icon" ' +
                         'data-id="' + equipo.relacion_id + '" ' +
