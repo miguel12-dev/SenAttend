@@ -210,6 +210,73 @@ class AprendizEquipoRepository
             return 0;
         }
     }
+
+    /**
+     * Obtiene un equipo específico del aprendiz (no eliminado)
+     */
+    public function findEquipoById(int $equipoId, int $aprendizId): ?array
+    {
+        try {
+            $stmt = Connection::prepare(
+                'SELECT ae.id as relacion_id,
+                        ae.estado,
+                        ae.fecha_asignacion,
+                        e.id as equipo_id,
+                        e.numero_serial,
+                        e.marca,
+                        e.imagen,
+                        e.activo
+                 FROM aprendiz_equipo ae
+                 INNER JOIN equipos e ON ae.id_equipo = e.id
+                 WHERE e.id = :equipo_id 
+                 AND ae.id_aprendiz = :aprendiz_id
+                 AND ae.eliminado IS NULL
+                 AND e.eliminado IS NULL'
+            );
+
+            $stmt->execute(['equipo_id' => $equipoId, 'aprendiz_id' => $aprendizId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ?: null;
+        } catch (PDOException $e) {
+            error_log("Error fetching equipo by id: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Actualiza la marca y/o imagen de un equipo
+     */
+    public function update(int $equipoId, array $data): bool
+    {
+        try {
+            $updates = [];
+            $params = ['equipo_id' => $equipoId];
+
+            if (isset($data['marca'])) {
+                $updates[] = 'marca = :marca';
+                $params['marca'] = $data['marca'];
+            }
+
+            if (isset($data['imagen'])) {
+                $updates[] = 'imagen = :imagen';
+                $params['imagen'] = $data['imagen'];
+            }
+
+            if (empty($updates)) {
+                return false;
+            }
+
+            $stmt = Connection::prepare(
+                'UPDATE equipos SET ' . implode(', ', $updates) . ' WHERE id = :equipo_id AND eliminado IS NULL'
+            );
+
+            $stmt->execute($params);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log("Error updating equipo: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 
 

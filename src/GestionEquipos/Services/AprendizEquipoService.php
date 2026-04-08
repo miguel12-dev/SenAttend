@@ -122,6 +122,44 @@ class AprendizEquipoService
             'message' => 'Error al restaurar el equipo. Intenta nuevamente.'
         ];
     }
+
+    /**
+     * Obtiene un equipo específico del aprendiz
+     */
+    public function getEquipoById(int $equipoId, int $aprendizId): ?array
+    {
+        return $this->aprendizEquipoRepository->findEquipoById($equipoId, $aprendizId);
+    }
+
+    /**
+     * Actualiza un equipo (marca e imagen)
+     */
+    public function actualizarEquipo(int $equipoId, int $aprendizId, array $data): array
+    {
+        // Verificar que el equipo pertenezca al aprendiz
+        $equipo = $this->aprendizEquipoRepository->findEquipoById($equipoId, $aprendizId);
+        
+        if (!$equipo) {
+            return [
+                'success' => false,
+                'message' => 'Equipo no encontrado o no te pertenece.'
+            ];
+        }
+
+        $updated = $this->aprendizEquipoRepository->update($equipoId, $data);
+
+        if ($updated) {
+            return [
+                'success' => true,
+                'message' => 'Equipo actualizado correctamente.'
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Error al actualizar el equipo. Intenta nuevamente.'
+        ];
+    }
 }
 
 

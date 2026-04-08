@@ -214,6 +214,142 @@ class AprendizEquipoController
     }
 
     /**
+     * Formulario para editar un equipo
+     * GET /aprendiz/equipos/{id}/editar
+     */
+    public function edit(int $equipoId): void
+    {
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::redirect('/login');
+        }
+
+        // Aggressive cache prevention headers
+        header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        // Obtener los datos del equipo del aprendiz
+        $equipo = $this->aprendizEquipoService->getEquipoById($equipoId, (int)$user['id']);
+
+        if (!$equipo) {
+            $this->session->start();
+            $this->session->flash('error', 'Equipo no encontrado');
+            Response::redirect('/aprendiz/equipos');
+        }
+
+        $this->session->start();
+        $error = $this->session->getFlash('error');
+        $message = $this->session->getFlash('message');
+        $old = $this->session->get('equipo_old', []);
+        $this->session->remove('equipo_old');
+
+        require __DIR__ . '/../../../views/aprendiz/equipos/edit.php';
+    }
+
+    /**
+     * Actualiza un equipo
+     * POST /aprendiz/equipos/{id}/actualizar
+     */
+    public function actualizar(int $equipoId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::redirect('/aprendiz/panel');
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::redirect('/login');
+        }
+
+        $marca = trim(filter_input(INPUT_POST, 'marca', FILTER_SANITIZE_FULL_SPECIAL_CHARS));
+
+        // Manejo de imagen (opcional)
+        $imagenPath = null;
+        $equipoActual = $this->aprendizEquipoService->getEquipoById($equipoId, (int)$user['id']);
+        
+        if (!$equipoActual) {
+            $this->session->start();
+            $this->session->flash('error', 'Equipo no encontrado');
+            Response::redirect('/aprendiz/equipos');
+        }
+
+        // Si hay nueva imagen, procesarla
+        if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../../../public/uploads/equipos/';
+
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0775, true);
+            }
+
+            $tmpName = $_FILES['imagen']['tmp_name'];
+            $originalName = $_FILES['imagen']['name'];
+            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+            $allowed = ['jpg', 'jpeg', 'png'];
+            if (in_array($extension, $allowed, true)) {
+                // Eliminar imagen anterior si existe
+                if (!empty($equipoActual['imagen'])) {
+                    $oldPath = __DIR__ . '/../../../public/' . $equipoActual['imagen'];
+                    if (file_exists($oldPath)) {
+                        @unlink($oldPath);
+                    }
+                }
+
+                $safeName = 'equipo_' . $user['id'] . '_' . time() . '.' . $extension;
+                $destPath = $uploadDir . $safeName;
+
+                if (move_uploaded_file($tmpName, $destPath)) {
+                    $imagenPath = 'uploads/equipos/' . $safeName;
+                }
+            }
+        }
+
+        $data = [
+            'marca' => $marca,
+            'imagen' => $imagenPath
+        ];
+
+        $result = $this->aprendizEquipoService->actualizarEquipo($equipoId, (int)$user['id'], $data);
+
+        $this->session->start();
+
+        if ($result['success']) {
+            $this->session->flash('success', $result['message'] ?? 'Equipo actualizado correctamente');
+            
+            // Check if AJAX request - return JSON
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => $result['message'] ?? 'Equipo actualizado correctamente',
+                    'redirect' => '/aprendiz/equipos?updated=' . time()
+                ]);
+                exit;
+            }
+            
+            Response::redirect('/aprendiz/equipos?updated=' . time());
+        } else {
+            $this->session->flash('error', implode('<br>', $result['errors'] ?? []));
+            $this->session->set('equipo_old', $data);
+            
+            // Check if AJAX request - return JSON error
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => implode('<br>', $result['errors'] ?? ['Error al actualizar equipo']),
+                    'errors' => $result['errors'] ?? []
+                ]);
+                exit;
+            }
+            
+            Response::redirect('/aprendiz/equipos/' . $equipoId . '/editar');
+        }
+    }
+
+    /**
      * Elimina lógicamente un equipo (soft-delete)
      * POST /aprendiz/equipos/{id}/eliminar
      */

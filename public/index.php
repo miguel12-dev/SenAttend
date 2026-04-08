@@ -1018,6 +1018,12 @@ $dynamicRoutes = [
             'middleware' => [],
             'params' => ['equipoId']
         ],
+        '/aprendiz/equipos/(\d+)/editar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'edit',
+            'middleware' => [],
+            'params' => ['equipoId']
+        ],
         // ============================================
         // MÓDULO DE EVENTOS - Rutas Dinámicas GET
         // ============================================
@@ -1238,6 +1244,12 @@ $dynamicRoutes = [
             'action' => 'restaurar',
             'middleware' => [],
             'params' => ['relacionId']
+        ],
+        '/aprendiz/equipos/(\d+)/actualizar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'actualizar',
+            'middleware' => [],
+            'params' => ['equipoId']
         ],
         // ============================================
         // MÓDULO DE EQUIPOS - Rutas API (AJAX)

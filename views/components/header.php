@@ -74,7 +74,7 @@ $currentPage = $currentPage ?? '';
                         <li><a href="/aprendiz/panel" class="<?= $currentPage === 'aprendiz-panel' ? 'active' : '' ?>">
                             <i class="fas fa-home"></i> Panel
                         </a></li>
-                        <li><a href="/aprendiz/equipos" class="<?= in_array($currentPage, ['aprendiz-equipos', 'aprendiz-equipos-crear', 'aprendiz-equipo-qr']) ? 'active' : '' ?>">
+                        <li><a href="/aprendiz/equipos" class="<?= in_array($currentPage, ['aprendiz-equipos', 'aprendiz-equipos-crear', 'aprendiz-equipos-editar', 'aprendiz-equipo-qr']) ? 'active' : '' ?>">
                             <i class="fas fa-laptop"></i> Mis Equipos
                         </a></li>
                         <li><a href="/aprendiz/asistencias" class="<?= $currentPage === 'aprendiz-asistencias' ? 'active' : '' ?>">

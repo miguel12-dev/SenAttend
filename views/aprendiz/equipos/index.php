@@ -101,6 +101,10 @@
                                             <a href="/aprendiz/equipos/<?= (int)($equipo['equipo_id'] ?? 0) ?>/qr" class="btn btn-primary btn-qr">
                                                 <i class="fas fa-qrcode"></i> Ver QR
                                             </a>
+                                            <a href="/aprendiz/equipos/<?= (int)($equipo['equipo_id'] ?? 0) ?>/editar" class="btn-edit-icon" 
+                                                title="Editar equipo">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                             <button type="button" class="btn-delete-icon" 
                                                 data-id="<?= (int)($equipo['relacion_id'] ?? 0) ?>" 
                                                 data-marca="<?= htmlspecialchars($equipo['marca'] ?? '', ENT_QUOTES, 'UTF-8') ?>" 
@@ -221,6 +225,17 @@
                 // Show success notification
                 if (window.showSuccess) {
                     window.showSuccess('Equipo registrado correctamente');
+                }
+            }
+
+            // Check for updated param (from edit page)
+            if (urlParams.has('updated')) {
+                // Clear URL param without reload
+                window.history.replaceState({}, '', '/aprendiz/equipos');
+                
+                // Show success notification
+                if (window.showSuccess) {
+                    window.showSuccess('Equipo actualizado correctamente');
                 }
             }
 
