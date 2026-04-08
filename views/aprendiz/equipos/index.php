@@ -208,8 +208,35 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script src="<?= asset('js/common/notification-modal.js') ?>"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Check for created param from redirect (AJAX success)
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('created')) {
+                // Clear URL param without reload
+                window.history.replaceState({}, '', '/aprendiz/equipos');
+                
+                // Show success notification
+                if (window.showSuccess) {
+                    window.showSuccess('Equipo registrado correctamente');
+                }
+            }
+
+            // Also check for flash messages from server
+            const successMsg = <?= json_encode($success ?? '') ?>;
+            const errorMsg = <?= json_encode($error ?? '') ?>;
+            const messageMsg = <?= json_encode($message ?? '') ?>;
+            
+            if (successMsg && window.showSuccess) {
+                window.showSuccess(successMsg);
+            } else if (errorMsg && window.showError) {
+                window.showError(errorMsg);
+            } else if (messageMsg && window.showInfo) {
+                window.showInfo(messageMsg);
+            }
+
             // Utilizar una key única para la PWA que no conflte con otras funciones
             const PWA_RELOAD_KEY = 'equipos_ajax_loaded';
 
@@ -285,6 +312,9 @@
                     const data = await response.json();
 
                     if (data.success) {
+                        // ✅ Invalidate cache after mutation
+                        invalidateEquiposCache();
+                        
                         // Encontrar y ocultar la tarjeta del equipo
                         const card = document.querySelector('.btn-delete-icon[data-id="' + relacionId + '"]');
                         if (card) {
@@ -332,6 +362,9 @@
                     const data = await response.json();
 
                     if (data.success) {
+                        // ✅ Invalidate cache after mutation
+                        invalidateEquiposCache();
+                        
                         // Encontrar y mover la tarjeta del equipo
                         const card = boton.closest('.equipo-card');
                         if (card) {
@@ -574,6 +607,31 @@
                 const delay = card.getAttribute('data-animate-delay');
                 card.style.animationDelay = delay + 's';
             });
+
+            /**
+             * Cache Invalidation Function
+             * Clears Service Worker cache for equipos endpoint after mutations
+             */
+            async function invalidateEquiposCache() {
+                console.log('[Cache] Invalidating equipos cache after mutation...');
+                
+                // Option A: Message to Service Worker
+                if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'INVALIDATE_CACHE',
+                        patterns: ['/aprendiz/equipos', '/api/aprendiz/equipos']
+                    });
+                }
+                
+                // Option B: Clear localStorage cache
+                localStorage.removeItem('senattend_equipos_cache');
+                
+                // Option C: Clear sessionStorage
+                sessionStorage.removeItem('equipos_list');
+                sessionStorage.removeItem('equipos_last_fetch');
+                
+                console.log('[Cache] Equipos cache invalidated');
+            }
         });
     </script>
 </body>

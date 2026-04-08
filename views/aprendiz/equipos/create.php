@@ -120,6 +120,7 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script src="<?= asset('js/common/notification-modal.js') ?>"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const marcaSelect = document.getElementById('marca');
@@ -148,16 +149,117 @@
                 }
             });
             
-            // Handle form submission
+            // Handle form submission - AJAX with cache invalidation
             const form = marcaSelect.closest('form');
-            form.addEventListener('submit', function(e) {
+            
+            form.addEventListener('submit', async function(e) {
+                // Prevent default only if JavaScript enabled (graceful degradation)
+                e.preventDefault();
+                
                 if (marcaSelect.value === 'Otro' && marcaOtroInput.value.trim() === '') {
-                    e.preventDefault();
                     marcaOtroInput.focus();
                     marcaOtroWrapper.classList.add('input-error');
+                    return;
+                }
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalBtnContent = submitBtn.innerHTML;
+                
+                // Disable button and show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                
+                try {
+                    // Use FormData for file uploads
+                    const formData = new FormData(form);
+                    
+                    // Submit via AJAX
+                    const response = await fetch('/aprendiz/equipos', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'same-origin'
+                    });
+                    
+                    // Check content type
+                    const contentType = response.headers.get('content-type');
+                    let result;
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                        
+                        if (!result.success) {
+                            throw new Error(result.message || result.error || 'Error al registrar');
+                        }
+                    } else if (response.ok || response.redirected) {
+                        // Traditional redirect - will handle on client
+                        result = { success: true, redirected: true };
+                    } else {
+                        throw new Error('Error en la solicitud');
+                    }
+                    
+                    // ✅ CACHE INVALIDATION - Key Step!
+                    await invalidateEquiposCache();
+                    
+                    // Show success notification
+                    if (window.showSuccess) {
+                        window.showSuccess('Equipo registrado correctamente');
+                    } else if (window.pwaManager) {
+                        pwaManager.showToast('Equipo registrado correctamente', 'success');
+                    }
+                    
+                    // Navigate to list (soft redirect to avoid full page reload issues)
+                    setTimeout(() => {
+                        window.location.href = '/aprendiz/equipos?created=' + Date.now();
+                    }, 500);
+                    
+                } catch (error) {
+                    console.error('Error al registrar equipo:', error);
+                    
+                    // Show error notification
+                    if (window.showError) {
+                        window.showError(error.message || 'Error al registrar el equipo');
+                    } else if (window.pwaManager) {
+                        pwaManager.showToast(error.message || 'Error al registrar el equipo', 'error');
+                    }
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnContent;
                 }
             });
+            
+            // Remove error class on input
+            marcaOtroInput.addEventListener('input', function() {
+                marcaOtroWrapper.classList.remove('input-error');
+            });
         });
+
+        /**
+         * Cache Invalidation Function
+         * Clears Service Worker cache for equipos endpoint
+         */
+        async function invalidateEquiposCache() {
+            console.log('[Cache] Invalidating equipos cache...');
+            
+            // Option A: Message to Service Worker
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'INVALIDATE_CACHE',
+                    patterns: ['/aprendiz/equipos', '/api/aprendiz/equipos']
+                });
+            }
+            
+            // Option B: Clear localStorage cache
+            localStorage.removeItem('senattend_equipos_cache');
+            
+            // Option C: Clear sessionStorage
+            sessionStorage.removeItem('equipos_list');
+            sessionStorage.removeItem('equipos_last_fetch');
+            
+            console.log('[Cache] Equipos cache invalidated');
+        }
     </script>
 </body>
 </html>
