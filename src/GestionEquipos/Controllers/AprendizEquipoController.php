@@ -43,15 +43,21 @@ class AprendizEquipoController
             Response::redirect('/login');
         }
 
-        // Prevent browser caching to ensure fresh data and flash messages work
-        header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate');
+        // Aggressive cache prevention headers
+        header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private');
         header('Pragma: no-cache');
         header('Expires: 0');
+        header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+        header('ETag: "' . md5(time() . microtime()) . '"');
+        header('X-Accel-Expires: 0');
 
         $this->session->start();
         $error = $this->session->getFlash('error');
         $message = $this->session->getFlash('message');
         $success = $this->session->getFlash('success');
+        
+        // Check for created param from redirect
+        $created = isset($_GET['created']) && is_numeric($_GET['created']);
 
         $equipos = $this->aprendizEquipoService->getEquiposDeAprendiz((int)$user['id']);
         $equiposEliminados = $this->aprendizEquipoService->getEquiposEliminados((int)$user['id']);
@@ -70,6 +76,11 @@ class AprendizEquipoController
         if (!$user || $user['rol'] !== 'aprendiz') {
             Response::redirect('/login');
         }
+
+        // Aggressive cache prevention headers
+        header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate, private');
+        header('Pragma: no-cache');
+        header('Expires: 0');
 
         $this->session->start();
         $error = $this->session->getFlash('error') ?? $this->session->getFlash('aprendiz_error');
@@ -135,12 +146,47 @@ class AprendizEquipoController
 
         if ($result['success']) {
             $this->session->flash('success', $result['message'] ?? 'Equipo registrado correctamente');
-            Response::redirect('/aprendiz/panel');
+            
+            // Check if AJAX request - return JSON
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => $result['message'] ?? 'Equipo registrado correctamente',
+                    'redirect' => '/aprendiz/equipos?created=' . time()
+                ]);
+                exit;
+            }
+            
+            Response::redirect('/aprendiz/equipos?created=' . time());
         } else {
             $this->session->flash('error', implode('<br>', $result['errors'] ?? []));
             $this->session->set('aprendiz_old', $data);
+            
+            // Check if AJAX request - return JSON error
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => implode('<br>', $result['errors'] ?? ['Error al registrar equipo']),
+                    'errors' => $result['errors'] ?? []
+                ]);
+                exit;
+            }
+            
             Response::redirect('/aprendiz/equipos/crear');
         }
+    }
+    
+    /**
+     * Check if request is AJAX (XMLHttpRequest)
+     * @return bool
+     */
+    private function isAjaxRequest(): bool
+    {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     /**

@@ -32,6 +32,28 @@ const ONLINE_ONLY_ROUTES = [
   '/auth/logout',
   '/api/qr/procesar',
   '/asistencia/guardar',
+  // Rutas de equipos - crítico para datos frescos
+  '/aprendiz/equipos',
+  // Dashboard y datos privados por rol
+  '/dashboard',
+  '/admin',
+  '/instructor',
+  '/portero',
+  '/aprendiz/panel',
+  '/aprendiz/boletas-salida',
+  '/aprendiz/asistencias',
+  // APIs con datos sensibles
+  '/api/aprendices',
+  '/api/fichas',
+  '/api/instructor-fichas',
+  '/api/admin',
+  '/api/instructor',
+  '/api/portero',
+  '/api/aprendiz',
+  // Boletas de salida
+  '/boletas-salida',
+  // Perfil
+  '/perfil',
 ];
 
 // Rutas API que se pueden cachear temporalmente
@@ -53,7 +75,15 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_STATIC)
       .then((cache) => {
         console.log('[SW] Pre-cacheando recursos estáticos');
-        return cache.addAll(STATIC_ASSETS);
+        // Usar Promise.allSettled para que no falle si un recurso no existe
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url => 
+            cache.add(url).catch(err => {
+              console.warn('[SW] No se pudo cachear:', url, err);
+              return null;
+            })
+          )
+        );
       })
       .then(() => {
         console.log('[SW] Service Worker instalado correctamente');
@@ -61,6 +91,7 @@ self.addEventListener('install', (event) => {
       })
       .catch((error) => {
         console.error('[SW] Error al instalar Service Worker:', error);
+        return self.skipWaiting(); // Continuar aunque falle el pre-cache
       })
   );
 });
@@ -280,7 +311,47 @@ self.addEventListener('message', (event) => {
       })
     );
   }
+
+  // 🚀 Cache Invalidation para operaciones de escritura
+  if (event.data && event.data.type === 'INVALIDATE_CACHE') {
+    event.waitUntil(invalidatePatterns(event.data.patterns));
+  }
 });
+
+/**
+ * Invalida patrones de caché específicos
+ * @param {string[]} patterns - Patrones de URL a invalidar
+ */
+async function invalidatePatterns(patterns) {
+  console.log('[SW] Invalidating cache patterns:', patterns);
+  
+  const cacheNames = await caches.keys();
+  
+  for (const cacheName of cacheNames) {
+    // Solo procesar caches de nuestra app
+    if (!cacheName.startsWith('senattend-')) continue;
+    
+    try {
+      const cache = await caches.open(cacheName);
+      const requests = await cache.keys();
+      
+      for (const request of requests) {
+        const url = new URL(request.url);
+        
+        for (const pattern of patterns) {
+          if (url.pathname.includes(pattern)) {
+            console.log('[SW] Deleting cached:', url.pathname);
+            await cache.delete(request);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[SW] Error processing cache:', cacheName, error);
+    }
+  }
+  
+  console.log('[SW] Cache invalidation complete');
+}
 
 /**
  * Manejo de sincronización en segundo plano
