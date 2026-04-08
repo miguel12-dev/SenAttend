@@ -38,11 +38,13 @@ class QrEquipoRepository
     {
         try {
             $stmt = Connection::prepare(
-                'SELECT * FROM qr_equipos 
-                 WHERE id_equipo = :equipo_id 
-                   AND id_aprendiz = :aprendiz_id 
-                   AND activo = 1
-                 ORDER BY fecha_generacion DESC
+                'SELECT q.*, e.numero_serial, e.marca 
+                 FROM qr_equipos q
+                 INNER JOIN equipos e ON q.id_equipo = e.id
+                 WHERE q.id_equipo = :equipo_id 
+                   AND q.id_aprendiz = :aprendiz_id 
+                   AND q.activo = 1
+                 ORDER BY q.fecha_generacion DESC
                  LIMIT 1'
             );
 

@@ -1224,6 +1224,36 @@ $dynamicRoutes = [
             'middleware' => [],
             'params' => ['id']
         ],
+        // ============================================
+        // MÓDULO DE EQUIPOS - Rutas Dinámicas POST (Aprendiz)
+        // ============================================
+        '/aprendiz/equipos/(\d+)/eliminar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'eliminar',
+            'middleware' => [],
+            'params' => ['relacionId']
+        ],
+        '/aprendiz/equipos/(\d+)/restaurar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'restaurar',
+            'middleware' => [],
+            'params' => ['relacionId']
+        ],
+        // ============================================
+        // MÓDULO DE EQUIPOS - Rutas API (AJAX)
+        // ============================================
+        '/api/aprendiz/equipos/(\d+)/eliminar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'apiEliminar',
+            'middleware' => [],
+            'params' => ['relacionId']
+        ],
+        '/api/aprendiz/equipos/(\d+)/restaurar' => [
+            'controller' => AprendizEquipoController::class,
+            'action' => 'apiRestaurar',
+            'middleware' => [],
+            'params' => ['relacionId']
+        ],
         '/eventos/admin/(\d+)/eliminar' => [
             'controller' => EventoAdminController::class,
             'action' => 'eliminar',

@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/aprendiz/panel.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/aprendiz/equipos/qr.css') ?>">
 </head>
 <body>
     <div class="wrapper">
@@ -37,17 +38,20 @@
                         </div>
                     </section>
 
-                    <section class="aprendiz-equipos-card" style="text-align:center;">
+                    <section class="aprendiz-equipos-card qr-card">
                         <h2>QR del equipo</h2>
-                        <div style="display:flex;justify-content:center;margin-bottom:1.5rem;">
-                            <img src="<?= $qrInfo['image_base64'] ?>" alt="QR del equipo" style="max-width:300px;">
+                        <div class="qr-image-container">
+                            <img src="<?= htmlspecialchars($qrInfo['image_base64'] ?? '', ENT_QUOTES, 'UTF-8') ?>" alt="QR del equipo" class="qr-image" id="qrImage">
                         </div>
-                        <p style="font-size:0.9rem;color:#666;">
-                            Generado: <?= htmlspecialchars($qrInfo['fecha_generacion']) ?><br>
+                        <p class="qr-details">
+                            <strong>Generado:</strong> <?= htmlspecialchars($qrInfo['fecha_generacion'] ?? '', ENT_QUOTES, 'UTF-8') ?><br>
                             <?php if (!empty($qrInfo['fecha_expiracion'])): ?>
-                                Expira: <?= htmlspecialchars($qrInfo['fecha_expiracion']) ?>
+                                <strong>Expira:</strong> <?= htmlspecialchars($qrInfo['fecha_expiracion'], ENT_QUOTES, 'UTF-8') ?>
                             <?php endif; ?>
                         </p>
+                        <button type="button" class="btn btn-primary btn-download" id="btnDownloadQR">
+                            <i class="fas fa-download"></i> Descargar QR
+                        </button>
                     </section>
                 </div>
             </div>
@@ -55,7 +59,23 @@
     </div>
 
     <script src="<?= asset('js/app.js') ?>"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnDownloadQR = document.getElementById('btnDownloadQR');
+            
+            if (btnDownloadQR) {
+                btnDownloadQR.addEventListener('click', function() {
+                    const img = document.getElementById('qrImage');
+                    const serial = '<?= htmlspecialchars($qrInfo['numero_serial'] ?? 'equipo', ENT_QUOTES, 'UTF-8') ?>';
+                    const link = document.createElement('a');
+                    link.href = img.src;
+                    link.download = 'qr-equipo-' + serial + '.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-
-

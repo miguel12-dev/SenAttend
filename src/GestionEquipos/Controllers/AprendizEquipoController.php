@@ -43,12 +43,18 @@ class AprendizEquipoController
             Response::redirect('/login');
         }
 
+        // Prevent browser caching to ensure fresh data and flash messages work
+        header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
         $this->session->start();
         $error = $this->session->getFlash('error');
         $message = $this->session->getFlash('message');
         $success = $this->session->getFlash('success');
 
         $equipos = $this->aprendizEquipoService->getEquiposDeAprendiz((int)$user['id']);
+        $equiposEliminados = $this->aprendizEquipoService->getEquiposEliminados((int)$user['id']);
 
         require __DIR__ . '/../../../views/aprendiz/equipos/index.php';
     }
@@ -159,6 +165,116 @@ class AprendizEquipoController
         $qrInfo = $result['data'];
 
         require __DIR__ . '/../../../views/aprendiz/equipos/qr.php';
+    }
+
+    /**
+     * Elimina lógicamente un equipo (soft-delete)
+     * POST /aprendiz/equipos/{id}/eliminar
+     */
+    public function eliminar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::redirect('/aprendiz/equipos');
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::redirect('/login');
+        }
+
+        $result = $this->aprendizEquipoService->eliminarEquipo($relacionId, (int)$user['id']);
+
+        $this->session->start();
+        if ($result['success']) {
+            $this->session->flash('success', $result['message']);
+        } else {
+            $this->session->flash('error', $result['message']);
+        }
+
+        // Redirect with action param to force page reload on client side
+        Response::redirect('/aprendiz/equipos?action=done');
+    }
+
+    /**
+     * Restaura un equipo previamente eliminado
+     * POST /aprendiz/equipos/{id}/restaurar
+     */
+    public function restaurar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::redirect('/aprendiz/equipos');
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::redirect('/login');
+        }
+
+        $result = $this->aprendizEquipoService->restaurarEquipo($relacionId, (int)$user['id']);
+
+        $this->session->start();
+        if ($result['success']) {
+            $this->session->flash('success', $result['message']);
+        } else {
+            $this->session->flash('error', $result['message']);
+        }
+
+        // Redirect with action param to force page reload on client side
+        Response::redirect('/aprendiz/equipos?action=done');
+    }
+
+    /**
+     * API: Elimina lógicamente un equipo (soft-delete) - AJAX
+     * POST /api/aprendiz/equipos/{id}/eliminar
+     */
+    public function apiEliminar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::error('Método no permitido', 405);
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::error('No autorizado', 401);
+        }
+
+        $result = $this->aprendizEquipoService->eliminarEquipo($relacionId, (int)$user['id']);
+
+        if ($result['success']) {
+            Response::success([
+                'relacion_id' => $relacionId,
+                'equipo' => $result['equipo'] ?? null
+            ], $result['message']);
+        } else {
+            Response::error($result['message'], 400);
+        }
+    }
+
+    /**
+     * API: Restaura un equipo previamente eliminado - AJAX
+     * POST /api/aprendiz/equipos/{id}/restaurar
+     */
+    public function apiRestaurar(int $relacionId): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            Response::error('Método no permitido', 405);
+        }
+
+        $user = $this->authService->getCurrentUser();
+        if (!$user || $user['rol'] !== 'aprendiz') {
+            Response::error('No autorizado', 401);
+        }
+
+        $result = $this->aprendizEquipoService->restaurarEquipo($relacionId, (int)$user['id']);
+
+        if ($result['success']) {
+            Response::success([
+                'relacion_id' => $relacionId,
+                'equipo' => $result['equipo'] ?? null
+            ], $result['message']);
+        } else {
+            Response::error($result['message'], 400);
+        }
     }
 }
 

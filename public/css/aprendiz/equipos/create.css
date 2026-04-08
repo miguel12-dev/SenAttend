@@ -4,3 +4,150 @@
     font-size: 0.85rem;
 }
 
+/* Enhanced form styling for equipment create */
+.aprendiz-equipos-card {
+    padding: 2rem;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.aprendiz-equipos-card .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.aprendiz-equipos-card .form-group label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.aprendiz-equipos-card .form-control {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #fafafa;
+}
+
+.aprendiz-equipos-card .form-control:focus {
+    border-color: #ff6b00;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+    outline: none;
+}
+
+.aprendiz-equipos-card .form-control:hover:not(:focus) {
+    border-color: #ccc;
+}
+
+/* Required field indicator */
+.required {
+    color: #e74c3c;
+    margin-left: 2px;
+}
+
+/* Brand select styling */
+.brand-select-wrapper select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: calc(100% - 12px) center;
+    padding-right: 36px;
+}
+
+/* Other brand input wrapper */
+.marca-otro-wrapper {
+    margin-top: 0.75rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #ddd;
+}
+
+.marca-otro-wrapper .form-control {
+    background-color: #fff;
+}
+
+.marca-otro-wrapper label {
+    display: block;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+/* Error state */
+.input-error {
+    border-color: #e74c3c !important;
+}
+
+.input-error:focus {
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2) !important;
+}
+
+/* Submit button styling */
+.aprendiz-equipos-card .btn-primary {
+    padding: 0.875rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+.aprendiz-equipos-card .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+}
+
+.aprendiz-equipos-card .btn-primary i {
+    margin-right: 8px;
+}
+
+/* Icon in form labels */
+.aprendiz-equipos-card .form-group label::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: #ff6b00;
+    border-radius: 2px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Image upload enhancement */
+.aprendiz-equipos-card input[type="file"] {
+    padding: 0.5rem;
+    background: #f8f9fa;
+    cursor: pointer;
+}
+
+.aprendiz-equipos-card input[type="file"]::file-selector-button {
+    background: #ff6b00;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 1rem;
+    transition: background 0.3s ease;
+}
+
+.aprendiz-equipos-card input[type="file"]::file-selector-button:hover {
+    background: #e65c00;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .aprendiz-equipos-card {
+        padding: 1.5rem;
+    }
+    
+    .aprendiz-equipos-card .form-control {
+        font-size: 0.9rem;
+    }
+}

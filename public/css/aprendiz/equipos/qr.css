@@ -1,5 +1,9 @@
-/* Estilos para vista QR de equipos */
-.qr-card-centered {
+/* Estilos para vista QR de equipos - Following SOLID principles */
+
+/* ============================================
+   Tarjeta QR centrada
+   ============================================ */
+.qr-card {
     text-align: center;
 }
 
@@ -18,3 +22,37 @@
     color: #666;
 }
 
+/* ============================================
+   Sección de información del QR
+   ============================================ */
+.qr-details {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.qr-details strong {
+    color: #333;
+}
+
+/* ============================================
+   Botón de descarga
+   ============================================ */
+.btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 123, 255, 0.35);
+}
+
+.btn-download:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.25);
+}

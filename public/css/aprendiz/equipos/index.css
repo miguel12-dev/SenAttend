@@ -1,5 +1,9 @@
-/* Estilos para lista de equipos de aprendiz */
-.empty-state-centered {
+/* Estilos para lista de equipos de aprendiz - Following SOLID principles */
+
+/* ============================================
+   Estados vacíos
+   ============================================ */
+.empty-state {
     text-align: center;
     padding: 3rem 1rem;
 }
@@ -16,3 +20,294 @@
     margin-bottom: 1rem;
 }
 
+/* ============================================
+   Animaciones
+   ============================================ */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ============================================
+   Tarjetas de equipos
+   ============================================ */
+.equipo-card {
+    animation: slideIn 0.4s ease-out forwards;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.equipo-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   Botones de acción
+   ============================================ */
+.equipo-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.btn-qr {
+    flex: 1;
+}
+
+.btn-delete-icon {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.btn-delete-icon:hover {
+    background-color: #c82333;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+/* ============================================
+   Botón restaurar
+   ============================================ */
+.btn-restore {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-restore:hover {
+    background-color: #218838;
+    transform: scale(1.05);
+}
+
+/* ============================================
+   Modal de confirmación
+   ============================================ */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-overlay.show {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+    text-align: center;
+}
+
+.modal-icon {
+    font-size: 3rem;
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.modal-message {
+    color: #666;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-modal-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.btn-modal-cancel:hover {
+    background-color: #5a6268;
+}
+
+.btn-modal-confirm {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.btn-modal-confirm:hover {
+    background-color: #c82333;
+}
+
+/* ============================================
+   Sección equipos eliminados
+   ============================================ */
+.equipos-eliminados-section {
+    margin-top: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.equipos-eliminados-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 1rem;
+    background: #fff3cd;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.equipos-eliminados-header h3 {
+    margin: 0;
+    color: #856404;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.equipos-eliminados-list {
+    display: none;
+    padding: 1rem 0;
+}
+
+.equipos-eliminados-list.show {
+    display: block;
+    animation: slideIn 0.3s ease;
+}
+
+.equipo-card.eliminado {
+    opacity: 0.7;
+    border: 2px dashed #ffc107;
+    background: #fffdf5;
+}
+
+.badge-eliminado {
+    background-color: #ffc107;
+    color: #856404;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+/* ============================================
+   Icono toggle
+   ============================================ */
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.toggle-icon.rotated {
+    transform: rotate(180deg);
+}
+
+/* ============================================
+   Botón primario hover
+   ============================================ */
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* ============================================
+   Animaciones AJAX de eliminar/restaurar
+   ============================================ */
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.equipo-card.eliminando {
+    animation: slideOut 0.3s ease forwards;
+}
+
+.equipo-card.restaurando {
+    animation: slideOut 0.3s ease forwards;
+}
+
+/* Fade out para mensajes flash */
+.alert.fade-out {
+    animation: fadeOut 0.3s ease forwards;
+}
+
+/* Estado deshabilitado para botones */
+.btn-modal-confirm:disabled,
+.btn-restore:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

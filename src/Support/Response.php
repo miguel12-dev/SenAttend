@@ -47,6 +47,11 @@ class Response
      */
     public static function redirect(string $url, int $statusCode = 302): void
     {
+        // Prevent browser caching on redirects (important for flash messages)
+        header('Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
         http_response_code($statusCode);
         header("Location: {$url}");
         exit;
