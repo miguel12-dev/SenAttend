@@ -17,6 +17,7 @@ $currentPath = rtrim($currentPath, '/') ?: '/';
                     <span></span>
                 </button>
                 <div class="logo">
+                    <img src="<?= asset('images/logo_sena_blanco.png') ?>" alt="Logo SENA" class="logo-sena">
                     <a href="/eventos" class="logo-link-public">
                         <i class="fas fa-calendar-alt"></i>
                         <span class="logo-text">Eventos SENA</span>

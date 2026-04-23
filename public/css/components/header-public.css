@@ -72,6 +72,17 @@
     gap: 0.5rem;
 }
 
+.header-public .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.header-public .logo-sena {
+    height: 35px;
+    width: auto;
+}
+
 .header-public .logo-text {
     font-size: 1.75rem;
     font-weight: 700;

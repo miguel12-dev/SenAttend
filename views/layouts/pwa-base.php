@@ -34,6 +34,7 @@
     <link rel="manifest" href="/manifest.json">
     
     <!-- Favicons -->
+    <link rel="icon" type="image/png" href="<?= asset('images/logo_sena_blanco.png') ?>">
     <link rel="icon" type="image/png" sizes="96x96" href="<?= asset('assets/icons/favicon-96x96.png') ?>">
     <link rel="shortcut icon" href="<?= asset('assets/icons/favicon-96x96.png') ?>">
     

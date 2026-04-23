@@ -1,5 +1,6 @@
 <?php
 /** @var array $user */
+/** @var array $equipo */
 /** @var array $old */
 ?>
 <!DOCTYPE html>
@@ -7,17 +8,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar Equipo - SENAttend</title>
+    <title>Editar Equipo - SENAttend</title>
     <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/dashboard/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/aprendiz/panel.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/aprendiz/equipos/create.css') ?>">
+    <style>
+        .equipo-current-image {
+            margin-bottom: 1rem;
+        }
+        .equipo-current-image img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .equipo-current-image p {
+            margin: 0.5rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
     <div class="wrapper">
         <?php 
-        $currentPage = 'aprendiz-equipos-crear';
+        $currentPage = 'aprendiz-equipos-editar';
         require __DIR__ . '/../../components/header.php'; 
         ?>
 
@@ -26,8 +43,8 @@
                 <div class="aprendiz-dashboard">
                     <section class="aprendiz-dashboard-header">
                         <div>
-                            <h1>Registrar nuevo equipo</h1>
-                            <p>Vincula tu equipo portátil para gestionar sus ingresos y salidas del CTA.</p>
+                            <h1>Editar equipo</h1>
+                            <p>Actualiza la marca o imagen de tu equipo.</p>
                         </div>
                         <div class="aprendiz-actions">
                             <?php 
@@ -51,18 +68,21 @@
                     <?php endif; ?>
 
                     <section class="aprendiz-equipos-card">
-                        <form action="/aprendiz/equipos" method="POST" class="form" enctype="multipart/form-data">
+                        <form action="/aprendiz/equipos/<?= (int)($equipo['equipo_id'] ?? 0) ?>/actualizar" method="POST" class="form" enctype="multipart/form-data">
+                            <!-- Número de serie (solo lectura) -->
                             <div class="form-group">
-                                <label for="numero_serial">Número de serie del equipo <span class="required">*</span></label>
+                                <label for="numero_serial">Número de serie</label>
                                 <input
                                     type="text"
                                     id="numero_serial"
-                                    name="numero_serial"
                                     class="form-control"
-                                    required
-                                    placeholder="Ej: SN123456789"
-                                    value="<?= htmlspecialchars($old['numero_serial'] ?? '') ?>"
+                                    value="<?= htmlspecialchars($equipo['numero_serial'] ?? '') ?>"
+                                    readonly
+                                    style="background-color: #f5f5f5; cursor: not-allowed;"
                                 >
+                                <small style="color:#666;font-size:0.85rem;">
+                                    El número de serie no se puede modificar.
+                                </small>
                             </div>
 
                             <div class="form-group">
@@ -70,20 +90,20 @@
                                 <div class="brand-select-wrapper">
                                     <select id="marca" name="marca" class="form-control" required>
                                         <option value="">Selecciona una marca</option>
-                                        <option value="HP">HP</option>
-                                        <option value="Dell">Dell</option>
-                                        <option value="Lenovo">Lenovo</option>
-                                        <option value="ASUS">ASUS</option>
-                                        <option value="Acer">Acer</option>
-                                        <option value="Apple">Apple (MacBook)</option>
-                                        <option value="Toshiba">Toshiba</option>
-                                        <option value="MSI">MSI</option>
-                                        <option value="Microsoft">Microsoft (Surface)</option>
-                                        <option value="Samsung">Samsung</option>
-                                        <option value="Otro">Otra marca (especificar)</option>
+                                        <option value="HP" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'HP' ? 'selected' : '' ?>>HP</option>
+                                        <option value="Dell" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Dell' ? 'selected' : '' ?>>Dell</option>
+                                        <option value="Lenovo" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Lenovo' ? 'selected' : '' ?>>Lenovo</option>
+                                        <option value="ASUS" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'ASUS' ? 'selected' : '' ?>>ASUS</option>
+                                        <option value="Acer" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Acer' ? 'selected' : '' ?>>Acer</option>
+                                        <option value="Apple" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Apple' ? 'selected' : '' ?>>Apple (MacBook)</option>
+                                        <option value="Toshiba" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Toshiba' ? 'selected' : '' ?>>Toshiba</option>
+                                        <option value="MSI" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'MSI' ? 'selected' : '' ?>>MSI</option>
+                                        <option value="Microsoft" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Microsoft' ? 'selected' : '' ?>>Microsoft (Surface)</option>
+                                        <option value="Samsung" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Samsung' ? 'selected' : '' ?>>Samsung</option>
+                                        <option value="Otro" <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Otro' ? 'selected' : '' ?>>Otra marca (especificar)</option>
                                     </select>
                                 </div>
-                                <div id="marca-otro-wrapper" class="marca-otro-wrapper" style="display: none;">
+                                <div id="marca-otro-wrapper" class="marca-otro-wrapper" style="display: <?= ($equipo['marca'] ?? $old['marca'] ?? '') === 'Otro' ? 'block' : 'none' ?>;">
                                     <input
                                         type="text"
                                         id="marca_otro"
@@ -97,6 +117,16 @@
 
                             <div class="form-group">
                                 <label for="imagen">Imagen del equipo (opcional)</label>
+                                
+                                <!-- Mostrar imagen actual -->
+                                <?php if (!empty($equipo['imagen'])): ?>
+                                    <div class="equipo-current-image">
+                                        <p>Imagen actual:</p>
+                                        <img src="<?= asset(htmlspecialchars($equipo['imagen'], ENT_QUOTES, 'UTF-8')) ?>" alt="Imagen actual del equipo">
+                                        <p style="margin-top: 0.5rem;">Sube una nueva imagen para reemplazar la actual.</p>
+                                    </div>
+                                <?php endif; ?>
+                                
                                 <input
                                     type="file"
                                     id="imagen"
@@ -110,7 +140,7 @@
                             </div>
 
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar equipo
+                                <i class="fas fa-save"></i> Actualizar equipo
                             </button>
                         </form>
                     </section>
@@ -167,14 +197,14 @@
                 
                 // Disable button and show loading state
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
                 
                 try {
                     // Use FormData for file uploads
                     const formData = new FormData(form);
                     
                     // Submit via AJAX
-                    const response = await fetch('/aprendiz/equipos', {
+                    const response = await fetch(form.action, {
                         method: 'POST',
                         body: formData,
                         headers: {
@@ -191,7 +221,7 @@
                         result = await response.json();
                         
                         if (!result.success) {
-                            throw new Error(result.message || result.error || 'Error al registrar');
+                            throw new Error(result.message || result.error || 'Error al actualizar');
                         }
                     } else if (response.ok || response.redirected) {
                         // Traditional redirect - will handle on client
@@ -205,24 +235,24 @@
                     
                     // Show success notification
                     if (window.showSuccess) {
-                        window.showSuccess('Equipo registrado correctamente');
+                        window.showSuccess('Equipo actualizado correctamente');
                     } else if (window.pwaManager) {
-                        pwaManager.showToast('Equipo registrado correctamente', 'success');
+                        pwaManager.showToast('Equipo actualizado correctamente', 'success');
                     }
                     
                     // Navigate to list (soft redirect to avoid full page reload issues)
                     setTimeout(() => {
-                        window.location.href = '/aprendiz/equipos?created=' + Date.now();
+                        window.location.href = '/aprendiz/equipos?updated=' + Date.now();
                     }, 500);
                     
                 } catch (error) {
-                    console.error('Error al registrar equipo:', error);
+                    console.error('Error al actualizar equipo:', error);
                     
                     // Show error notification
                     if (window.showError) {
-                        window.showError(error.message || 'Error al registrar el equipo');
+                        window.showError(error.message || 'Error al actualizar el equipo');
                     } else if (window.pwaManager) {
-                        pwaManager.showToast(error.message || 'Error al registrar el equipo', 'error');
+                        pwaManager.showToast(error.message || 'Error al actualizar el equipo', 'error');
                     }
                     
                     submitBtn.disabled = false;
@@ -263,5 +293,3 @@
     </script>
 </body>
 </html>
-
-

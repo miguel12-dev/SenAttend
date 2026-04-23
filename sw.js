@@ -351,6 +351,69 @@ self.addEventListener('message', (event) => {
       })
     );
   }
+
+  // 🚀 Cache Invalidation para operaciones de escritura
+  if (event.data && event.data.type === 'INVALIDATE_CACHE') {
+    event.waitUntil(invalidatePatterns(event.data.patterns));
+  }
+
+  // Clear specific route cache
+  if (event.data && event.data.type === 'CLEAR_CACHE_ROUTE') {
+    event.waitUntil(clearRouteCache(event.data.route));
+  }
 });
+
+/**
+ * Invalida patrones de caché específicos
+ * @param {string[]} patterns - Patrones de URL a invalidar
+ */
+async function invalidatePatterns(patterns) {
+  console.log('[SW] Invalidating cache patterns:', patterns);
+  
+  const cacheNames = await caches.keys();
+  
+  for (const cacheName of cacheNames) {
+    // Solo procesar caches de nuestra app
+    if (!cacheName.startsWith('senattend-')) continue;
+    
+    try {
+      const cache = await caches.open(cacheName);
+      const requests = await cache.keys();
+      
+      for (const request of requests) {
+        const url = new URL(request.url);
+        
+        for (const pattern of patterns) {
+          if (url.pathname.includes(pattern)) {
+            console.log('[SW] Deleting cached:', url.pathname);
+            await cache.delete(request);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[SW] Error processing cache:', cacheName, error);
+    }
+  }
+  
+  console.log('[SW] Cache invalidation complete');
+}
+
+/**
+ * Limpia el caché de una ruta específica
+ * @param {string} route - Ruta a invalidar
+ */
+async function clearRouteCache(route) {
+  const patterns = [route];
+  await invalidatePatterns(patterns);
+  
+  // Notificar a todos los clientes
+  const clients = await self.clients.matchAll();
+  clients.forEach(client => {
+    client.postMessage({
+      type: 'CACHE_INVALIDATED',
+      route: route
+    });
+  });
+}
 
 console.log('[SW] Service Worker cargado:', CACHE_VERSION);

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" type="image/png" href="<?= asset('images/logo_sena_blanco.png') ?>">
     <title><?= $title ?? 'SENAttend - Sistema de Asistencia SENA' ?></title>
     <link rel="stylesheet" href="<?= asset('assets/vendor/fontawesome/css/all.min.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/common/style.css') ?>">

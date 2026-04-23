@@ -17,6 +17,7 @@ $currentPath = rtrim($currentPath, '/') ?: '/';
                     <span></span>
                 </button>
                 <div class="logo">
+                    <img src="<?= asset('images/logo_sena_blanco.png') ?>" alt="Logo SENA" class="logo-sena">
                     <a href="/" style="text-decoration: none; color: inherit;">
                         <h1>SENAttend</h1>
                     </a>
